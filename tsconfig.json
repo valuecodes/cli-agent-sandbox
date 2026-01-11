@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+
+    "incremental": false,
+    "disableSourceOfProjectReferenceRedirect": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "checkJs": true,
+
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "noEmit": true
+  },
+  "include": ["eslint.config.ts"],
+  "exclude": ["node_modules"]
+}
