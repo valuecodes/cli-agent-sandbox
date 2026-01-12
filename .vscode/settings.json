@@ -8,5 +8,10 @@
     {
       "file": ".github/commit-message-instructions.md"
     }
+  ],
+  "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
+    {
+      "file": ".github/pull-request-description-instructions.md"
+    }
   ]
 }
