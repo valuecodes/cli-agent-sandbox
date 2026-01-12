@@ -5,7 +5,7 @@ import importPlugin from "eslint-plugin-import";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-export const baseConfig = defineConfig(
+export default defineConfig(
   // Ignore files not tracked by VCS and any config files
   includeIgnoreFile(path.join(import.meta.dirname, ".gitignore")),
   { ignores: ["**/*.config.*"] },
