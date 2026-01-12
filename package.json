@@ -1,13 +1,38 @@
 {
   "name": "cli-agent-sandbox",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A sandbox project for testing CLI agents",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "agent",
+    "sandbox",
+    "typescript",
+    "eslint",
+    "prettier"
+  ],
+  "author": "Juha Kangas",
   "license": "ISC",
-  "packageManager": "pnpm@10.27.0"
+  "packageManager": "pnpm@10.27.0",
+  "devDependencies": {
+    "@eslint/compat": "2.0.1",
+    "@eslint/js": "9.39.2",
+    "@types/node": "25.0.6",
+    "eslint": "9.39.2",
+    "eslint-plugin-import": "2.32.0",
+    "jiti": "2.6.1",
+    "prettier": "3.7.4",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.52.0",
+    "vitest": "4.0.16"
+  }
 }
