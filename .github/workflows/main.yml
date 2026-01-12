@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup
-        uses: ./tooling/github/setup
+        uses: ./.github/actions/setup
 
       - name: Typecheck
         run: pnpm typecheck
@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup
-        uses: ./tooling/github/setup
+        uses: ./.github/actions/setup
 
       - name: Lint
         run: pnpm lint
@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup
-        uses: ./tooling/github/setup
+        uses: ./.github/actions/setup
 
       - name: Format check
         run: pnpm format:check
@@ -78,7 +78,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup
-        uses: ./tooling/github/setup
+        uses: ./.github/actions/setup
 
       - name: Test
         run: pnpm test
