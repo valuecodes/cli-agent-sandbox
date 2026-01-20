@@ -4,7 +4,7 @@
   "description": "A sandbox project for testing CLI agents",
   "type": "module",
   "scripts": {
-    "start": "tsx src/main.ts",
+    "run:guestbook": "tsx src/guestbook.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -25,7 +25,9 @@
   "devDependencies": {
     "@eslint/compat": "2.0.1",
     "@eslint/js": "9.39.2",
+    "@openai/agents": "0.3.7",
     "@types/node": "25.0.6",
+    "dotenv": "17.2.3",
     "eslint": "9.39.2",
     "eslint-plugin-import": "2.32.0",
     "jiti": "2.6.1",
@@ -33,6 +35,8 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.52.0",
-    "vitest": "4.0.16"
+    "vitest": "4.0.16",
+    "zod": "4.3.5",
+    "zx": "8.8.5"
   }
 }

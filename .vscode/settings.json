@@ -13,5 +13,9 @@
     {
       "file": ".github/pull-request-description-instructions.md"
     }
-  ]
+  ],
+  "github.copilot.enable": {
+    "*": true,
+    "dotenv": false
+  }
 }
