@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { listFilesTool } from "./list-files-tool";
-import { TMP_ROOT } from "./utils";
-import { invokeTool, tryCreateSymlink } from "./test-utils";
+import { TMP_ROOT } from "../utils/fs";
+import { invokeTool, tryCreateSymlink } from "../utils/test-utils";
 
 describe("listFilesTool tmp path safety", () => {
   let testDir = "";

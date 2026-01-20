@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { writeFileTool } from "./write-file-tool";
-import { TMP_ROOT } from "./utils";
-import { invokeTool, tryCreateSymlink } from "./test-utils";
+import { readFileTool } from "./read-file-tool";
+import { TMP_ROOT } from "../utils/fs";
+import { invokeTool, tryCreateSymlink } from "../utils/test-utils";
 
-describe("writeFileTool tmp path safety", () => {
+describe("readFileTool tmp path safety", () => {
   let testDir = "";
   let relativeDir = "";
 
@@ -23,41 +23,33 @@ describe("writeFileTool tmp path safety", () => {
     relativeDir = "";
   });
 
-  it("writes relative paths under tmp", async () => {
+  it("reads relative paths under tmp", async () => {
     const relativePath = path.join(relativeDir, "relative.txt");
     const content = "hello";
+    await fs.writeFile(path.join(TMP_ROOT, relativePath), content, "utf8");
 
-    const writeResult = await invokeTool<string>(writeFileTool, {
+    const readResult = await invokeTool<string>(readFileTool, {
       path: relativePath,
-      content,
     });
-    expect(writeResult).toContain("Wrote");
-    const fileContents = await fs.readFile(
-      path.join(TMP_ROOT, relativePath),
-      "utf8"
-    );
-    expect(fileContents).toBe(content);
+    expect(readResult).toBe(content);
   });
 
-  it("writes absolute paths under tmp", async () => {
+  it("reads absolute paths under tmp", async () => {
     const absolutePath = path.join(testDir, "absolute.txt");
     const content = "absolute";
+    await fs.writeFile(absolutePath, content, "utf8");
 
-    const writeResult = await invokeTool<string>(writeFileTool, {
+    const readResult = await invokeTool<string>(readFileTool, {
       path: absolutePath,
-      content,
     });
-    expect(writeResult).toContain("Wrote");
-    const fileContents = await fs.readFile(absolutePath, "utf8");
-    expect(fileContents).toBe(content);
+    expect(readResult).toBe(content);
   });
 
   it("rejects path traversal attempts", async () => {
-    const writeResult = await invokeTool<string>(writeFileTool, {
+    const readResult = await invokeTool<string>(readFileTool, {
       path: "../outside.txt",
-      content: "nope",
     });
-    expect(writeResult).toContain("Path traversal is not allowed.");
+    expect(readResult).toContain("Path traversal is not allowed.");
   });
 
   it("rejects symlink paths", async () => {
@@ -72,10 +64,9 @@ describe("writeFileTool tmp path safety", () => {
 
     const symlinkPath = path.join(relativeDir, "link", "file.txt");
 
-    const writeResult = await invokeTool<string>(writeFileTool, {
+    const readResult = await invokeTool<string>(readFileTool, {
       path: symlinkPath,
-      content: "nope",
     });
-    expect(writeResult).toContain("Symlink paths are not allowed.");
+    expect(readResult).toContain("Symlink paths are not allowed.");
   });
 });

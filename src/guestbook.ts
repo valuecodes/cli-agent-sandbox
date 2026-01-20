@@ -3,8 +3,7 @@
 import { Agent, run } from "@openai/agents";
 import "dotenv/config";
 import { question } from "zx";
-import { writeFileTool } from "./tools/write-file-tool";
-import { readFileTool } from "./tools/read-file-tool";
+import { readFileTool, writeFileTool } from "./tools";
 
 console.log("Guestbook running...");
 

@@ -24,10 +24,11 @@ A minimal TypeScript CLI sandbox for testing agent workflows. Built with [`@open
 
 Agent tools are sandboxed to the `tmp/` directory. All paths are validated to prevent directory traversal and symlink attacks.
 
-| Tool        | Location                       | Description                                |
-| ----------- | ------------------------------ | ------------------------------------------ |
-| `readFile`  | `src/tools/read-file-tool.ts`  | Reads file content from `tmp` directory    |
-| `writeFile` | `src/tools/write-file-tool.ts` | Writes content to files in `tmp` directory |
+| Tool        | Location                                  | Description                                |
+| ----------- | ----------------------------------------- | ------------------------------------------ |
+| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory    |
+| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory |
+| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`    |
 
 ## Project Structure
 
@@ -35,10 +36,19 @@ Agent tools are sandboxed to the `tmp/` directory. All paths are validated to pr
 src/
 ├── guestbook.ts          # CLI entry point
 └── tools/
-    ├── read-file-tool.ts # Read tool implementation
-    ├── write-file-tool.ts# Write tool implementation
-    ├── utils.ts          # Path safety utilities
-    └── *.test.ts         # Tool tests
+    ├── index.ts          # Tool exports
+    ├── list-files/
+    │   ├── list-files-tool.ts      # List tool implementation
+    │   └── list-files-tool.test.ts # List tool tests
+    ├── read-file/
+    │   ├── read-file-tool.ts       # Read tool implementation
+    │   └── read-file-tool.test.ts  # Read tool tests
+    ├── write-file/
+    │   ├── write-file-tool.ts      # Write tool implementation
+    │   └── write-file-tool.test.ts # Write tool tests
+    └── utils/
+        ├── fs.ts          # Path safety utilities
+        └── test-utils.ts  # Shared test helpers
 tmp/                      # Runtime scratch space (tool I/O)
 ```
 

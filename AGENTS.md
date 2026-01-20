@@ -32,10 +32,13 @@ Available pnpm scripts for development and testing:
 | Path                           | Description                              |
 | ------------------------------ | ---------------------------------------- |
 | `src/guestbook.ts`             | CLI entry point                          |
-| `src/tools/read-file-tool.ts`  | Agent tool for reading files under `tmp` |
-| `src/tools/write-file-tool.ts` | Agent tool for writing files under `tmp` |
-| `src/tools/utils.ts`           | Path safety utilities                    |
-| `src/tools/*.test.ts`          | Vitest tests for tool path safety        |
+| `src/tools/index.ts`           | Tool exports                             |
+| `src/tools/read-file/read-file-tool.ts`  | Agent tool for reading files under `tmp` |
+| `src/tools/write-file/write-file-tool.ts` | Agent tool for writing files under `tmp` |
+| `src/tools/list-files/list-files-tool.ts` | Agent tool for listing files under `tmp` |
+| `src/tools/utils/fs.ts`        | Path safety utilities                    |
+| `src/tools/utils/test-utils.ts`| Shared test helpers                      |
+| `src/tools/*/*.test.ts`        | Vitest tests for tool path safety        |
 | `eslint.config.ts`             | ESLint configuration                     |
 | `prettier.config.ts`           | Prettier configuration                   |
 | `tsconfig.json`                | TypeScript configuration                 |
@@ -44,12 +47,13 @@ Available pnpm scripts for development and testing:
 
 ## Tools
 
-Agent tools provide file operations sandboxed to the `tmp/` directory. Path traversal and symlinks are rejected to ensure security. Tools are implemented in `src/tools/` with path safety helpers in `src/tools/utils.ts`.
+Agent tools provide file operations sandboxed to the `tmp/` directory. Path traversal and symlinks are rejected to ensure security. Tools are implemented in `src/tools/` subfolders with path safety helpers in `src/tools/utils/fs.ts`.
 
 | Tool        | Location                       | Parameters                  | Description                     |
 | ----------- | ------------------------------ | --------------------------- | ------------------------------- |
-| `readFile`  | `src/tools/read-file-tool.ts`  | `path` (string)             | Reads file content from `tmp`   |
-| `writeFile` | `src/tools/write-file-tool.ts` | `path`, `content` (strings) | Writes content to file in `tmp` |
+| `readFile`  | `src/tools/read-file/read-file-tool.ts`  | `path` (string)             | Reads file content from `tmp`   |
+| `writeFile` | `src/tools/write-file/write-file-tool.ts` | `path`, `content` (strings) | Writes content to file in `tmp` |
+| `listFiles` | `src/tools/list-files/list-files-tool.ts` | `path` (string, optional)   | Lists files under `tmp`         |
 
 ## Agent notes
 
