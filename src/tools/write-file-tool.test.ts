@@ -1,37 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { FunctionTool } from "@openai/agents";
 import { writeFileTool } from "./write-file-tool";
-
-const TMP_ROOT = path.resolve(process.cwd(), "tmp");
-const RUN_CONTEXT = {} as unknown as Parameters<FunctionTool["invoke"]>[0];
-const SYMLINK_ERROR_CODES = new Set(["EPERM", "EACCES", "ENOSYS", "EINVAL"]);
-
-const isErrnoWithCode = (error: unknown, codes: Set<string>) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  typeof (error as NodeJS.ErrnoException).code === "string" &&
-  codes.has((error as NodeJS.ErrnoException).code ?? "");
-
-const invokeTool = async <TResult>(
-  tool: FunctionTool,
-  input: Record<string, unknown>
-): Promise<TResult> =>
-  tool.invoke(RUN_CONTEXT, JSON.stringify(input)) as Promise<TResult>;
-
-const tryCreateSymlink = async (target: string, linkPath: string) => {
-  try {
-    await fs.symlink(target, linkPath, "dir");
-    return true;
-  } catch (error) {
-    if (isErrnoWithCode(error, SYMLINK_ERROR_CODES)) {
-      return false;
-    }
-    throw error;
-  }
-};
+import { TMP_ROOT } from "./utils";
+import { invokeTool, tryCreateSymlink } from "./test-utils";
 
 describe("writeFileTool tmp path safety", () => {
   let testDir = "";

@@ -4,7 +4,6 @@
   "description": "A sandbox project for testing CLI agents",
   "type": "module",
   "scripts": {
-    "start": "tsx src/main.ts",
     "run:guestbook": "tsx src/guestbook.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -38,6 +37,6 @@
     "typescript-eslint": "8.52.0",
     "vitest": "4.0.16",
     "zod": "4.3.5",
-    "zx": "^8.8.5"
+    "zx": "8.8.5"
   }
 }
