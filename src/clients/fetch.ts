@@ -1,5 +1,10 @@
 import sanitize from "sanitize-html";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import type { Logger } from "./logger";
+
+export interface FetchConfig {
+  logger: Logger;
+}
 
 const SANITIZE_OPTIONS: sanitize.IOptions = {
   allowedTags: sanitize.defaults.allowedTags,
@@ -10,8 +15,16 @@ const SANITIZE_OPTIONS: sanitize.IOptions = {
 };
 
 export class Fetch {
+  private logger: Logger;
+
+  constructor(config: FetchConfig) {
+    this.logger = config.logger;
+  }
+
   private async get(url: string): Promise<Response> {
+    this.logger.debug("Fetching URL:", url);
     const response = await fetch(url);
+    this.logger.debug("Response status:", response.status);
     return response;
   }
 

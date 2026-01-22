@@ -12,48 +12,56 @@
 
 ## Environment
 
-- Set `OPENAI_API_KEY` (export it or use a `.env`) to run the guestbook.
+- Set `OPENAI_API_KEY` (export it or use a `.env`) to run the guestbook and publication scraper.
 
 ## Common commands
 
 Available pnpm scripts for development and testing:
 
-| Command              | Description                            |
-| -------------------- | -------------------------------------- |
-| `pnpm run:guestbook` | Run the interactive guestbook CLI demo |
-| `pnpm typecheck`     | Run TypeScript type checking           |
-| `pnpm lint`          | Run ESLint for code quality            |
-| `pnpm format`        | Format code with Prettier              |
-| `pnpm format:check`  | Check code formatting                  |
-| `pnpm test`          | Run Vitest test suite                  |
+| Command                        | Description                                      |
+| ------------------------------ | ------------------------------------------------ |
+| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo           |
+| `pnpm run:scrape-publications` | Scrape publication links and build a review page |
+| `pnpm typecheck`               | Run TypeScript type checking                     |
+| `pnpm lint`                    | Run ESLint for code quality                      |
+| `pnpm format`                  | Format code with Prettier                        |
+| `pnpm format:check`            | Check code formatting                            |
+| `pnpm test`                    | Run Vitest test suite                            |
 
 ## Project layout
 
-| Path                           | Description                              |
-| ------------------------------ | ---------------------------------------- |
-| `src/guestbook.ts`             | CLI entry point                          |
-| `src/tools/index.ts`           | Tool exports                             |
-| `src/tools/read-file/read-file-tool.ts`  | Agent tool for reading files under `tmp` |
-| `src/tools/write-file/write-file-tool.ts` | Agent tool for writing files under `tmp` |
-| `src/tools/list-files/list-files-tool.ts` | Agent tool for listing files under `tmp` |
-| `src/tools/utils/fs.ts`        | Path safety utilities                    |
-| `src/tools/utils/test-utils.ts`| Shared test helpers                      |
-| `src/tools/*/*.test.ts`        | Vitest tests for tool path safety        |
-| `eslint.config.ts`             | ESLint configuration                     |
-| `prettier.config.ts`           | Prettier configuration                   |
-| `tsconfig.json`                | TypeScript configuration                 |
-| `vitest.config.ts`             | Vitest configuration                     |
-| `tmp/`                         | Runtime scratch space for tool I/O       |
+| Path                                      | Description                                     |
+| ----------------------------------------- | ----------------------------------------------- |
+| `src/guestbook.ts`                        | CLI entry point                                 |
+| `src/scrape-publications.ts`              | Publication scraping CLI                        |
+| `src/clients/*`                           | Publication scraping pipeline clients           |
+| `src/tools/index.ts`                      | Tool exports                                    |
+| `src/tools/fetch-url/fetch-url-tool.ts`   | Safe HTTP fetch tool with SSRF protection       |
+| `src/tools/read-file/read-file-tool.ts`   | Agent tool for reading files under `tmp`        |
+| `src/tools/write-file/write-file-tool.ts` | Agent tool for writing files under `tmp`        |
+| `src/tools/list-files/list-files-tool.ts` | Agent tool for listing files under `tmp`        |
+| `src/tools/utils/fs.ts`                   | Path safety utilities                           |
+| `src/tools/utils/html-processing.ts`      | HTML sanitization + extraction helpers          |
+| `src/tools/utils/url-safety.ts`           | URL safety + SSRF protection helpers            |
+| `src/tools/utils/test-utils.ts`           | Shared test helpers                             |
+| `src/tools/*/*.test.ts`                   | Vitest tests for tools and safety utils         |
+| `src/types/index.ts`                      | Zod schemas for publication pipeline            |
+| `eslint.config.ts`                        | ESLint configuration                            |
+| `prettier.config.ts`                      | Prettier configuration                          |
+| `tsconfig.json`                           | TypeScript configuration                        |
+| `vitest.config.ts`                        | Vitest configuration                            |
+| `tmp/`                                    | Runtime scratch space for tool + scraper output |
 
 ## Tools
 
-Agent tools provide file operations sandboxed to the `tmp/` directory. Path traversal and symlinks are rejected to ensure security. Tools are implemented in `src/tools/` subfolders with path safety helpers in `src/tools/utils/fs.ts`.
+File tools provide operations sandboxed to the `tmp/` directory with path validation. The `fetchUrl` tool adds SSRF protection and sanitizes HTML content before conversion.
 
-| Tool        | Location                       | Parameters                  | Description                     |
-| ----------- | ------------------------------ | --------------------------- | ------------------------------- |
-| `readFile`  | `src/tools/read-file/read-file-tool.ts`  | `path` (string)             | Reads file content from `tmp`   |
-| `writeFile` | `src/tools/write-file/write-file-tool.ts` | `path`, `content` (strings) | Writes content to file in `tmp` |
-| `listFiles` | `src/tools/list-files/list-files-tool.ts` | `path` (string, optional)   | Lists files under `tmp`         |
+| Tool        | Location                                  | Parameters                                                                               | Description                                             |
+| ----------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | `url`, `timeoutMs?`, `maxBytes?`, `maxRedirects?`, `maxChars?`, `etag?`, `lastModified?` | Fetches URLs safely and returns sanitized Markdown/text |
+| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | `path` (string)                                                                          | Reads file content from `tmp`                           |
+| `writeFile` | `src/tools/write-file/write-file-tool.ts` | `path`, `content` (strings)                                                              | Writes content to file in `tmp`                         |
+| `listFiles` | `src/tools/list-files/list-files-tool.ts` | `path` (string, optional)                                                                | Lists files under `tmp`                                 |
 
 ## Agent notes
 

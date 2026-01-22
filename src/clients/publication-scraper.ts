@@ -8,24 +8,28 @@ import {
   ContentSelectorResult,
 } from "../types/index";
 import type { LinkCandidate } from "../types/index";
+import type { Logger } from "./logger";
 
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;
 
 export interface PublicationScraperConfig {
+  logger: Logger;
   selectorAgent?: SelectorAgent;
   contentSelectorAgent?: ContentSelectorAgent;
 }
 
 export class PublicationScraper {
+  private logger: Logger;
   private selectorAgent: SelectorAgent;
   private contentSelectorAgent: ContentSelectorAgent;
   private htmlToMarkdown: NodeHtmlMarkdown;
 
-  constructor(config?: PublicationScraperConfig) {
-    this.selectorAgent = config?.selectorAgent ?? this.createSelectorAgent();
+  constructor(config: PublicationScraperConfig) {
+    this.logger = config.logger;
+    this.selectorAgent = config.selectorAgent ?? this.createSelectorAgent();
     this.contentSelectorAgent =
-      config?.contentSelectorAgent ?? this.createContentSelectorAgent();
+      config.contentSelectorAgent ?? this.createContentSelectorAgent();
     this.htmlToMarkdown = new NodeHtmlMarkdown();
   }
 

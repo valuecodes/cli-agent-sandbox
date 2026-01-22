@@ -1,8 +1,18 @@
 import { marked } from "marked";
 import type { z } from "zod";
 import type { Publication } from "../types/index";
+import type { Logger } from "./logger";
+
+export interface ReviewPageGeneratorConfig {
+  logger: Logger;
+}
 
 export class ReviewPageGenerator {
+  private logger: Logger;
+
+  constructor(config: ReviewPageGeneratorConfig) {
+    this.logger = config.logger;
+  }
   private escapeHtml(text: string): string {
     return text
       .replace(/&/g, "&amp;")

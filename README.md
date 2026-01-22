@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows. Built with [`@openai/agents`](https://github.com/openai/openai-agents-js), it provides file tools scoped to a `tmp` directory with comprehensive path safety validation.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a publication scraping pipeline, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -8,47 +8,78 @@ A minimal TypeScript CLI sandbox for testing agent workflows. Built with [`@open
 2. Install dependencies: `pnpm install`
 3. Set `OPENAI_API_KEY` (export it or add to `.env`)
 4. Run the demo: `pnpm run:guestbook`
+5. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 
 ## Commands
 
-| Command              | Description                            |
-| -------------------- | -------------------------------------- |
-| `pnpm run:guestbook` | Run the interactive guestbook CLI demo |
-| `pnpm typecheck`     | Run TypeScript type checking           |
-| `pnpm lint`          | Run ESLint for code quality            |
-| `pnpm format`        | Format code with Prettier              |
-| `pnpm format:check`  | Check code formatting                  |
-| `pnpm test`          | Run Vitest test suite                  |
+| Command                        | Description                                      |
+| ------------------------------ | ------------------------------------------------ |
+| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo           |
+| `pnpm run:scrape-publications` | Scrape publication links and build a review page |
+| `pnpm typecheck`               | Run TypeScript type checking                     |
+| `pnpm lint`                    | Run ESLint for code quality                      |
+| `pnpm format`                  | Format code with Prettier                        |
+| `pnpm format:check`            | Check code formatting                            |
+| `pnpm test`                    | Run Vitest test suite                            |
+
+## Publication scraping
+
+The `run:scrape-publications` script scrapes a target page for publication links, uses an agent to infer title/date selectors, fetches publication pages, extracts content, and generates an HTML review page.
+
+Usage:
+
+```
+pnpm run:scrape-publications -- --url="https://example.com" [--refetch] [--filterUrl="substring"]
+```
+
+Outputs are written under `tmp/scraped-publications/<url-slug>/`, including source content, link discovery artifacts, publication HTML/Markdown, extraction reports, and `review.html`.
 
 ## Tools
 
-Agent tools are sandboxed to the `tmp/` directory. All paths are validated to prevent directory traversal and symlink attacks.
+File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization.
 
-| Tool        | Location                                  | Description                                |
-| ----------- | ----------------------------------------- | ------------------------------------------ |
-| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory    |
-| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory |
-| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`    |
+| Tool        | Location                                  | Description                                             |
+| ----------- | ----------------------------------------- | ------------------------------------------------------- |
+| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | Fetches URLs safely and returns sanitized Markdown/text |
+| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                 |
+| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory              |
+| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                 |
 
 ## Project Structure
 
 ```
 src/
-├── guestbook.ts          # CLI entry point
-└── tools/
-    ├── index.ts          # Tool exports
-    ├── list-files/
-    │   ├── list-files-tool.ts      # List tool implementation
-    │   └── list-files-tool.test.ts # List tool tests
-    ├── read-file/
-    │   ├── read-file-tool.ts       # Read tool implementation
-    │   └── read-file-tool.test.ts  # Read tool tests
-    ├── write-file/
-    │   ├── write-file-tool.ts      # Write tool implementation
-    │   └── write-file-tool.test.ts # Write tool tests
-    └── utils/
-        ├── fs.ts          # Path safety utilities
-        └── test-utils.ts  # Shared test helpers
+├── guestbook.ts                # Guestbook CLI entry point
+├── scrape-publications.ts      # Publication scraping CLI
+├── clients/
+│   ├── fetch.ts                # HTTP fetch + sanitization helpers
+│   ├── logger.ts               # Console logger
+│   ├── publication-pipeline.ts # Pipeline orchestration
+│   ├── publication-scraper.ts  # Link discovery + selector inference
+│   └── review-page-generator.ts # Review HTML generator
+├── tools/
+│   ├── fetch-url/
+│   │   ├── fetch-url-tool.ts      # Safe fetch tool
+│   │   └── fetch-url-tool.test.ts # Fetch tool tests
+│   ├── index.ts          # Tool exports
+│   ├── list-files/
+│   │   ├── list-files-tool.ts      # List tool implementation
+│   │   └── list-files-tool.test.ts # List tool tests
+│   ├── read-file/
+│   │   ├── read-file-tool.ts       # Read tool implementation
+│   │   └── read-file-tool.test.ts  # Read tool tests
+│   ├── write-file/
+│   │   ├── write-file-tool.ts      # Write tool implementation
+│   │   └── write-file-tool.test.ts # Write tool tests
+│   └── utils/
+│       ├── fs.ts               # Path safety utilities
+│       ├── html-processing.ts  # HTML sanitization + extraction helpers
+│       ├── html-processing.test.ts # HTML processing tests
+│       ├── url-safety.ts       # SSRF protection helpers
+│       ├── url-safety.test.ts  # URL safety tests
+│       └── test-utils.ts       # Shared test helpers
+└── types/
+    └── index.ts                    # Zod schemas for publication pipeline
 tmp/                      # Runtime scratch space (tool I/O)
 ```
 
@@ -60,3 +91,5 @@ File tools enforce strict path safety:
 - Path traversal (`../`) is rejected
 - Symlinks are rejected
 - Real path validation ensures boundary enforcement
+
+The `fetchUrl` tool adds SSRF protections (blocks localhost/private IPs and re-validates redirects) and sanitizes HTML before converting it to Markdown/text.
