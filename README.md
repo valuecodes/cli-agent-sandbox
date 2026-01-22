@@ -1,14 +1,15 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a publication scraping pipeline, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
 1. Install Node.js and pnpm
 2. Install dependencies: `pnpm install`
-3. Set `OPENAI_API_KEY` (export it or add to `.env`)
-4. Run the demo: `pnpm run:guestbook`
-5. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
+3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
+4. Set `OPENAI_API_KEY` (export it or add to `.env`)
+5. Run the demo: `pnpm run:guestbook`
+6. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 
 ## Commands
 
@@ -34,6 +35,10 @@ pnpm run:scrape-publications -- --url="https://example.com" [--refetch] [--filte
 
 Outputs are written under `tmp/scraped-publications/<url-slug>/`, including source content, link discovery artifacts, publication HTML/Markdown, extraction reports, and `review.html`.
 
+### Playwright scraper
+
+The publication pipeline uses `PlaywrightScraper` to render JavaScript-heavy pages and sanitize the resulting HTML before Markdown conversion. It supports per-request timeouts, load wait strategies (`load`, `domcontentloaded`, `networkidle`), and an optional `waitForSelector` for SPA content.
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization.
@@ -54,6 +59,7 @@ src/
 ├── clients/
 │   ├── fetch.ts                # HTTP fetch + sanitization helpers
 │   ├── logger.ts               # Console logger
+│   ├── playwright-scraper.ts   # Playwright-based scraper for JS-rendered pages
 │   ├── publication-pipeline.ts # Pipeline orchestration
 │   ├── publication-scraper.ts  # Link discovery + selector inference
 │   └── review-page-generator.ts # Review HTML generator
