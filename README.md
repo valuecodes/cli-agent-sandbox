@@ -54,8 +54,13 @@ File tools are sandboxed to the `tmp/` directory with path validation to prevent
 
 ```
 src/
-├── guestbook.ts                # Guestbook CLI entry point
-├── scrape-publications.ts      # Publication scraping CLI
+├── cli/
+│   ├── guestbook/
+│   │   ├── main.ts            # Guestbook CLI entry point
+│   │   └── README.md          # Guestbook CLI docs
+│   └── scrape-publications/
+│       ├── main.ts            # Publication scraping CLI
+│       └── README.md          # Publication scraping docs
 ├── clients/
 │   ├── fetch.ts                # HTTP fetch + sanitization helpers
 │   ├── logger.ts               # Console logger

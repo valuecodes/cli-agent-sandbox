@@ -160,7 +160,8 @@ export class PublicationPipeline {
       await fs.writeFile(htmlPath, html);
     }
 
-    const sourceLabel = fromCache.markdown && fromCache.html ? "cached" : source;
+    const sourceLabel =
+      fromCache.markdown && fromCache.html ? "cached" : source;
     const contentStatus = [
       `content.md (${fromCache.markdown ? "cached" : sourceLabel})`,
       `content.html (${fromCache.html ? "cached" : sourceLabel})`,

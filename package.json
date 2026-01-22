@@ -4,8 +4,8 @@
   "description": "A sandbox project for testing CLI agents",
   "type": "module",
   "scripts": {
-    "run:guestbook": "tsx src/guestbook.ts",
-    "run:scrape-publications": "tsx src/scrape-publications.ts",
+    "run:guestbook": "tsx src/cli/guestbook/main.ts",
+    "run:scrape-publications": "tsx src/cli/scrape-publications/main.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

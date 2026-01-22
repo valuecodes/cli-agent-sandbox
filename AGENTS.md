@@ -2,7 +2,7 @@
 
 - **Name:** cli-agent-sandbox
 - **Purpose:** Minimal TypeScript CLI sandbox for testing agent workflows.
-- **Entry point:** `src/guestbook.ts` (runs via `pnpm run:guestbook`).
+- **Entry point:** `src/cli/guestbook/main.ts` (runs via `pnpm run:guestbook`).
 - **Framework:** Uses `@openai/agents` with file tools scoped to `tmp`.
 
 ## Setup
@@ -32,8 +32,10 @@ Available pnpm scripts for development and testing:
 
 | Path                                      | Description                                     |
 | ----------------------------------------- | ----------------------------------------------- |
-| `src/guestbook.ts`                        | CLI entry point                                 |
-| `src/scrape-publications.ts`              | Publication scraping CLI                        |
+| `src/cli/guestbook/main.ts`               | Guestbook CLI entry point                       |
+| `src/cli/guestbook/README.md`             | Guestbook CLI docs                              |
+| `src/cli/scrape-publications/main.ts`     | Publication scraping CLI entry point            |
+| `src/cli/scrape-publications/README.md`   | Publication scraping CLI docs                   |
 | `src/clients/*`                           | Publication scraping pipeline clients           |
 | `src/tools/index.ts`                      | Tool exports                                    |
 | `src/tools/fetch-url/fetch-url-tool.ts`   | Safe HTTP fetch tool with SSRF protection       |
