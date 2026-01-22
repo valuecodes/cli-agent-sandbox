@@ -264,7 +264,9 @@ describe("url-safety", () => {
         "2606:2800:220:1:248:1893:25c8:1946",
       ]);
 
-      const result = await resolveAndValidateUrl("https://ipv6only.example.com/");
+      const result = await resolveAndValidateUrl(
+        "https://ipv6only.example.com/"
+      );
       expect(result.valid).toBe(true);
       expect(result.resolvedIp).toBe("2606:2800:220:1:248:1893:25c8:1946");
     });
@@ -273,7 +275,9 @@ describe("url-safety", () => {
       vi.mocked(dns.resolve4).mockRejectedValue(new Error("ENOTFOUND"));
       vi.mocked(dns.resolve6).mockResolvedValue(["fd00::1"]);
 
-      const result = await resolveAndValidateUrl("https://internal.example.com/");
+      const result = await resolveAndValidateUrl(
+        "https://internal.example.com/"
+      );
       expect(result.valid).toBe(false);
       expect(result.error).toContain("blocked IPv6");
     });

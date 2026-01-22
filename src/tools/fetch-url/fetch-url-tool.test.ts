@@ -307,7 +307,9 @@ describe("fetchUrlTool", () => {
       const options = fetchCall?.[1];
       expect(options?.headers).toBeDefined();
       const headers = options?.headers as Record<string, string> | undefined;
-      expect(headers?.["If-Modified-Since"]).toBe("Wed, 21 Oct 2024 07:28:00 GMT");
+      expect(headers?.["If-Modified-Since"]).toBe(
+        "Wed, 21 Oct 2024 07:28:00 GMT"
+      );
     });
 
     it("returns notModified: true on 304 response", async () => {
@@ -391,7 +393,8 @@ describe("fetchUrlTool", () => {
     });
 
     it("truncates output at maxChars", async () => {
-      const largeContent = "<html><body>" + "x".repeat(10000) + "</body></html>";
+      const largeContent =
+        "<html><body>" + "x".repeat(10000) + "</body></html>";
       vi.mocked(fetch).mockResolvedValueOnce(
         createMockResponse({
           status: 200,

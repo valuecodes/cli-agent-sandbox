@@ -125,10 +125,7 @@ async function executeFetch(params: {
 
     while (true) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        effectiveTimeout
-      );
+      const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
 
       const headers: HeadersInit = {
         "User-Agent": USER_AGENT,
@@ -388,7 +385,8 @@ export const fetchUrlTool = tool({
       },
       maxRedirects: {
         type: "number",
-        description: "Maximum number of redirects to follow (default: 5, max: 10)",
+        description:
+          "Maximum number of redirects to follow (default: 5, max: 10)",
       },
       maxChars: {
         type: "number",

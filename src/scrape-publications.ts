@@ -84,3 +84,6 @@ if (publicationsWithContent.length > 0) {
     targetUrl,
   });
 }
+
+// Cleanup
+await pipeline.close();

@@ -5,6 +5,7 @@ import slug from "slug";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import type { z } from "zod";
 import { Fetch } from "./fetch";
+import { PlaywrightScraper } from "./playwright-scraper";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
 import type { Logger } from "./logger";
@@ -61,6 +62,7 @@ export class PublicationPipeline {
   private outputDir: string;
   private refetch: boolean;
   private fetchClient: Fetch;
+  private playwrightScraper: PlaywrightScraper;
   private scraper: PublicationScraper;
   private reviewGenerator: ReviewPageGenerator;
   private htmlToMarkdown: NodeHtmlMarkdown;
@@ -70,6 +72,7 @@ export class PublicationPipeline {
     this.outputDir = config.outputDir;
     this.refetch = config.refetch ?? false;
     this.fetchClient = new Fetch({ logger: this.logger });
+    this.playwrightScraper = new PlaywrightScraper({ logger: this.logger });
     this.scraper = new PublicationScraper({ logger: this.logger });
     this.reviewGenerator = new ReviewPageGenerator({ logger: this.logger });
     this.htmlToMarkdown = new NodeHtmlMarkdown();
@@ -128,7 +131,7 @@ export class PublicationPipeline {
       markdown = await fs.readFile(markdownPath, "utf8");
       fromCache.markdown = true;
     } else {
-      markdown = await this.fetchClient.fetchMarkdown(targetUrl);
+      markdown = await this.playwrightScraper.scrapeMarkdown(targetUrl);
       await fs.writeFile(markdownPath, markdown);
     }
 
@@ -136,7 +139,7 @@ export class PublicationPipeline {
       html = await fs.readFile(htmlPath, "utf8");
       fromCache.html = true;
     } else {
-      html = await this.fetchClient.fetchHtml(targetUrl);
+      html = await this.playwrightScraper.scrapeHtml(targetUrl);
       await fs.writeFile(htmlPath, html);
     }
 
@@ -483,5 +486,9 @@ export class PublicationPipeline {
     this.logger.info(`Review page saved to: ${reviewPath}`);
 
     return reviewPath;
+  }
+
+  async close(): Promise<void> {
+    await this.playwrightScraper.close();
   }
 }

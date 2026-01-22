@@ -353,7 +353,8 @@ describe("html-processing", () => {
     });
 
     it("handles nested elements", () => {
-      const input = "<p>Text with <strong><em>bold and italic</em></strong></p>";
+      const input =
+        "<p>Text with <strong><em>bold and italic</em></strong></p>";
       const result = convertToMarkdown(input);
       expect(result).toContain("bold and italic");
     });
