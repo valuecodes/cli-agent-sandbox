@@ -46,6 +46,14 @@ export interface ScrapeOptions {
 }
 
 /**
+ * Parameters for individual scrape operations.
+ */
+export interface ScrapeRequest extends ScrapeOptions {
+  /** URL to scrape */
+  targetUrl: string;
+}
+
+/**
  * A web scraper client that uses Playwright to scrape webpages
  * requiring JavaScript rendering. Returns sanitized HTML or Markdown.
  */
@@ -78,18 +86,22 @@ export class PlaywrightScraper {
   /**
    * Navigate to a URL and wait for the page to be ready.
    */
-  private async navigateAndWait(
-    page: Page,
-    url: string,
-    options: ScrapeOptions
-  ): Promise<void> {
+  private async navigateAndWait({
+    page,
+    targetUrl,
+    options,
+  }: {
+    page: Page;
+    targetUrl: string;
+    options: ScrapeOptions;
+  }): Promise<void> {
     const timeout = options.timeoutMs ?? this.defaultTimeoutMs;
     const waitStrategy = options.waitStrategy ?? this.defaultWaitStrategy;
 
-    this.logger.debug(`Navigating to: ${url}`);
+    this.logger.debug(`Navigating to: ${targetUrl}`);
     this.logger.debug(`Wait strategy: ${waitStrategy}, timeout: ${timeout}ms`);
 
-    await page.goto(url, {
+    await page.goto(targetUrl, {
       timeout,
       waitUntil: waitStrategy,
     });
@@ -106,12 +118,12 @@ export class PlaywrightScraper {
    * Scrape a URL and return sanitized HTML.
    * Uses Playwright to render JavaScript and extract the final DOM.
    */
-  async scrapeHtml(url: string, options: ScrapeOptions = {}): Promise<string> {
+  async scrapeHtml({ targetUrl, ...options }: ScrapeRequest): Promise<string> {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
 
     try {
-      await this.navigateAndWait(page, url, options);
+      await this.navigateAndWait({ page, targetUrl, options });
       const html = await page.content();
       const sanitized = sanitizeHtml(html);
 
@@ -120,7 +132,7 @@ export class PlaywrightScraper {
       );
       return sanitized;
     } catch (error) {
-      this.handleError(url, error);
+      this.handleError({ targetUrl, error });
       throw error; // Re-throw after logging
     } finally {
       await page.close();
@@ -131,11 +143,11 @@ export class PlaywrightScraper {
    * Scrape a URL and return Markdown.
    * Uses Playwright to render JavaScript, then sanitizes and converts to Markdown.
    */
-  async scrapeMarkdown(
-    url: string,
-    options: ScrapeOptions = {}
-  ): Promise<string> {
-    const html = await this.scrapeHtml(url, options);
+  async scrapeMarkdown({
+    targetUrl,
+    ...options
+  }: ScrapeRequest): Promise<string> {
+    const html = await this.scrapeHtml({ targetUrl, ...options });
     const markdown = convertToMarkdown(html);
 
     this.logger.debug(`Converted to Markdown (${markdown.length} chars)`);
@@ -145,26 +157,38 @@ export class PlaywrightScraper {
   /**
    * Handle and categorize errors for better debugging.
    */
-  private handleError(url: string, error: unknown): void {
+  private handleError({
+    targetUrl,
+    error,
+  }: {
+    targetUrl: string;
+    error: unknown;
+  }): void {
     if (error instanceof Error) {
       if (error.name === "TimeoutError" || error.message.includes("Timeout")) {
-        this.logger.error(`Timeout while scraping ${url}: ${error.message}`);
+        this.logger.error(
+          `Timeout while scraping ${targetUrl}: ${error.message}`
+        );
         return;
       }
 
       if (error.message.includes("net::ERR_")) {
-        this.logger.error(`Network error scraping ${url}: ${error.message}`);
+        this.logger.error(
+          `Network error scraping ${targetUrl}: ${error.message}`
+        );
         return;
       }
 
       if (error.message.includes("Navigation failed")) {
-        this.logger.error(`Navigation failed for ${url}: ${error.message}`);
+        this.logger.error(
+          `Navigation failed for ${targetUrl}: ${error.message}`
+        );
         return;
       }
 
-      this.logger.error(`Error scraping ${url}: ${error.message}`);
+      this.logger.error(`Error scraping ${targetUrl}: ${error.message}`);
     } else {
-      this.logger.error(`Unknown error scraping ${url}:`, error);
+      this.logger.error(`Unknown error scraping ${targetUrl}:`, error);
     }
   }
 

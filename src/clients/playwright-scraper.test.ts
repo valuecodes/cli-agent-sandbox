@@ -74,7 +74,7 @@ describe("PlaywrightScraper", () => {
     it("launches browser and navigates to URL", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
 
       expect(launchMock).toHaveBeenCalledWith({ headless: true });
       expect(newPageMock).toHaveBeenCalled();
@@ -94,7 +94,9 @@ describe("PlaywrightScraper", () => {
       );
 
       const scraper = new PlaywrightScraper({ logger });
-      const html = await scraper.scrapeHtml("https://example.com");
+      const html = await scraper.scrapeHtml({
+        targetUrl: "https://example.com",
+      });
 
       // Script tags should be removed by sanitization
       expect(html).not.toContain("<script>");
@@ -106,8 +108,8 @@ describe("PlaywrightScraper", () => {
     it("reuses browser instance across scrapes", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example1.com");
-      await scraper.scrapeHtml("https://example2.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example1.com" });
+      await scraper.scrapeHtml({ targetUrl: "https://example2.com" });
 
       // Browser should only be launched once
       expect(launchMock).toHaveBeenCalledTimes(1);
@@ -119,7 +121,8 @@ describe("PlaywrightScraper", () => {
     it("uses custom timeout and wait strategy", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com", {
+      await scraper.scrapeHtml({
+        targetUrl: "https://example.com",
         timeoutMs: 60000,
         waitStrategy: "networkidle",
       });
@@ -135,7 +138,8 @@ describe("PlaywrightScraper", () => {
     it("waits for selector when provided", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com", {
+      await scraper.scrapeHtml({
+        targetUrl: "https://example.com",
         waitForSelector: ".article-content",
       });
 
@@ -154,7 +158,7 @@ describe("PlaywrightScraper", () => {
         defaultWaitStrategy: "domcontentloaded",
       });
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
 
       expect(launchMock).toHaveBeenCalledWith({ headless: false });
       expect(gotoMock).toHaveBeenCalledWith("https://example.com", {
@@ -172,9 +176,9 @@ describe("PlaywrightScraper", () => {
 
       const scraper = new PlaywrightScraper({ logger });
 
-      await expect(scraper.scrapeHtml("https://slow-site.com")).rejects.toThrow(
-        "Timeout"
-      );
+      await expect(
+        scraper.scrapeHtml({ targetUrl: "https://slow-site.com" })
+      ).rejects.toThrow("Timeout");
 
       await scraper.close();
     });
@@ -185,7 +189,7 @@ describe("PlaywrightScraper", () => {
       const scraper = new PlaywrightScraper({ logger });
 
       await expect(
-        scraper.scrapeHtml("https://unreachable.com")
+        scraper.scrapeHtml({ targetUrl: "https://unreachable.com" })
       ).rejects.toThrow("net::ERR_CONNECTION_REFUSED");
 
       await scraper.close();
@@ -196,7 +200,9 @@ describe("PlaywrightScraper", () => {
 
       const scraper = new PlaywrightScraper({ logger });
 
-      await expect(scraper.scrapeHtml("https://bad-url.com")).rejects.toThrow();
+      await expect(
+        scraper.scrapeHtml({ targetUrl: "https://bad-url.com" })
+      ).rejects.toThrow();
       expect(closePageMock).toHaveBeenCalled();
 
       await scraper.close();
@@ -210,7 +216,9 @@ describe("PlaywrightScraper", () => {
       );
 
       const scraper = new PlaywrightScraper({ logger });
-      const markdown = await scraper.scrapeMarkdown("https://example.com");
+      const markdown = await scraper.scrapeMarkdown({
+        targetUrl: "https://example.com",
+      });
 
       expect(markdown).toContain("Title");
       expect(markdown).toContain("Paragraph text");
@@ -221,7 +229,8 @@ describe("PlaywrightScraper", () => {
     it("passes options to scrapeHtml", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeMarkdown("https://example.com", {
+      await scraper.scrapeMarkdown({
+        targetUrl: "https://example.com",
         waitForSelector: ".content",
         timeoutMs: 5000,
       });
@@ -238,7 +247,7 @@ describe("PlaywrightScraper", () => {
     it("closes the browser", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
       await scraper.close();
 
       expect(browserCloseMock).toHaveBeenCalled();
@@ -255,7 +264,7 @@ describe("PlaywrightScraper", () => {
     it("can be called multiple times safely", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
       await scraper.close();
       await scraper.close();
 
@@ -265,13 +274,13 @@ describe("PlaywrightScraper", () => {
     it("relaunches browser after close", async () => {
       const scraper = new PlaywrightScraper({ logger });
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
       await scraper.close();
 
       // Reset isConnected to simulate closed browser
       isConnectedMock.mockReturnValue(false);
 
-      await scraper.scrapeHtml("https://example.com");
+      await scraper.scrapeHtml({ targetUrl: "https://example.com" });
 
       expect(launchMock).toHaveBeenCalledTimes(2);
 

@@ -131,7 +131,7 @@ export class PublicationPipeline {
       markdown = await fs.readFile(markdownPath, "utf8");
       fromCache.markdown = true;
     } else {
-      markdown = await this.playwrightScraper.scrapeMarkdown(targetUrl);
+      markdown = await this.playwrightScraper.scrapeMarkdown({ targetUrl });
       await fs.writeFile(markdownPath, markdown);
     }
 
@@ -139,7 +139,7 @@ export class PublicationPipeline {
       html = await fs.readFile(htmlPath, "utf8");
       fromCache.html = true;
     } else {
-      html = await this.playwrightScraper.scrapeHtml(targetUrl);
+      html = await this.playwrightScraper.scrapeHtml({ targetUrl });
       await fs.writeFile(htmlPath, html);
     }
 

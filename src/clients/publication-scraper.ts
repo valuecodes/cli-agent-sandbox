@@ -131,6 +131,239 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     return container ?? anchor.parentElement ?? anchor;
   }
 
+  /**
+   * Creates a structure signature for an HTML snippet based on its structural features.
+   * Used to group similar HTML structures together for better sampling.
+   */
+  private getStructureSignature(html: string): string {
+    const dom = new JSDOM(html);
+    const root = dom.window.document.body.firstElementChild;
+    if (!root) return "unknown";
+
+    const tag = root.tagName.toLowerCase();
+    const hasImage = !!root.querySelector("img");
+    const hasHeading = !!root.querySelector("h1, h2, h3, h4, h5, h6");
+    const hasDate = !!root.querySelector(
+      'time, [class*="date"], [class*="Date"]'
+    );
+
+    return `${tag}:img=${hasImage}:h=${hasHeading}:date=${hasDate}`;
+  }
+
+  /**
+   * Scores a structure signature based on how "article-like" it appears.
+   * Higher scores indicate more likely article content vs navigation.
+   */
+  private scoreStructureSignature(signature: string): number {
+    let score = 0;
+    if (signature.includes("h=true")) score += 10; // Has heading - strong signal
+    if (signature.includes("img=true")) score += 5; // Has image
+    if (signature.includes("date=true")) score += 5; // Has date
+    if (signature.startsWith("article:")) score += 5; // Semantic article tag
+    return score;
+  }
+
+  /**
+   * Groups candidates by their structure signature.
+   */
+  private groupCandidatesByStructure(
+    candidates: z.infer<typeof LinkCandidate>[]
+  ): Map<string, z.infer<typeof LinkCandidate>[]> {
+    const groups = new Map<string, z.infer<typeof LinkCandidate>[]>();
+
+    for (const candidate of candidates) {
+      const signature = this.getStructureSignature(candidate.html);
+      const group = groups.get(signature) ?? [];
+      group.push(candidate);
+      groups.set(signature, group);
+    }
+
+    return groups;
+  }
+
+  /**
+   * Selects sample candidates for AI analysis, prioritizing article-like structures.
+   */
+  private selectSampleCandidates(
+    candidates: z.infer<typeof LinkCandidate>[],
+    maxSamples = 3
+  ): z.infer<typeof LinkCandidate>[] {
+    if (candidates.length <= maxSamples) {
+      return candidates;
+    }
+
+    const groups = this.groupCandidatesByStructure(candidates);
+
+    // Sort groups by score (descending)
+    const sortedGroups = Array.from(groups.entries()).sort(
+      ([sigA], [sigB]) =>
+        this.scoreStructureSignature(sigB) - this.scoreStructureSignature(sigA)
+    );
+
+    // Take samples from the highest-scoring group
+    const firstGroup = sortedGroups[0];
+    if (firstGroup) {
+      const [topSignature, topGroup] = firstGroup;
+      if (topGroup.length > 0) {
+        this.logger.debug(
+          `Selected structure group: ${topSignature} (${topGroup.length} candidates, score: ${this.scoreStructureSignature(topSignature)})`
+        );
+        return topGroup.slice(0, maxSamples);
+      }
+    }
+
+    // Fallback to first N candidates
+    return candidates.slice(0, maxSamples);
+  }
+
+  /**
+   * Cleans a title by collapsing whitespace (handles multi-span titles).
+   */
+  private cleanTitle(title: string): string {
+    return title.replace(/\s+/g, " ").trim();
+  }
+
+  /**
+   * Finds the anchor element that matches the target URL.
+   * Handles both absolute and relative URLs.
+   */
+  private findTargetAnchor(doc: Document, targetUrl: string): Element | null {
+    const anchors = doc.querySelectorAll("a[href]");
+    for (const anchor of anchors) {
+      const href = anchor.getAttribute("href");
+      if (!href) continue;
+
+      // Check if the href matches (could be relative or absolute)
+      if (
+        targetUrl.endsWith(href) ||
+        href.endsWith(new URL(targetUrl).pathname)
+      ) {
+        return anchor;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Extracts a title from candidate HTML using multiple strategies.
+   * Uses the candidate URL to find the specific anchor when container has multiple articles.
+   */
+  private extractTitle(
+    html: string,
+    selectors: z.infer<typeof SelectorResult>,
+    candidateUrl: string
+  ): string | null {
+    const dom = new JSDOM(html);
+    const doc = dom.window.document;
+
+    // Find the specific anchor for this candidate's URL
+    const targetAnchor = this.findTargetAnchor(doc, candidateUrl);
+
+    // Strategy 1: AI-identified selector (within target anchor if found)
+    if (targetAnchor) {
+      const titleElement = targetAnchor.querySelector(selectors.titleSelector);
+      let title = titleElement?.textContent.trim();
+      if (title && title.length > 3) return this.cleanTitle(title);
+
+      // Strategy 2: Anchor title attribute
+      const anchorTitle = targetAnchor.getAttribute("title")?.trim();
+      if (anchorTitle && anchorTitle.length > 3)
+        return this.cleanTitle(anchorTitle);
+
+      // Strategy 3: Heading inside the anchor (h1-h6)
+      const heading = targetAnchor.querySelector("h1, h2, h3, h4, h5, h6");
+      title = heading?.textContent.trim();
+      if (title && title.length > 3) return this.cleanTitle(title);
+
+      // Strategy 4: Direct anchor text
+      title = targetAnchor.textContent.trim();
+      if (title && title.length > 3) return this.cleanTitle(title);
+    }
+
+    // Fallback: Try document-level selectors if no target anchor found
+    const titleElement = doc.querySelector(selectors.titleSelector);
+    let title = titleElement?.textContent.trim();
+    if (title && title.length > 3) return this.cleanTitle(title);
+
+    const anchor = doc.querySelector("a[title]");
+    title = anchor?.getAttribute("title")?.trim();
+    if (title && title.length > 3) return this.cleanTitle(title);
+
+    const heading = doc.querySelector("a h1, a h2, a h3, a h4, a h5, a h6");
+    title = heading?.textContent.trim();
+    if (title && title.length > 3) return this.cleanTitle(title);
+
+    const mainAnchor = doc.querySelector("a[href]");
+    title = mainAnchor?.textContent.trim();
+    if (title && title.length > 3) return this.cleanTitle(title);
+
+    return null;
+  }
+
+  /**
+   * Parses a date from an element, checking datetime attribute first, then text content.
+   */
+  private parseDateFromElement(el: Element | null): string | undefined {
+    if (!el) return undefined;
+    const raw = el.getAttribute("datetime") ?? el.textContent.trim();
+    return raw ? this.parseToIsoDate(raw) : undefined;
+  }
+
+  /**
+   * Extracts a date from candidate HTML using multiple strategies.
+   * Uses the candidate URL to find the specific anchor when container has multiple articles.
+   */
+  private extractDate(
+    html: string,
+    selectors: z.infer<typeof SelectorResult>,
+    candidateUrl: string
+  ): string | undefined {
+    const dom = new JSDOM(html);
+    const doc = dom.window.document;
+
+    // Find the specific anchor for this candidate's URL
+    const targetAnchor = this.findTargetAnchor(doc, candidateUrl);
+
+    // If we found the target anchor, search within its parent container for date
+    if (targetAnchor) {
+      // Strategy 1: AI-identified selector within anchor
+      if (selectors.dateSelector) {
+        const dateEl = targetAnchor.querySelector(selectors.dateSelector);
+        const date = this.parseDateFromElement(dateEl);
+        if (date) return date;
+      }
+
+      // Strategy 2: <time> element within anchor
+      const timeEl = targetAnchor.querySelector("time");
+      const timeDate = this.parseDateFromElement(timeEl);
+      if (timeDate) return timeDate;
+
+      // Strategy 3: Element with date-related class within anchor
+      const dateClassEl = targetAnchor.querySelector(
+        '[class*="date"], [class*="Date"]'
+      );
+      const classDate = this.parseDateFromElement(dateClassEl);
+      if (classDate) return classDate;
+    }
+
+    // Fallback: Try document-level selectors
+    if (selectors.dateSelector) {
+      const dateEl = doc.querySelector(selectors.dateSelector);
+      const date = this.parseDateFromElement(dateEl);
+      if (date) return date;
+    }
+
+    const timeEl = doc.querySelector("time");
+    const timeDate = this.parseDateFromElement(timeEl);
+    if (timeDate) return timeDate;
+
+    const dateClassEl = doc.querySelector('[class*="date"], [class*="Date"]');
+    const classDate = this.parseDateFromElement(dateClassEl);
+    if (classDate) return classDate;
+
+    return undefined;
+  }
+
   discoverLinks(
     html: string,
     baseUrl: string
@@ -211,12 +444,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
   async identifySelectors(
     candidates: z.infer<typeof LinkCandidate>[]
   ): Promise<z.infer<typeof SelectorResult>> {
-    // Take first 3 candidates (or fewer if less available)
-    const sampleCandidates = candidates.slice(0, 3);
-
-    if (sampleCandidates.length === 0) {
+    if (candidates.length === 0) {
       throw new Error("No link candidates available for analysis");
     }
+
+    // Select samples prioritizing article-like structures over navigation
+    const sampleCandidates = this.selectSampleCandidates(candidates, 3);
 
     const htmlSamples = sampleCandidates
       .map((candidate, index) => {
@@ -250,25 +483,14 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
     const publications: z.infer<typeof PublicationLink>[] = [];
 
     for (const candidate of candidates) {
-      const dom = new JSDOM(candidate.html);
-      const document = dom.window.document;
+      // Use multi-strategy extraction for title and date
+      // Pass the candidate URL to correctly identify the target anchor in containers with multiple articles
+      const title = this.extractTitle(candidate.html, selectors, candidate.url);
+      const date = this.extractDate(candidate.html, selectors, candidate.url);
 
-      // Extract title
-      const titleElement = document.querySelector(selectors.titleSelector);
-      const title = titleElement?.textContent.trim();
-
-      // Extract date if selector exists
-      let date: string | undefined;
-      if (selectors.dateSelector) {
-        const dateElement = document.querySelector(selectors.dateSelector);
-        const rawDate =
-          dateElement?.getAttribute("datetime") ??
-          dateElement?.textContent.trim() ??
-          undefined;
-
-        if (rawDate) {
-          date = this.parseToIsoDate(rawDate);
-        }
+      if (!title) {
+        this.logger.warn(`Could not extract title for: ${candidate.url}`);
+        continue;
       }
 
       // Validate and add to publications
@@ -280,6 +502,10 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
 
       if (result.success) {
         publications.push(result.data);
+      } else {
+        this.logger.warn(
+          `Validation failed for ${candidate.url}: ${result.error.message}`
+        );
       }
     }
 
