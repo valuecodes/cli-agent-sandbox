@@ -49,7 +49,7 @@ const pipeline = new PublicationPipeline({
 });
 
 // 4. Run pipeline
-const { html } = await pipeline.fetchSourceContent({ targetUrl });
+const { html, source } = await pipeline.fetchSourceContent({ targetUrl });
 
 // Get filter substring (from CLI arg or user prompt)
 const filterSubstring =
@@ -58,12 +58,19 @@ const filterSubstring =
     "Enter URL substring to filter links by (leave blank to keep all): "
   ));
 
-// Discover and filter links
-const { linkCandidates } = await pipeline.discoverLinks({
+// Discover and filter links (with automatic fallback if Playwright finds no candidates)
+const { linkCandidates, usedFallback } = await pipeline.discoverLinks({
   html,
   targetUrl,
   filterSubstring,
+  source,
 });
+
+if (usedFallback) {
+  logger.info(
+    "Note: Used basic HTTP fetch fallback (Playwright found no candidates)"
+  );
+}
 
 // Identify selectors and extract publication metadata
 const { publications } = await pipeline.identifyAndExtractMetadata({

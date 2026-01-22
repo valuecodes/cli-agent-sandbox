@@ -16,6 +16,8 @@ import type {
   Publication,
 } from "../types/index";
 
+export type FetchSource = "playwright" | "basic-fetch";
+
 export interface PublicationPipelineConfig {
   logger: Logger;
   outputDir: string;
@@ -26,12 +28,15 @@ export interface FetchSourceResult {
   markdown: string;
   html: string;
   fromCache: { markdown: boolean; html: boolean };
+  source: FetchSource;
 }
 
 export interface DiscoverLinksResult {
   allLinks: string[];
   filteredLinks: string[];
   linkCandidates: z.infer<typeof LinkCandidate>[];
+  source: FetchSource;
+  usedFallback: boolean;
 }
 
 export interface IdentifyAndExtractResult {
@@ -110,8 +115,10 @@ export class PublicationPipeline {
 
   async fetchSourceContent({
     targetUrl,
+    forceSource,
   }: {
     targetUrl: string;
+    forceSource?: FetchSource;
   }): Promise<FetchSourceResult> {
     await fs.mkdir(this.outputDir, { recursive: true });
 
@@ -126,43 +133,56 @@ export class PublicationPipeline {
     let markdown: string;
     let html: string;
     const fromCache = { markdown: false, html: false };
+    const source: FetchSource = forceSource ?? "playwright";
 
-    if (!this.refetch && hasMarkdown) {
+    // Only use cache if not forcing a specific source
+    const useCache = !this.refetch && !forceSource;
+
+    if (useCache && hasMarkdown) {
       markdown = await fs.readFile(markdownPath, "utf8");
       fromCache.markdown = true;
+    } else if (source === "basic-fetch") {
+      markdown = await this.fetchClient.fetchMarkdown(targetUrl);
+      await fs.writeFile(markdownPath, markdown);
     } else {
       markdown = await this.playwrightScraper.scrapeMarkdown({ targetUrl });
       await fs.writeFile(markdownPath, markdown);
     }
 
-    if (!this.refetch && hasHtml) {
+    if (useCache && hasHtml) {
       html = await fs.readFile(htmlPath, "utf8");
       fromCache.html = true;
+    } else if (source === "basic-fetch") {
+      html = await this.fetchClient.fetchHtml(targetUrl);
+      await fs.writeFile(htmlPath, html);
     } else {
       html = await this.playwrightScraper.scrapeHtml({ targetUrl });
       await fs.writeFile(htmlPath, html);
     }
 
+    const sourceLabel = fromCache.markdown && fromCache.html ? "cached" : source;
     const contentStatus = [
-      `content.md (${fromCache.markdown ? "cached" : "fetched"})`,
-      `content.html (${fromCache.html ? "cached" : "fetched"})`,
+      `content.md (${fromCache.markdown ? "cached" : sourceLabel})`,
+      `content.html (${fromCache.html ? "cached" : sourceLabel})`,
     ];
     this.logger.info(`Content ready: ${contentStatus.join(", ")}`);
 
-    return { markdown, html, fromCache };
+    return { markdown, html, fromCache, source };
   }
 
   async discoverLinks({
     html,
     targetUrl,
     filterSubstring,
+    source = "playwright",
   }: {
     html: string;
     targetUrl: string;
     filterSubstring?: string;
+    source?: FetchSource;
   }): Promise<DiscoverLinksResult> {
-    const discoveredLinks = this.scraper.discoverLinks(html, targetUrl);
-    const allLinks = discoveredLinks.map((link) => link.url);
+    let discoveredLinks = this.scraper.discoverLinks(html, targetUrl);
+    let allLinks = discoveredLinks.map((link) => link.url);
 
     await fs.writeFile(
       path.join(this.outputDir, "links.json"),
@@ -170,7 +190,7 @@ export class PublicationPipeline {
     );
     this.logger.info(`Saved ${allLinks.length} links to links.json`);
 
-    const filteredLinks = (
+    let filteredLinks = (
       filterSubstring
         ? allLinks.filter((link) => link.includes(filterSubstring))
         : allLinks
@@ -184,12 +204,64 @@ export class PublicationPipeline {
       `Saved ${filteredLinks.length} filtered links to filtered-links.json`
     );
 
-    const filteredUrlSet = new Set(filteredLinks);
-    const linkCandidates = this.scraper.extractLinkCandidates(
+    let filteredUrlSet = new Set(filteredLinks);
+    let linkCandidates = this.scraper.extractLinkCandidates(
       html,
       targetUrl,
       filteredUrlSet
     );
+
+    let usedFallback = false;
+    let currentSource = source;
+
+    // Fallback: if Playwright found 0 candidates, retry with basic fetch
+    if (linkCandidates.length === 0 && source === "playwright") {
+      this.logger.warn(
+        "Playwright scraping found 0 link candidates. Retrying with basic HTTP fetch..."
+      );
+
+      const fallbackResult = await this.fetchSourceContent({
+        targetUrl,
+        forceSource: "basic-fetch",
+      });
+
+      // Re-discover links with fallback HTML
+      discoveredLinks = this.scraper.discoverLinks(
+        fallbackResult.html,
+        targetUrl
+      );
+      allLinks = discoveredLinks.map((link) => link.url);
+
+      await fs.writeFile(
+        path.join(this.outputDir, "links.json"),
+        JSON.stringify(allLinks, null, 2)
+      );
+
+      filteredLinks = (
+        filterSubstring
+          ? allLinks.filter((link) => link.includes(filterSubstring))
+          : allLinks
+      ).filter((link) => link !== targetUrl);
+
+      await fs.writeFile(
+        path.join(this.outputDir, "filtered-links.json"),
+        JSON.stringify(filteredLinks, null, 2)
+      );
+
+      filteredUrlSet = new Set(filteredLinks);
+      linkCandidates = this.scraper.extractLinkCandidates(
+        fallbackResult.html,
+        targetUrl,
+        filteredUrlSet
+      );
+
+      usedFallback = true;
+      currentSource = "basic-fetch";
+
+      this.logger.info(
+        `Fallback fetch found ${linkCandidates.length} link candidates`
+      );
+    }
 
     await fs.writeFile(
       path.join(this.outputDir, "link-candidates.json"),
@@ -199,7 +271,13 @@ export class PublicationPipeline {
       `Saved ${linkCandidates.length} link candidates to link-candidates.json`
     );
 
-    return { allLinks, filteredLinks, linkCandidates };
+    return {
+      allLinks,
+      filteredLinks,
+      linkCandidates,
+      source: currentSource,
+      usedFallback,
+    };
   }
 
   async identifyAndExtractMetadata({
