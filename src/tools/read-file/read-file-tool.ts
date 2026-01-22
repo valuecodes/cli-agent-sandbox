@@ -1,6 +1,6 @@
 import { tool } from "@openai/agents";
 import fs from "node:fs/promises";
-import { resolveTmpPathForRead } from "./utils";
+import { resolveTmpPathForRead } from "../utils/fs";
 
 export const readFileTool = tool({
   name: "readFile",

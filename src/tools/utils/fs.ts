@@ -148,3 +148,40 @@ export const resolveTmpPathForRead = async (userPath: string) => {
 
   return candidatePath;
 };
+
+export const resolveTmpPathForList = async (userPath?: string) => {
+  const trimmed = (userPath ?? "").trim();
+
+  if (trimmed && PATH_TRAVERSAL.test(trimmed)) {
+    throw new Error("Path traversal is not allowed.");
+  }
+
+  await ensureTmpRoot({ create: false });
+
+  if (!trimmed) {
+    return TMP_ROOT;
+  }
+
+  const candidatePath = path.isAbsolute(trimmed)
+    ? path.normalize(trimmed)
+    : path.resolve(TMP_ROOT, trimmed);
+
+  if (!isPathInside(TMP_ROOT, candidatePath)) {
+    throw new Error("Path must be within the repo tmp directory.");
+  }
+
+  await assertNoSymlinkComponents(TMP_ROOT, candidatePath);
+
+  const tmpRootReal = await fs.realpath(TMP_ROOT);
+  const candidateReal = await fs.realpath(candidatePath);
+  if (!isPathInside(tmpRootReal, candidateReal)) {
+    throw new Error("Resolved path escapes tmp directory.");
+  }
+
+  const stat = await fs.lstat(candidatePath);
+  if (!stat.isDirectory()) {
+    throw new Error("Path must point to a directory.");
+  }
+
+  return candidatePath;
+};
