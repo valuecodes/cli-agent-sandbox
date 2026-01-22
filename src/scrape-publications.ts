@@ -1,21 +1,17 @@
 // pnpm run:scrape-publications
 
 // Scrape publication links from a given webpage and save them to tmp/scraped-publications/[url-slug]/
-// Phase 1: Fetch and save HTML/Markdown content
-// Phase 2: Parse links from HTML using JSDOM and save to links.json
 
 import "dotenv/config";
 import { question, argv } from "zx";
 import slug from "slug";
-import { JSDOM } from "jsdom";
-import { NodeHtmlMarkdown } from "node-html-markdown";
-import { Agent, run } from "@openai/agents";
-import { Fetch } from "./clients/fetch";
-import { PublicationLink, SelectorResult } from "./types/index";
-import { z } from "zod";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
+import { z } from "zod";
+import { NodeHtmlMarkdown } from "node-html-markdown";
+import { Fetch, PublicationScraper, ReviewPageGenerator } from "./clients";
+import type { Publication } from "./types/index";
 
 console.log("Scrape Publications running...");
 
@@ -27,7 +23,7 @@ const {
 } = z
   .object({
     url: z.url(),
-    refetch: z.boolean().optional(),
+    refetch: z.coerce.boolean().default(false),
     filterUrl: z.string().optional(),
   })
   .parse(argv);
@@ -66,6 +62,8 @@ const [hasMarkdown, hasHtml] = await Promise.all([
 ]);
 
 const fetchClient = new Fetch();
+const scraper = new PublicationScraper();
+const reviewGenerator = new ReviewPageGenerator();
 
 let markdown: string;
 let html: string;
@@ -91,54 +89,27 @@ const contentStatus = [
 
 console.log(`Content ready: ${contentStatus.join(", ")}`);
 
-// 5. Parse links from HTML using JSDOM
-const dom = new JSDOM(html);
-const document = dom.window.document;
-const anchors = document.querySelectorAll("a[href]");
+// 5. Discover links from HTML
+const discoveredLinks = scraper.discoverLinks(html, targetUrl);
+const linkUrls = discoveredLinks.map((link) => link.url);
 
-const links: string[] = [];
-const seenUrls = new Set<string>();
+// 6. Save links to JSON
+await fs.writeFile(
+  path.join(outputDir, "links.json"),
+  JSON.stringify(linkUrls, null, 2)
+);
 
-for (const anchor of anchors) {
-  const href = anchor.getAttribute("href");
-  const title = anchor.textContent.trim();
+console.log(`Saved ${linkUrls.length} links to links.json`);
 
-  if (!href || !title) continue;
-
-  // Resolve relative URLs
-  let absoluteUrl: string;
-  try {
-    absoluteUrl = new URL(href, targetUrl).href;
-  } catch {
-    continue; // Skip invalid URLs
-  }
-
-  const result = PublicationLink.safeParse({
-    title,
-    url: absoluteUrl,
-  });
-
-  if (result.success && !seenUrls.has(result.data.url)) {
-    seenUrls.add(result.data.url);
-    links.push(result.data.url);
-  }
-}
-
-// 6. Ask for filter substring and apply it
+// 7. Ask for filter substring and apply it
 const filterSubstring =
   filterUrl ??
   (await question(
     "Enter URL substring to filter links by (leave blank to keep all): "
   ));
 const filteredLinks = filterSubstring
-  ? links.filter((link) => link.includes(filterSubstring))
-  : links;
-
-// 7. Save links to JSON
-await fs.writeFile(
-  path.join(outputDir, "links.json"),
-  JSON.stringify(links, null, 2)
-);
+  ? linkUrls.filter((link) => link.includes(filterSubstring))
+  : linkUrls;
 
 await fs.writeFile(
   path.join(outputDir, "filtered-links.json"),
@@ -146,122 +117,30 @@ await fs.writeFile(
 );
 
 console.log(
-  `Saved ${links.length} links to links.json and ${filteredLinks.length} links to filtered-links.json`
+  `Saved ${filteredLinks.length} filtered links to filtered-links.json`
 );
 
-// 8. Parse link candidates with surrounding HTML
+// 8. Extract link candidates with surrounding HTML
 const filteredUrlSet = new Set(filteredLinks);
-const linkCandidates: { url: string; html: string }[] = [];
-
-for (const anchor of anchors) {
-  const href = anchor.getAttribute("href");
-  if (!href) continue;
-
-  let absoluteUrl: string;
-  try {
-    absoluteUrl = new URL(href, targetUrl).href;
-  } catch {
-    continue;
-  }
-
-  if (!filteredUrlSet.has(absoluteUrl)) continue;
-
-  // Find a suitable parent container for this link
-  let container: Element | null = anchor.parentElement;
-  const containerTags = ["LI", "ARTICLE", "DIV", "SECTION", "TR", "DD"];
-
-  while (container && !containerTags.includes(container.tagName)) {
-    container = container.parentElement;
-  }
-
-  // Fall back to parent if no suitable container found
-  container ??= anchor.parentElement;
-
-  const rawHtml = container ? container.outerHTML : anchor.outerHTML;
-  const html = rawHtml.replace(/\s+/g, " ").trim();
-
-  linkCandidates.push({ url: absoluteUrl, html });
-}
-
-// Remove duplicates by URL
-const seenCandidateUrls = new Set<string>();
-const uniqueCandidates = linkCandidates.filter((candidate) => {
-  if (seenCandidateUrls.has(candidate.url)) return false;
-  seenCandidateUrls.add(candidate.url);
-  return true;
-});
+const linkCandidates = scraper.extractLinkCandidates(
+  html,
+  targetUrl,
+  filteredUrlSet
+);
 
 await fs.writeFile(
   path.join(outputDir, "link-candidates.json"),
-  JSON.stringify(uniqueCandidates, null, 2)
+  JSON.stringify(linkCandidates, null, 2)
 );
 
 console.log(
-  `Done! Saved ${uniqueCandidates.length} link candidates to link-candidates.json`
+  `Done! Saved ${linkCandidates.length} link candidates to link-candidates.json`
 );
 
 // 9. Use agent to identify CSS selectors from HTML samples
 console.log("\nAnalyzing HTML structure to identify CSS selectors...");
 
-const selectorAgent = new Agent({
-  name: "SelectorAnalyzer",
-  model: "gpt-5-mini",
-  tools: [],
-  outputType: SelectorResult,
-  instructions: `You are an expert at analyzing HTML structure and identifying CSS selectors.
-
-Your task is to analyze HTML snippets from a publication listing page and identify CSS selectors that can be used to extract:
-1. Title (REQUIRED): The publication/article title
-2. Date (OPTIONAL): The publication date, if present
-
-Guidelines for selector identification:
-- Prefer class-based selectors (e.g., ".class-name") over tag-only selectors
-- Use specific selectors that uniquely identify the target element
-- For nested elements, use descendant selectors (e.g., "h3.title a")
-- If multiple valid selectors exist, choose the most specific and reliable one
-- For dates, look for <time> elements, date-related classes, or datetime attributes
-
-IMPORTANT: You must respond with ONLY a valid JSON object in this exact format:
-{
-  "titleSelector": "selector-for-title",
-  "dateSelector": "selector-for-date-or-null"
-}
-
-If you cannot identify a date selector, set dateSelector to null.
-Do not include any explanation or markdown - only the JSON object.`,
-});
-
-// Take first 3 candidates (or fewer if less available)
-const sampleCandidates = uniqueCandidates.slice(0, 3);
-
-if (sampleCandidates.length === 0) {
-  console.error("Error: No link candidates available for analysis");
-  process.exit(1);
-}
-
-const htmlSamples = sampleCandidates
-  .map((candidate, index) => {
-    return `--- Sample ${index + 1} ---
-URL: ${candidate.url}
-HTML:
-${candidate.html}`;
-  })
-  .join("\n\n");
-
-const selectorPrompt = `Analyze the following ${sampleCandidates.length} HTML snippets from a publication listing page.
-Each snippet represents a publication card/item containing a link to an article.
-
-${htmlSamples}
-
-Based on these samples, identify:
-1. A CSS selector for the publication TITLE (the main clickable text that names the article)
-2. A CSS selector for the publication DATE (if present)
-
-Look for patterns that are consistent across all samples.
-Respond with only a JSON object containing "titleSelector" and "dateSelector" (null if no date found).`;
-
-const selectorResponse = await run(selectorAgent, selectorPrompt);
-const selectors = SelectorResult.parse(selectorResponse.finalOutput);
+const selectors = await scraper.identifySelectors(linkCandidates);
 
 // Save selectors to file
 await fs.writeFile(
@@ -274,86 +153,19 @@ console.log(`  Title: ${selectors.titleSelector}`);
 console.log(`  Date:  ${selectors.dateSelector ?? "(not found)"}`);
 console.log(`Saved to selectors.json`);
 
-// Helper to convert various date formats to ISO (YYYY-MM-DD)
-function parseToIsoDate(rawDate: string): string | undefined {
-  // Already ISO format
-  if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
-    return rawDate;
-  }
-
-  // MM.DD.YY format (e.g., "01.15.26")
-  const dotFormat = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(rawDate);
-  if (dotFormat?.[1] && dotFormat[2] && dotFormat[3]) {
-    const month = dotFormat[1];
-    const day = dotFormat[2];
-    const year = dotFormat[3];
-    const fullYear = Number.parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
-    return `${fullYear}-${month}-${day}`;
-  }
-
-  // MM/DD/YYYY or MM-DD-YYYY format
-  const slashFormat = /^(\d{2})[/-](\d{2})[/-](\d{4})$/.exec(rawDate);
-  if (slashFormat?.[1] && slashFormat[2] && slashFormat[3]) {
-    const month = slashFormat[1];
-    const day = slashFormat[2];
-    const year = slashFormat[3];
-    return `${year}-${month}-${day}`;
-  }
-
-  return undefined;
-}
-
 // 10. Extract publication data using identified selectors
 console.log("\nExtracting publication data...");
 
-const publications: z.infer<typeof PublicationLink>[] = [];
-
-for (const candidate of uniqueCandidates) {
-  const candidateDom = new JSDOM(candidate.html);
-  const candidateDoc = candidateDom.window.document;
-
-  // Extract title
-  const titleElement = candidateDoc.querySelector(selectors.titleSelector);
-  const title = titleElement?.textContent.trim();
-
-  // Extract date if selector exists
-  let date: string | undefined;
-  if (selectors.dateSelector) {
-    const dateElement = candidateDoc.querySelector(selectors.dateSelector);
-    // Try datetime attribute first, then text content
-    const rawDate =
-      dateElement?.getAttribute("datetime") ??
-      dateElement?.textContent.trim() ??
-      undefined;
-
-    // Convert common date formats to ISO (YYYY-MM-DD)
-    if (rawDate) {
-      date = parseToIsoDate(rawDate);
-    }
-  }
-
-  // Validate and add to publications
-  const result = PublicationLink.safeParse({
-    title,
-    url: candidate.url,
-    date,
-  });
-
-  if (result.success) {
-    publications.push(result.data);
-  } else {
-    console.warn(`Skipping invalid publication: ${candidate.url}`);
-  }
-}
+const publications = scraper.extractPublicationData(linkCandidates, selectors);
 
 // Save publications to JSON
 await fs.writeFile(
-  path.join(outputDir, "publications.json"),
+  path.join(outputDir, "publication-links.json"),
   JSON.stringify(publications, null, 2)
 );
 
 console.log(
-  `\nDone! Saved ${publications.length} publications to publications.json`
+  `\nDone! Saved ${publications.length} publications to publication-links.json`
 );
 
 // 11. Fetch individual publication pages
@@ -426,8 +238,8 @@ for (const [index, publication] of publications.entries()) {
     fileExists(pubMarkdownPath),
   ]);
 
-  const needsHtml = shouldRefetch ?? !hasPubHtml;
-  const needsMarkdown = (shouldRefetch ?? !hasPubMarkdown) || needsHtml;
+  const needsHtml = shouldRefetch || !hasPubHtml;
+  const needsMarkdown = shouldRefetch || !hasPubMarkdown || needsHtml;
 
   // Check cache - skip if already fetched
   if (!needsHtml && !needsMarkdown) {
@@ -473,3 +285,155 @@ for (const [index, publication] of publications.entries()) {
 console.log(
   `Fetch complete: ${fetchedCount} new HTML, ${markdownCount} markdown written, ${skippedCount} cached`
 );
+
+// 12. Extract content from publication HTML files
+// ============================================================
+// PHASE: EXTRACT PUBLICATION CONTENT
+// ============================================================
+console.log("\n--- Extracting Publication Content ---");
+
+// Read sample HTML file to determine content selector
+const htmlFiles = (await fs.readdir(publicationsDir)).filter((f) =>
+  f.endsWith(".html")
+);
+
+const firstHtmlFile = htmlFiles[0];
+
+if (!firstHtmlFile) {
+  console.log(
+    "No HTML files found in publications directory, skipping content extraction"
+  );
+} else {
+  const sampleHtmlPath = path.join(publicationsDir, firstHtmlFile);
+  const sampleHtml = await fs.readFile(sampleHtmlPath, "utf-8");
+
+  console.log(`Analyzing sample HTML: ${firstHtmlFile}`);
+  const contentSelectors = await scraper.identifyContentSelector(sampleHtml);
+
+  console.log(
+    `Identified content selector: ${contentSelectors.contentSelector}`
+  );
+
+  // Save content selectors
+  await fs.writeFile(
+    path.join(outputDir, "content-selectors.json"),
+    JSON.stringify(contentSelectors, null, 2)
+  );
+
+  // Extract content from all HTML files
+  const publicationsWithContent: z.infer<typeof Publication>[] = [];
+  const extractionResults: {
+    success: boolean;
+    filename: string;
+    error?: string;
+  }[] = [];
+
+  for (const publication of publications) {
+    const pubTitleSlug = titleToSlug(publication.title);
+    const hash = urlToShortHash(publication.url);
+
+    // Try both filename patterns
+    const possibleFilenames = [
+      `${pubTitleSlug}.html`,
+      `${pubTitleSlug}-${hash}.html`,
+    ];
+
+    let pubHtmlContent: string | null = null;
+    let usedFilename: string | null = null;
+
+    for (const filename of possibleFilenames) {
+      const filePath = path.join(publicationsDir, filename);
+      if (await fileExists(filePath)) {
+        pubHtmlContent = await fs.readFile(filePath, "utf-8");
+        usedFilename = filename;
+        break;
+      }
+    }
+
+    const firstPossibleFilename = possibleFilenames[0] ?? "unknown.html";
+
+    if (!pubHtmlContent || !usedFilename) {
+      extractionResults.push({
+        success: false,
+        filename: firstPossibleFilename,
+        error: "HTML file not found",
+      });
+      console.warn(`HTML file not found for: ${publication.title}`);
+      continue;
+    }
+
+    // Extract content using the scraper
+    const contentMarkdown = scraper.extractContent(
+      pubHtmlContent,
+      contentSelectors.contentSelector
+    );
+
+    if (!contentMarkdown) {
+      extractionResults.push({
+        success: false,
+        filename: usedFilename,
+        error: "No content found with selector",
+      });
+      console.warn(`No content found for: ${publication.title}`);
+      continue;
+    }
+
+    publicationsWithContent.push({
+      title: publication.title,
+      url: publication.url,
+      date: publication.date,
+      content: contentMarkdown,
+      extractedAt: new Date().toISOString(),
+    });
+
+    extractionResults.push({
+      success: true,
+      filename: usedFilename,
+    });
+
+    console.log(
+      `[${extractionResults.length}/${publications.length}] Extracted: ${publication.title}`
+    );
+  }
+
+  // Save publications with content
+  await fs.writeFile(
+    path.join(outputDir, "publications.json"),
+    JSON.stringify(publicationsWithContent, null, 2)
+  );
+
+  // Save extraction report
+  await fs.writeFile(
+    path.join(outputDir, "extraction-report.json"),
+    JSON.stringify(
+      {
+        total: publications.length,
+        successful: extractionResults.filter((r) => r.success).length,
+        failed: extractionResults.filter((r) => !r.success).length,
+        results: extractionResults,
+      },
+      null,
+      2
+    )
+  );
+
+  const successCount = extractionResults.filter((r) => r.success).length;
+  console.log(
+    `\nContent extraction complete: ${successCount}/${publications.length} publications processed`
+  );
+
+  // 13. Generate HTML review page
+  // ============================================================
+  // PHASE: GENERATE HTML REVIEW PAGE
+  // ============================================================
+  console.log("\n--- Generating HTML Review Page ---");
+
+  const reviewHtml = reviewGenerator.generate(
+    publicationsWithContent,
+    targetUrl
+  );
+  const reviewPath = path.join(outputDir, "review.html");
+  await fs.writeFile(reviewPath, reviewHtml);
+
+  console.log(`Review page saved to: ${reviewPath}`);
+}

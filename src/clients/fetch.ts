@@ -5,7 +5,7 @@ const SANITIZE_OPTIONS: sanitize.IOptions = {
   allowedTags: sanitize.defaults.allowedTags,
   allowedAttributes: {
     ...sanitize.defaults.allowedAttributes,
-    "*": ["class"],
+    "*": ["class", "id", "itemprop", "data-*"],
   },
 };
 
