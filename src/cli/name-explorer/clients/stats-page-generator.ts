@@ -1,9 +1,9 @@
 import type { Logger } from "../../../clients/logger";
 import type { AllStats, LetterStats, TopName, UnisexName } from "../types";
 
-export interface StatsPageGeneratorConfig {
+export type StatsPageGeneratorConfig = {
   logger: Logger;
-}
+};
 
 export class StatsPageGenerator {
   private logger: Logger;
@@ -786,7 +786,9 @@ details > div { padding: 1rem; }
       ${decades
         .map((decade) => {
           const names = unisexByDecade.get(decade) ?? [];
-          if (names.length === 0) return "";
+          if (names.length === 0) {
+            return "";
+          }
 
           return `
           <details ${decade === "2020" ? "open" : ""}>

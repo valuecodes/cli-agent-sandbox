@@ -39,7 +39,20 @@ export default defineConfig(
           allowConstantLoopConditions: true,
         },
       ],
-      "@typescript-eslint/no-non-null-assertion": "error",
+      // Enforce arrow functions over function declarations
+      "func-style": ["error", "expression"],
+      "@typescript-eslint/no-floating-promises": [
+        "error",
+        { ignoreVoid: true },
+      ],
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/no-non-null-assertion": "error", // Disallow non-null assertions
+      "@typescript-eslint/consistent-type-exports": "error", // Ensure consistent usage of type exports
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"], // Use 'type' over 'interface'
+      "prefer-const": "error",
+      "no-var": "error",
+      eqeqeq: ["error", "smart"],
+      curly: ["error", "all"],
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
     },
   },

@@ -8,7 +8,7 @@ import { resolveAndValidateUrl } from "../../../tools/utils/url-safety";
 /**
  * Statistics for a single decade row
  */
-export interface NameStatRow {
+export type NameStatRow = {
   decade: string;
   men: number | null;
   women: number | null;
@@ -16,12 +16,12 @@ export interface NameStatRow {
   menUnder5?: boolean;
   womenUnder5?: boolean;
   totalUnder5?: boolean;
-}
+};
 
 /**
  * Complete result from fetching name statistics
  */
-export interface NameStatResult {
+export type NameStatResult = {
   name: string;
   rows: NameStatRow[];
   totals: {
@@ -33,20 +33,20 @@ export interface NameStatResult {
     totalUnder5?: boolean;
   };
   fetchedAt: string;
-}
+};
 
 /**
  * Error result when fetch fails
  */
-export interface NameStatError {
+export type NameStatError = {
   error: string;
   name: string;
-}
+};
 
-interface ParsedValue {
+type ParsedValue = {
   value: number | null;
   isUnder5: boolean;
-}
+};
 
 const DVV_BASE_URL = "https://nimipalvelu.dvv.fi/etunimihaku";
 const USER_AGENT = "cli-agent-sandbox/1.0";
@@ -59,7 +59,7 @@ const DEFAULT_TIMEOUT_MS = 15000;
  * - "alle X" (under X, privacy-protected) -> returns null with flag
  * - "0" -> 0
  */
-function parseTableValue(rawValue: string): ParsedValue {
+const parseTableValue = (rawValue: string): ParsedValue => {
   const trimmed = rawValue.trim();
 
   // Handle "alle X" (Finnish for "under X") - privacy protection for small counts
@@ -90,12 +90,12 @@ function parseTableValue(rawValue: string): ParsedValue {
   }
 
   return { value: parsed, isUnder5: false };
-}
+};
 
 /**
  * Parse a single table row into a NameStatRow
  */
-function parseTableRow(cells: Element[]): NameStatRow | null {
+const parseTableRow = (cells: Element[]): NameStatRow | null => {
   const [decadeCell, menCell, womenCell, totalCell] = cells;
   if (!decadeCell || !menCell || !womenCell || !totalCell) {
     return null;
@@ -113,20 +113,26 @@ function parseTableRow(cells: Element[]): NameStatRow | null {
     total: totalParsed.value,
   };
 
-  if (menParsed.isUnder5) row.menUnder5 = true;
-  if (womenParsed.isUnder5) row.womenUnder5 = true;
-  if (totalParsed.isUnder5) row.totalUnder5 = true;
+  if (menParsed.isUnder5) {
+    row.menUnder5 = true;
+  }
+  if (womenParsed.isUnder5) {
+    row.womenUnder5 = true;
+  }
+  if (totalParsed.isUnder5) {
+    row.totalUnder5 = true;
+  }
 
   return row;
-}
+};
 
 /**
  * Extract name statistics from the DVV HTML page
  */
-function extractNameStatistics(
+const extractNameStatistics = (
   html: string,
   name: string
-): NameStatResult | NameStatError {
+): NameStatResult | NameStatError => {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -199,9 +205,15 @@ function extractNameStatistics(
         total: totalParsed.value,
       };
 
-      if (menParsed.isUnder5) totals.menUnder5 = true;
-      if (womenParsed.isUnder5) totals.womenUnder5 = true;
-      if (totalParsed.isUnder5) totals.totalUnder5 = true;
+      if (menParsed.isUnder5) {
+        totals.menUnder5 = true;
+      }
+      if (womenParsed.isUnder5) {
+        totals.womenUnder5 = true;
+      }
+      if (totalParsed.isUnder5) {
+        totals.totalUnder5 = true;
+      }
     }
   }
 
@@ -211,27 +223,27 @@ function extractNameStatistics(
     totals,
     fetchedAt: new Date().toISOString(),
   };
-}
+};
 
-async function fileExists(filePath: string): Promise<boolean> {
+const fileExists = async (filePath: string): Promise<boolean> => {
   try {
     await fs.access(filePath);
     return true;
   } catch {
     return false;
   }
-}
+};
 
-export interface FetchNameToolOptions {
+export type FetchNameToolOptions = {
   cacheDir: string;
   refetch?: boolean;
   maxRequests?: number;
-}
+};
 
 /**
  * Create a tool for fetching individual name statistics from DVV
  */
-export function createFetchNameTool(options: FetchNameToolOptions) {
+export const createFetchNameTool = (options: FetchNameToolOptions) => {
   const { cacheDir, refetch = false, maxRequests = 3 } = options;
 
   let requestCount = 0;
@@ -352,4 +364,4 @@ For aggregate statistics across top 100 names per decade, use the SQL database t
       }
     },
   });
-}
+};

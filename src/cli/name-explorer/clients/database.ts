@@ -4,24 +4,24 @@ import fs from "node:fs";
 import type { Logger } from "../../../clients/logger";
 import type { NameEntry } from "./parse-names";
 
-export interface NameRow {
+export type NameRow = {
   id: number;
   decade: string;
   gender: "boy" | "girl";
   rank: number;
   name: string;
   count: number;
-}
+};
 
-export interface DecadeData {
+export type DecadeData = {
   decade: string;
   boys: NameEntry[];
   girls: NameEntry[];
-}
+};
 
-export interface ConsolidatedData {
+export type ConsolidatedData = {
   decades: DecadeData[];
-}
+};
 
 export class NameDatabase {
   private db: DatabaseSync;
@@ -134,12 +134,12 @@ export class NameDatabase {
   }
 }
 
-export interface AggregatedNameRow {
+export type AggregatedNameRow = {
   id: number;
   name: string;
   count: number;
   gender: "male" | "female";
-}
+};
 
 export class AggregatedNameDatabase {
   private db: DatabaseSync;
@@ -183,13 +183,19 @@ export class AggregatedNameDatabase {
     try {
       for (const line of dataLines) {
         const [name, countStr] = line.split(",");
-        if (!name || !countStr) continue;
+        if (!name || !countStr) {
+          continue;
+        }
 
         // Parse count with thousand separators like "43.276" or "43,276"
         const normalizedCount = countStr.replace(/[^\d]/g, "");
-        if (!normalizedCount) continue;
+        if (!normalizedCount) {
+          continue;
+        }
         const count = Number.parseInt(normalizedCount, 10);
-        if (Number.isNaN(count)) continue;
+        if (Number.isNaN(count)) {
+          continue;
+        }
 
         insert.run(name.trim(), count, gender);
       }

@@ -18,39 +18,39 @@ import type {
 
 export type FetchSource = "playwright" | "basic-fetch";
 
-export interface PublicationPipelineConfig {
+export type PublicationPipelineConfig = {
   logger: Logger;
   outputDir: string;
   refetch?: boolean;
-}
+};
 
-export interface FetchSourceResult {
+export type FetchSourceResult = {
   markdown: string;
   html: string;
   fromCache: { markdown: boolean; html: boolean };
   source: FetchSource;
-}
+};
 
-export interface DiscoverLinksResult {
+export type DiscoverLinksResult = {
   allLinks: string[];
   filteredLinks: string[];
   linkCandidates: z.infer<typeof LinkCandidate>[];
   source: FetchSource;
   usedFallback: boolean;
-}
+};
 
-export interface IdentifyAndExtractResult {
+export type IdentifyAndExtractResult = {
   selectors: z.infer<typeof SelectorResult>;
   publications: z.infer<typeof PublicationLink>[];
-}
+};
 
-export interface FetchPublicationsResult {
+export type FetchPublicationsResult = {
   fetchedCount: number;
   skippedCount: number;
   markdownCount: number;
-}
+};
 
-export interface ExtractContentResult {
+export type ExtractContentResult = {
   publications: z.infer<typeof Publication>[];
   report: {
     total: number;
@@ -58,7 +58,7 @@ export interface ExtractContentResult {
     failed: number;
     results: { success: boolean; filename: string; error?: string }[];
   };
-}
+};
 
 const MAX_TITLE_SLUG_LENGTH = 80;
 

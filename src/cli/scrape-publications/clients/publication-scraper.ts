@@ -13,11 +13,11 @@ import type { Logger } from "../../../clients/logger";
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;
 
-export interface PublicationScraperConfig {
+export type PublicationScraperConfig = {
   logger: Logger;
   selectorAgent?: SelectorAgent;
   contentSelectorAgent?: ContentSelectorAgent;
-}
+};
 
 export class PublicationScraper {
   private logger: Logger;
@@ -138,7 +138,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
   private getStructureSignature(html: string): string {
     const dom = new JSDOM(html);
     const root = dom.window.document.body.firstElementChild;
-    if (!root) return "unknown";
+    if (!root) {
+      return "unknown";
+    }
 
     const tag = root.tagName.toLowerCase();
     const hasImage = !!root.querySelector("img");
@@ -156,10 +158,18 @@ IMPORTANT: Respond with ONLY a valid JSON object:
    */
   private scoreStructureSignature(signature: string): number {
     let score = 0;
-    if (signature.includes("h=true")) score += 10; // Has heading - strong signal
-    if (signature.includes("img=true")) score += 5; // Has image
-    if (signature.includes("date=true")) score += 5; // Has date
-    if (signature.startsWith("article:")) score += 5; // Semantic article tag
+    if (signature.includes("h=true")) {
+      score += 10;
+    } // Has heading - strong signal
+    if (signature.includes("img=true")) {
+      score += 5;
+    } // Has image
+    if (signature.includes("date=true")) {
+      score += 5;
+    } // Has date
+    if (signature.startsWith("article:")) {
+      score += 5;
+    } // Semantic article tag
     return score;
   }
 
@@ -231,7 +241,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     const anchors = doc.querySelectorAll("a[href]");
     for (const anchor of anchors) {
       const href = anchor.getAttribute("href");
-      if (!href) continue;
+      if (!href) {
+        continue;
+      }
 
       // Check if the href matches (could be relative or absolute)
       if (
@@ -263,39 +275,54 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     if (targetAnchor) {
       const titleElement = targetAnchor.querySelector(selectors.titleSelector);
       let title = titleElement?.textContent.trim();
-      if (title && title.length > 3) return this.cleanTitle(title);
+      if (title && title.length > 3) {
+        return this.cleanTitle(title);
+      }
 
       // Strategy 2: Anchor title attribute
       const anchorTitle = targetAnchor.getAttribute("title")?.trim();
-      if (anchorTitle && anchorTitle.length > 3)
+      if (anchorTitle && anchorTitle.length > 3) {
         return this.cleanTitle(anchorTitle);
+      }
 
       // Strategy 3: Heading inside the anchor (h1-h6)
       const heading = targetAnchor.querySelector("h1, h2, h3, h4, h5, h6");
       title = heading?.textContent.trim();
-      if (title && title.length > 3) return this.cleanTitle(title);
+      if (title && title.length > 3) {
+        return this.cleanTitle(title);
+      }
 
       // Strategy 4: Direct anchor text
       title = targetAnchor.textContent.trim();
-      if (title && title.length > 3) return this.cleanTitle(title);
+      if (title && title.length > 3) {
+        return this.cleanTitle(title);
+      }
     }
 
     // Fallback: Try document-level selectors if no target anchor found
     const titleElement = doc.querySelector(selectors.titleSelector);
     let title = titleElement?.textContent.trim();
-    if (title && title.length > 3) return this.cleanTitle(title);
+    if (title && title.length > 3) {
+      return this.cleanTitle(title);
+    }
 
     const anchor = doc.querySelector("a[title]");
     title = anchor?.getAttribute("title")?.trim();
-    if (title && title.length > 3) return this.cleanTitle(title);
+    if (title && title.length > 3) {
+      return this.cleanTitle(title);
+    }
 
     const heading = doc.querySelector("a h1, a h2, a h3, a h4, a h5, a h6");
     title = heading?.textContent.trim();
-    if (title && title.length > 3) return this.cleanTitle(title);
+    if (title && title.length > 3) {
+      return this.cleanTitle(title);
+    }
 
     const mainAnchor = doc.querySelector("a[href]");
     title = mainAnchor?.textContent.trim();
-    if (title && title.length > 3) return this.cleanTitle(title);
+    if (title && title.length > 3) {
+      return this.cleanTitle(title);
+    }
 
     return null;
   }
@@ -304,7 +331,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
    * Parses a date from an element, checking datetime attribute first, then text content.
    */
   private parseDateFromElement(el: Element | null): string | undefined {
-    if (!el) return undefined;
+    if (!el) {
+      return undefined;
+    }
     const raw = el.getAttribute("datetime") ?? el.textContent.trim();
     return raw ? this.parseToIsoDate(raw) : undefined;
   }
@@ -330,36 +359,48 @@ IMPORTANT: Respond with ONLY a valid JSON object:
       if (selectors.dateSelector) {
         const dateEl = targetAnchor.querySelector(selectors.dateSelector);
         const date = this.parseDateFromElement(dateEl);
-        if (date) return date;
+        if (date) {
+          return date;
+        }
       }
 
       // Strategy 2: <time> element within anchor
       const timeEl = targetAnchor.querySelector("time");
       const timeDate = this.parseDateFromElement(timeEl);
-      if (timeDate) return timeDate;
+      if (timeDate) {
+        return timeDate;
+      }
 
       // Strategy 3: Element with date-related class within anchor
       const dateClassEl = targetAnchor.querySelector(
         '[class*="date"], [class*="Date"]'
       );
       const classDate = this.parseDateFromElement(dateClassEl);
-      if (classDate) return classDate;
+      if (classDate) {
+        return classDate;
+      }
     }
 
     // Fallback: Try document-level selectors
     if (selectors.dateSelector) {
       const dateEl = doc.querySelector(selectors.dateSelector);
       const date = this.parseDateFromElement(dateEl);
-      if (date) return date;
+      if (date) {
+        return date;
+      }
     }
 
     const timeEl = doc.querySelector("time");
     const timeDate = this.parseDateFromElement(timeEl);
-    if (timeDate) return timeDate;
+    if (timeDate) {
+      return timeDate;
+    }
 
     const dateClassEl = doc.querySelector('[class*="date"], [class*="Date"]');
     const classDate = this.parseDateFromElement(dateClassEl);
-    if (classDate) return classDate;
+    if (classDate) {
+      return classDate;
+    }
 
     return undefined;
   }
@@ -379,7 +420,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
       const href = anchor.getAttribute("href");
       const title = anchor.textContent.trim();
 
-      if (!href || !title) continue;
+      if (!href || !title) {
+        continue;
+      }
 
       // Resolve relative URLs
       let absoluteUrl: string;
@@ -417,7 +460,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
 
     for (const anchor of anchors) {
       const href = anchor.getAttribute("href");
-      if (!href) continue;
+      if (!href) {
+        continue;
+      }
 
       let absoluteUrl: string;
       try {
@@ -426,8 +471,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
         continue;
       }
 
-      if (!filterUrls.has(absoluteUrl)) continue;
-      if (seenUrls.has(absoluteUrl)) continue;
+      if (!filterUrls.has(absoluteUrl)) {
+        continue;
+      }
+      if (seenUrls.has(absoluteUrl)) {
+        continue;
+      }
 
       seenUrls.add(absoluteUrl);
 

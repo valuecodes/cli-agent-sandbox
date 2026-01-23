@@ -6,7 +6,7 @@ import { processHtmlContent } from "../utils/html-processing";
 /**
  * Result of a fetch operation
  */
-export interface FetchResult {
+export type FetchResult = {
   ok: boolean;
   status: number;
   finalUrl: string;
@@ -21,7 +21,7 @@ export interface FetchResult {
   lastModified?: string;
   warnings: string[];
   error?: string;
-}
+};
 
 /**
  * Default configuration values
@@ -62,21 +62,19 @@ const UNTRUSTED_CONTENT_WARNING =
 /**
  * Clamp a value between bounds
  */
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
 
 /**
  * Check if content type indicates HTML
  */
-function isHtmlContentType(contentType: string): boolean {
-  return contentType.includes("text/html");
-}
+const isHtmlContentType = (contentType: string): boolean =>
+  contentType.includes("text/html");
 
 /**
  * Execute the fetch operation
  */
-async function executeFetch(params: {
+const executeFetch = async (params: {
   url: string;
   timeoutMs?: number;
   maxBytes?: number;
@@ -84,7 +82,7 @@ async function executeFetch(params: {
   maxChars?: number;
   etag?: string;
   lastModified?: string;
-}): Promise<FetchResult> {
+}): Promise<FetchResult> => {
   const {
     url,
     timeoutMs = DEFAULTS.timeoutMs,
@@ -246,7 +244,9 @@ async function executeFetch(params: {
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
 
       totalBytes += value.length;
       if (totalBytes > effectiveMaxBytes) {
@@ -354,7 +354,7 @@ async function executeFetch(params: {
       fetchedAt,
     };
   }
-}
+};
 
 /**
  * Safe HTTP GET fetch tool for agent runtime.

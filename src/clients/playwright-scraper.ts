@@ -14,7 +14,7 @@ export type WaitStrategy = "load" | "domcontentloaded" | "networkidle";
 /**
  * Configuration for the PlaywrightScraper client
  */
-export interface PlaywrightScraperConfig {
+export type PlaywrightScraperConfig = {
   /** Logger instance for debug/info/warn/error logging */
   logger: Logger;
 
@@ -26,12 +26,12 @@ export interface PlaywrightScraperConfig {
 
   /** Default wait strategy for page loads (default: "load") */
   defaultWaitStrategy?: WaitStrategy;
-}
+};
 
 /**
  * Options for individual scrape operations
  */
-export interface ScrapeOptions {
+export type ScrapeOptions = {
   /** Timeout in milliseconds for this specific operation */
   timeoutMs?: number;
 
@@ -43,15 +43,15 @@ export interface ScrapeOptions {
    * Useful for SPAs that render content dynamically.
    */
   waitForSelector?: string;
-}
+};
 
 /**
  * Parameters for individual scrape operations.
  */
-export interface ScrapeRequest extends ScrapeOptions {
+export type ScrapeRequest = {
   /** URL to scrape */
   targetUrl: string;
-}
+} & ScrapeOptions;
 
 /**
  * A web scraper client that uses Playwright to scrape webpages

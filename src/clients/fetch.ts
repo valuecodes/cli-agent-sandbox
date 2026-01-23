@@ -2,9 +2,9 @@ import sanitize from "sanitize-html";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import type { Logger } from "./logger";
 
-export interface FetchConfig {
+export type FetchConfig = {
   logger: Logger;
-}
+};
 
 const SANITIZE_OPTIONS: sanitize.IOptions = {
   allowedTags: sanitize.defaults.allowedTags,

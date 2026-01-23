@@ -33,7 +33,9 @@ export class StatsGenerator {
         const total = totalRow?.total ?? 0;
         const nameCount = totalRow?.cnt ?? 0;
 
-        if (total === 0) continue;
+        if (total === 0) {
+          continue;
+        }
 
         // Top-N concentration
         const topConcentration = {
@@ -245,7 +247,9 @@ export class StatsGenerator {
     for (let i = 1; i < DECADES.length; i++) {
       const fromDecade = DECADES[i - 1];
       const toDecade = DECADES[i];
-      if (!fromDecade || !toDecade) continue;
+      if (!fromDecade || !toDecade) {
+        continue;
+      }
 
       const rows = this.db.query<{
         name: string;
@@ -292,7 +296,9 @@ export class StatsGenerator {
     for (let i = 1; i < DECADES.length; i++) {
       const prevDecade = DECADES[i - 1];
       const currDecade = DECADES[i];
-      if (!prevDecade || !currDecade) continue;
+      if (!prevDecade || !currDecade) {
+        continue;
+      }
 
       const rows = this.db.query<{
         name: string;
@@ -356,12 +362,16 @@ export class StatsGenerator {
       const parts = key.split("|");
       const name = parts[0];
       const gender = parts[1];
-      if (!name || !gender) continue;
+      if (!name || !gender) {
+        continue;
+      }
 
       for (let i = 1; i < decadeList.length; i++) {
         const prevEntry = decadeList[i - 1];
         const currEntry = decadeList[i];
-        if (!prevEntry || !currEntry) continue;
+        if (!prevEntry || !currEntry) {
+          continue;
+        }
 
         const prevIdx = DECADES.indexOf(prevEntry.decade);
         const currIdx = DECADES.indexOf(currEntry.decade);
@@ -389,7 +399,9 @@ export class StatsGenerator {
     for (let i = 1; i < DECADES.length; i++) {
       const fromDecade = DECADES[i - 1];
       const toDecade = DECADES[i];
-      if (!fromDecade || !toDecade) continue;
+      if (!fromDecade || !toDecade) {
+        continue;
+      }
 
       for (const gender of ["boy", "girl"] as const) {
         // Get name sets

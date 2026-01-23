@@ -2,11 +2,11 @@ import { question } from "zx";
 import { z } from "zod";
 import type { Logger } from "../clients/logger";
 
-export interface QuestionHandlerConfig {
+export type QuestionHandlerConfig = {
   logger: Logger;
-}
+};
 
-export interface AskOptions<T extends z.ZodTypeAny = z.ZodString> {
+export type AskOptions<T extends z.ZodTypeAny = z.ZodString> = {
   /** The prompt to display to the user */
   prompt: string;
 
@@ -24,15 +24,15 @@ export interface AskOptions<T extends z.ZodTypeAny = z.ZodString> {
 
   /** Maximum retry attempts (default: 3) */
   maxRetries?: number;
-}
+};
 
-export interface AskResult<T> {
+export type AskResult<T> = {
   /** The validated and processed answer */
   answer: T;
 
   /** Raw input before trimming/validation */
   rawInput: string;
-}
+};
 
 const NonEmptyString = z.string().trim().min(1, "Input cannot be empty");
 

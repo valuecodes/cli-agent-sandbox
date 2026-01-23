@@ -21,6 +21,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
 | `pnpm typecheck`               | Run TypeScript type checking                      |
 | `pnpm lint`                    | Run ESLint for code quality                       |
+| `pnpm lint:fix`                | Run ESLint and auto-fix issues                    |
 | `pnpm format`                  | Format code with Prettier                         |
 | `pnpm format:check`            | Check code formatting                             |
 | `pnpm test`                    | Run Vitest test suite                             |

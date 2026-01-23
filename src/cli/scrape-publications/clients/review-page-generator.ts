@@ -3,9 +3,9 @@ import type { z } from "zod";
 import type { Publication } from "../types/index";
 import type { Logger } from "../../../clients/logger";
 
-export interface ReviewPageGeneratorConfig {
+export type ReviewPageGeneratorConfig = {
   logger: Logger;
-}
+};
 
 export class ReviewPageGenerator {
   private logger: Logger;

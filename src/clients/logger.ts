@@ -1,10 +1,10 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-export interface LoggerConfig {
+export type LoggerConfig = {
   level?: LogLevel;
   useColors?: boolean;
   useTimestamps?: boolean;
-}
+};
 
 export class Logger {
   private level: LogLevel;

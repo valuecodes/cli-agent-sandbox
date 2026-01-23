@@ -5,11 +5,11 @@ import { NodeHtmlMarkdown } from "node-html-markdown";
 /**
  * Result of processing HTML content
  */
-export interface ProcessedContent {
+export type ProcessedContent = {
   title: string | null;
   markdown: string;
   text: string;
-}
+};
 
 /**
  * Elements to remove (navigation, ads, etc.)
@@ -181,15 +181,14 @@ const markdownConverter = new NodeHtmlMarkdown({
  * Sanitize HTML content by removing dangerous elements and attributes.
  * Uses sanitize-html to strip scripts, iframes, event handlers, etc.
  */
-export function sanitizeHtml(html: string): string {
-  return sanitize(html, SANITIZE_OPTIONS);
-}
+export const sanitizeHtml = (html: string): string =>
+  sanitize(html, SANITIZE_OPTIONS);
 
 /**
  * Extract the main content from HTML, removing navigation, ads, etc.
  * Falls back to body content if no main content area is found.
  */
-export function extractMainContent(html: string): string {
+export const extractMainContent = (html: string): string => {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -210,47 +209,43 @@ export function extractMainContent(html: string): string {
 
   // Fall back to body
   return document.body.innerHTML;
-}
+};
 
 /**
  * Convert sanitized HTML to Markdown
  */
-export function convertToMarkdown(html: string): string {
-  return markdownConverter.translate(html);
-}
+export const convertToMarkdown = (html: string): string =>
+  markdownConverter.translate(html);
 
 /**
  * Convert Markdown/HTML to plain text by stripping formatting
  */
-export function convertToPlainText(markdown: string): string {
-  return (
-    markdown
-      // Remove markdown images ![alt](url) -> alt (must come before links)
-      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-      // Remove markdown links [text](url) -> text
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      // Remove bold/italic markers
-      .replace(/\*\*([^*]+)\*\*/g, "$1")
-      .replace(/\*([^*]+)\*/g, "$1")
-      .replace(/__([^_]+)__/g, "$1")
-      .replace(/_([^_]+)_/g, "$1")
-      // Remove code blocks
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/`([^`]+)`/g, "$1")
-      // Remove headings markers
-      .replace(/^#{1,6}\s+/gm, "")
-      // Remove horizontal rules
-      .replace(/^[-*_]{3,}$/gm, "")
-      // Clean up extra whitespace
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-  );
-}
+export const convertToPlainText = (markdown: string): string =>
+  markdown
+    // Remove markdown images ![alt](url) -> alt (must come before links)
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    // Remove markdown links [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    // Remove bold/italic markers
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove headings markers
+    .replace(/^#{1,6}\s+/gm, "")
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}$/gm, "")
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
 /**
  * Extract the page title from HTML
  */
-export function extractTitle(html: string): string | null {
+export const extractTitle = (html: string): string | null => {
   const dom = new JSDOM(html);
   const titleElement = dom.window.document.querySelector("title");
   if (!titleElement) {
@@ -258,7 +253,7 @@ export function extractTitle(html: string): string | null {
   }
   const titleText = titleElement.textContent.trim();
   return titleText === "" ? null : titleText;
-}
+};
 
 /**
  * Process HTML content through the full pipeline:
@@ -268,7 +263,7 @@ export function extractTitle(html: string): string | null {
  * 4. Convert to Markdown
  * 5. Generate plain text
  */
-export function processHtmlContent(html: string): ProcessedContent {
+export const processHtmlContent = (html: string): ProcessedContent => {
   // Extract title before any modifications
   const title = extractTitle(html);
 
@@ -289,4 +284,4 @@ export function processHtmlContent(html: string): ProcessedContent {
     markdown,
     text,
   };
-}
+};

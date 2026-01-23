@@ -14,10 +14,12 @@ const DANGEROUS_KEYWORDS = [
   "EXECUTE",
 ];
 
-function validateReadOnlyQuery(sql: string): {
+const validateReadOnlyQuery = (
+  sql: string
+): {
   valid: boolean;
   error?: string;
-} {
+} => {
   const trimmedSql = sql.trim();
 
   // Must start with SELECT
@@ -39,9 +41,9 @@ function validateReadOnlyQuery(sql: string): {
   }
 
   return { valid: true };
-}
+};
 
-export function createSqlQueryTool(db: NameDatabase) {
+export const createSqlQueryTool = (db: NameDatabase) => {
   return tool({
     name: "query_names_database",
     description: `Execute a read-only SQL query against the Finnish names database (decade-based data).
@@ -68,9 +70,9 @@ Example queries:
       }
     },
   });
-}
+};
 
-export function createAggregatedSqlQueryTool(db: AggregatedNameDatabase) {
+export const createAggregatedSqlQueryTool = (db: AggregatedNameDatabase) => {
   return tool({
     name: "query_aggregated_names",
     description: `Execute a read-only SQL query against the aggregated Finnish names database (total counts across all time).
@@ -98,4 +100,4 @@ Example queries:
       }
     },
   });
-}
+};

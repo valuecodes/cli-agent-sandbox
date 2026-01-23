@@ -1,6 +1,6 @@
 // TypeScript interfaces for name statistics
 
-export interface DecadeGenderStats {
+export type DecadeGenderStats = {
   decade: string;
   gender: "boy" | "girl";
   totalBirths: number;
@@ -17,18 +17,18 @@ export interface DecadeGenderStats {
   hhi: number;
   effectiveNames: number;
   entropy: number;
-}
+};
 
-export interface TopName {
+export type TopName = {
   decade: string;
   gender: "boy" | "girl";
   rank: number;
   name: string;
   count: number;
   share: number;
-}
+};
 
-export interface NameDynamics {
+export type NameDynamics = {
   name: string;
   gender: "boy" | "girl";
   peakDecade: string;
@@ -39,9 +39,9 @@ export interface NameDynamics {
   longevity: number;
   avgRank: number;
   rankStddev: number;
-}
+};
 
-export interface RankChange {
+export type RankChange = {
   name: string;
   gender: "boy" | "girl";
   fromDecade: string;
@@ -49,26 +49,26 @@ export interface RankChange {
   fromRank: number;
   toRank: number;
   change: number;
-}
+};
 
-export interface NewEntry {
+export type NewEntry = {
   name: string;
   gender: "boy" | "girl";
   decade: string;
   rank: number;
   count: number;
-}
+};
 
-export interface Comeback {
+export type Comeback = {
   name: string;
   gender: "boy" | "girl";
   comebackDecade: string;
   previousDecade: string;
   gapDecades: number;
   comebackRank: number;
-}
+};
 
-export interface ChurnMetrics {
+export type ChurnMetrics = {
   fromDecade: string;
   toDecade: string;
   gender: "boy" | "girl";
@@ -76,52 +76,52 @@ export interface ChurnMetrics {
   newNames: number;
   exitedNames: number;
   jaccardSimilarity: number;
-}
+};
 
-export interface UnisexName {
+export type UnisexName = {
   name: string;
   decade: string;
   boyRank: number;
   girlRank: number;
   boyCount: number;
   girlCount: number;
-}
+};
 
-export interface EvergreenName {
+export type EvergreenName = {
   name: string;
   gender: "boy" | "girl";
   decadesPresent: number;
   avgRank: number;
   totalCount: number;
-}
+};
 
-export interface LetterStats {
+export type LetterStats = {
   decade: string;
   gender: "boy" | "girl";
   letter: string;
   nameCount: number;
   totalBirths: number;
   share: number;
-}
+};
 
-export interface SuffixStats {
+export type SuffixStats = {
   decade: string;
   gender: "boy" | "girl";
   suffix: string;
   nameCount: number;
   totalBirths: number;
   share: number;
-}
+};
 
-export interface NameLengthStats {
+export type NameLengthStats = {
   decade: string;
   gender: "boy" | "girl";
   avgLength: number;
   minLength: number;
   maxLength: number;
-}
+};
 
-export interface SpecialCharStats {
+export type SpecialCharStats = {
   decade: string;
   gender: "boy" | "girl";
   namesWithUmlautA: number;
@@ -129,9 +129,9 @@ export interface SpecialCharStats {
   totalNames: number;
   umlautAShare: number;
   umlautOShare: number;
-}
+};
 
-export interface AllStats {
+export type AllStats = {
   generatedAt: string;
   dataSource: string;
   decadeRange: { first: string; last: string };
@@ -152,4 +152,4 @@ export interface AllStats {
   suffixStats: SuffixStats[];
   nameLengthStats: NameLengthStats[];
   specialCharStats: SpecialCharStats[];
-}
+};
