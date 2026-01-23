@@ -1,4 +1,5 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
+import type { SQLInputValue } from "node:sqlite";
 import type { Logger } from "../../clients/logger";
 import type { NameEntry } from "./parse-names";
 
@@ -22,13 +23,13 @@ export interface ConsolidatedData {
 }
 
 export class NameDatabase {
-  private db: Database.Database;
+  private db: DatabaseSync;
   private logger: Logger;
 
   constructor(logger: Logger) {
     this.logger = logger;
     this.logger.debug("Initializing in-memory SQLite database");
-    this.db = new Database(":memory:");
+    this.db = new DatabaseSync(":memory:");
     this.createSchema();
     this.logger.debug("Database schema created");
   }
@@ -60,13 +61,16 @@ export class NameDatabase {
       VALUES (?, ?, ?, ?, ?)
     `);
 
-    const insertMany = this.db.transaction((items: NameEntry[]) => {
-      for (const entry of items) {
+    this.db.exec("BEGIN");
+    try {
+      for (const entry of entries) {
         insert.run(decade, gender, entry.rank, entry.name, entry.count);
       }
-    });
-
-    insertMany(entries);
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
     this.logger.debug(
       `Inserted ${entries.length} ${gender} names for decade ${decade}`
     );
@@ -74,7 +78,7 @@ export class NameDatabase {
 
   getByDecade(decade: string): NameRow[] {
     const stmt = this.db.prepare("SELECT * FROM names WHERE decade = ?");
-    return stmt.all(decade) as NameRow[];
+    return stmt.all(decade) as unknown as NameRow[];
   }
 
   getAll(): ConsolidatedData {
@@ -91,8 +95,8 @@ export class NameDatabase {
 
     const result: DecadeData[] = decades.map(({ decade }) => ({
       decade,
-      boys: boysStmt.all(decade) as NameEntry[],
-      girls: girlsStmt.all(decade) as NameEntry[],
+      boys: boysStmt.all(decade) as unknown as NameEntry[],
+      girls: girlsStmt.all(decade) as unknown as NameEntry[],
     }));
 
     return { decades: result };
@@ -105,12 +109,12 @@ export class NameDatabase {
     return result.count;
   }
 
-  query<T>(sql: string, params: unknown[] = []): T[] {
+  query<T>(sql: string, params: SQLInputValue[] = []): T[] {
     const stmt = this.db.prepare(sql);
     return stmt.all(...params) as T[];
   }
 
-  queryOne<T>(sql: string, params: unknown[] = []): T | undefined {
+  queryOne<T>(sql: string, params: SQLInputValue[] = []): T | undefined {
     const stmt = this.db.prepare(sql);
     return stmt.get(...params) as T | undefined;
   }

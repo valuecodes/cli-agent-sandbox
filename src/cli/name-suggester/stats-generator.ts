@@ -414,27 +414,29 @@ export class StatsGenerator {
         // Get name sets
         const fromNames = new Set(
           this.db
-            .query<{ name: string }>(
-              `SELECT name FROM names WHERE decade = ? AND gender = ?`,
-              [fromDecade, gender]
-            )
+            .query<{
+              name: string;
+            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [fromDecade, gender])
             .map((r) => r.name)
         );
 
         const toNames = new Set(
           this.db
-            .query<{ name: string }>(
-              `SELECT name FROM names WHERE decade = ? AND gender = ?`,
-              [toDecade, gender]
-            )
+            .query<{
+              name: string;
+            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [toDecade, gender])
             .map((r) => r.name)
         );
 
-        const intersection = new Set([...fromNames].filter((n) => toNames.has(n)));
+        const intersection = new Set(
+          [...fromNames].filter((n) => toNames.has(n))
+        );
         const union = new Set([...fromNames, ...toNames]);
 
         const newNames = [...toNames].filter((n) => !fromNames.has(n)).length;
-        const exitedNames = [...fromNames].filter((n) => !toNames.has(n)).length;
+        const exitedNames = [...fromNames].filter(
+          (n) => !toNames.has(n)
+        ).length;
 
         results.push({
           fromDecade,

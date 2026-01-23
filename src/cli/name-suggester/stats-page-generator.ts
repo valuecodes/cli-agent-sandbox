@@ -62,20 +62,21 @@ export class StatsPageGenerator {
     </p>
   </header>
 
-  <nav class="tabs">
-    <input type="radio" name="tab" id="tab-overview" checked>
+  <input class="tab-toggle" type="radio" name="tab" id="tab-overview" checked>
+  <input class="tab-toggle" type="radio" name="tab" id="tab-leaderboards">
+  <input class="tab-toggle" type="radio" name="tab" id="tab-dynamics">
+  <input class="tab-toggle" type="radio" name="tab" id="tab-diversity">
+  <input class="tab-toggle" type="radio" name="tab" id="tab-churn">
+  <input class="tab-toggle" type="radio" name="tab" id="tab-gender">
+  <input class="tab-toggle" type="radio" name="tab" id="tab-linguistics">
+
+  <nav class="tabs" aria-label="Statistics sections">
     <label for="tab-overview">Overview</label>
-    <input type="radio" name="tab" id="tab-leaderboards">
     <label for="tab-leaderboards">Leaderboards</label>
-    <input type="radio" name="tab" id="tab-dynamics">
     <label for="tab-dynamics">Dynamics</label>
-    <input type="radio" name="tab" id="tab-diversity">
     <label for="tab-diversity">Diversity</label>
-    <input type="radio" name="tab" id="tab-churn">
     <label for="tab-churn">Churn</label>
-    <input type="radio" name="tab" id="tab-gender">
     <label for="tab-gender">Gender</label>
-    <input type="radio" name="tab" id="tab-linguistics">
     <label for="tab-linguistics">Linguistics</label>
   </nav>
 
@@ -146,7 +147,7 @@ header .meta { color: #6c757d; font-size: 0.85rem; margin: 0; }
   padding-bottom: 0;
 }
 
-.tabs input[type="radio"] { display: none; }
+.tab-toggle { display: none; }
 
 .tabs label {
   padding: 0.5rem 1rem;
@@ -162,7 +163,13 @@ header .meta { color: #6c757d; font-size: 0.85rem; margin: 0; }
 
 .tabs label:hover { background: var(--color-card); color: var(--color-text); }
 
-.tabs input[type="radio"]:checked + label {
+#tab-overview:checked ~ .tabs label[for="tab-overview"],
+#tab-leaderboards:checked ~ .tabs label[for="tab-leaderboards"],
+#tab-dynamics:checked ~ .tabs label[for="tab-dynamics"],
+#tab-diversity:checked ~ .tabs label[for="tab-diversity"],
+#tab-churn:checked ~ .tabs label[for="tab-churn"],
+#tab-gender:checked ~ .tabs label[for="tab-gender"],
+#tab-linguistics:checked ~ .tabs label[for="tab-linguistics"] {
   background: var(--color-card);
   border-color: var(--color-border);
   color: var(--color-accent);
