@@ -64,7 +64,7 @@ export class QuestionHandler {
       attempts++;
 
       this.logger.question(prompt.trim());
-      const rawInput = await question("Answer: ");
+      const rawInput = await question("");
       const trimmedInput = rawInput.trim();
 
       if (trimmedInput === "" && defaultValue !== undefined) {
