@@ -6,7 +6,7 @@ export type QuestionHandlerConfig = {
   logger: Logger;
 };
 
-export type AskOptions<T extends z.ZodTypeAny = z.ZodString> = {
+export type AskOptions<T extends z.ZodType = z.ZodString> = {
   /** The prompt to display to the user */
   prompt: string;
 
@@ -43,7 +43,7 @@ export class QuestionHandler {
     this.logger = config.logger;
   }
 
-  async ask<T extends z.ZodTypeAny = z.ZodString>(
+  async ask<T extends z.ZodType = z.ZodString>(
     options: AskOptions<T>
   ): Promise<AskResult<z.infer<T>>> {
     const {
@@ -55,7 +55,7 @@ export class QuestionHandler {
       maxRetries = 3,
     } = options;
 
-    const effectiveSchema: z.ZodTypeAny =
+    const effectiveSchema: z.ZodType =
       schema ?? (allowEmpty ? z.string().trim() : NonEmptyString);
 
     let attempts = 0;

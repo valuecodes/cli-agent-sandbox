@@ -195,7 +195,9 @@ export const extractMainContent = (html: string): string => {
   // Remove non-content elements
   for (const selector of REMOVE_SELECTORS) {
     const elements = document.querySelectorAll(selector);
-    elements.forEach((el) => el.remove());
+    elements.forEach((el) => {
+      el.remove();
+    });
   }
 
   // Try to find main content area

@@ -118,14 +118,27 @@ export class NameDatabase {
     this.logger.debug(`Loaded ${this.getTotalCount()} records from JSON`);
   }
 
-  query<T>(sql: string, params: SQLInputValue[] = []): T[] {
+  query<T>(
+    sql: string,
+    params: SQLInputValue[] = [],
+    mapRow?: (row: unknown) => T
+  ): T[] {
     const stmt = this.db.prepare(sql);
-    return stmt.all(...params) as T[];
+    const rows = stmt.all(...params) as unknown[];
+    return mapRow ? rows.map(mapRow) : (rows as T[]);
   }
 
-  queryOne<T>(sql: string, params: SQLInputValue[] = []): T | undefined {
+  queryOne<T>(
+    sql: string,
+    params: SQLInputValue[] = [],
+    mapRow?: (row: unknown) => T
+  ): T | undefined {
     const stmt = this.db.prepare(sql);
-    return stmt.get(...params) as T | undefined;
+    const row = stmt.get(...params) as unknown;
+    if (row === undefined) {
+      return undefined;
+    }
+    return mapRow ? mapRow(row) : (row as T);
   }
 
   close(): void {
@@ -214,14 +227,27 @@ export class AggregatedNameDatabase {
     return result.count;
   }
 
-  query<T>(sql: string, params: SQLInputValue[] = []): T[] {
+  query<T>(
+    sql: string,
+    params: SQLInputValue[] = [],
+    mapRow?: (row: unknown) => T
+  ): T[] {
     const stmt = this.db.prepare(sql);
-    return stmt.all(...params) as T[];
+    const rows = stmt.all(...params) as unknown[];
+    return mapRow ? rows.map(mapRow) : (rows as T[]);
   }
 
-  queryOne<T>(sql: string, params: SQLInputValue[] = []): T | undefined {
+  queryOne<T>(
+    sql: string,
+    params: SQLInputValue[] = [],
+    mapRow?: (row: unknown) => T
+  ): T | undefined {
     const stmt = this.db.prepare(sql);
-    return stmt.get(...params) as T | undefined;
+    const row = stmt.get(...params) as unknown;
+    if (row === undefined) {
+      return undefined;
+    }
+    return mapRow ? mapRow(row) : (row as T);
   }
 
   close(): void {

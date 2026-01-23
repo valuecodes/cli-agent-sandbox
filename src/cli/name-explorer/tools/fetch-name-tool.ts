@@ -310,10 +310,9 @@ For aggregate statistics across top 100 names per decade, use the SQL database t
       // Fetch the page
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          DEFAULT_TIMEOUT_MS
-        );
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, DEFAULT_TIMEOUT_MS);
 
         const response = await fetch(url, {
           method: "GET",

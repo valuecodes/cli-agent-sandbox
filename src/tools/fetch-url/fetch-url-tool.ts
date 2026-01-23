@@ -123,7 +123,9 @@ const executeFetch = async (params: {
 
     while (true) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), effectiveTimeout);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, effectiveTimeout);
 
       const headers: HeadersInit = {
         "User-Agent": USER_AGENT,

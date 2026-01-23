@@ -18,6 +18,7 @@ export default defineConfig(
       eslint.configs.recommended,
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
     ],
     rules: {
@@ -49,10 +50,21 @@ export default defineConfig(
       "@typescript-eslint/no-non-null-assertion": "error", // Disallow non-null assertions
       "@typescript-eslint/consistent-type-exports": "error", // Ensure consistent usage of type exports
       "@typescript-eslint/consistent-type-definitions": ["error", "type"], // Use 'type' over 'interface'
+      "@typescript-eslint/restrict-template-expressions": "off",
       "prefer-const": "error",
       "no-var": "error",
+      // --- Async correctness ---
+      "@typescript-eslint/await-thenable": "error",
+
+      // --- Safer error handling ---
+      "@typescript-eslint/only-throw-error": "error",
+
+      // --- Better modern TS patterns ---
+      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-optional-chain": "error",
       eqeqeq: ["error", "smart"],
       curly: ["error", "all"],
+      "import/no-default-export": "error",
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
     },
   },

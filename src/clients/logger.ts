@@ -33,7 +33,7 @@ export class Logger {
 
   constructor(config?: LoggerConfig) {
     this.level = config?.level ?? "info";
-    this.useColors = config?.useColors ?? Boolean(process.stdout.isTTY);
+    this.useColors = config?.useColors ?? process.stdout.isTTY;
     this.useTimestamps = config?.useTimestamps ?? true;
   }
 

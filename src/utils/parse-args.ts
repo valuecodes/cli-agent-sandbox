@@ -2,12 +2,12 @@ import { argv } from "zx";
 import type { z } from "zod";
 import type { Logger } from "../clients/logger";
 
-export type ParseArgsOptions<T extends z.ZodTypeAny> = {
+export type ParseArgsOptions<T extends z.ZodType> = {
   logger: Logger;
   schema: T;
 };
 
-export const parseArgs = <T extends z.ZodTypeAny>({
+export const parseArgs = <T extends z.ZodType>({
   logger,
   schema,
 }: ParseArgsOptions<T>): z.infer<T> => {
