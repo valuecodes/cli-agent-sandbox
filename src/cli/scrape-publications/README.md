@@ -22,7 +22,7 @@ Writes under `tmp/scraped-publications/<url-slug>/`, including `review.html`.
 
 ```mermaid
 flowchart TD
-  A[Start: run CLI] --> B[Parse + validate args (zod)]
+  A[Start: run CLI] --> B[Parse and validate args (zod)]
   B --> C[Derive output path (slugify URL)]
   C --> D[Init PublicationPipeline]
   D --> E[Fetch source HTML]
@@ -34,8 +34,8 @@ flowchart TD
   I --> J{Playwright found none?}
   J -->|yes| K[Fallback to basic HTTP]
   J -->|no| L[Use Playwright results]
-  K --> M[Identify selectors + extract metadata]
-  L --> M[Identify selectors + extract metadata]
+  K --> M[Identify selectors and extract metadata]
+  L --> M[Identify selectors and extract metadata]
   M --> N[Fetch publication pages]
   N --> O[Extract publication content]
   O --> P{Any content?}

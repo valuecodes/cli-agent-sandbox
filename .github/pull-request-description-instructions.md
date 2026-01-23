@@ -29,7 +29,8 @@ Use exactly these headings, in this order:
 
 ## What
 
-- 2-5 bullet points describing what changed and why
+- Start with a 3–5 sentence description (plain text, no bullets)
+- Then add optional bullet points describing what changed and why
 - Call out affected areas like `src/`, tests, or config files when relevant
 - If CLI behavior/output changes, note the change and any new flags or args
 

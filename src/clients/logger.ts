@@ -25,6 +25,10 @@ export class Logger {
     error: "\x1b[31m", // Red
   };
 
+  private static readonly MAGENTA = "\x1b[35m";
+  private static readonly GREEN = "\x1b[32m";
+  private static readonly BLUE = "\x1b[34m";
+
   private static readonly RESET = "\x1b[0m";
 
   constructor(config?: LoggerConfig) {
@@ -77,6 +81,57 @@ export class Logger {
   error(message: string, ...args: unknown[]): void {
     if (this.shouldLog("error")) {
       console.error(this.formatMessage("error", message), ...args);
+    }
+  }
+
+  tool(message: string, ...args: unknown[]): void {
+    if (this.shouldLog("info")) {
+      const parts: string[] = [];
+      if (this.useTimestamps) {
+        parts.push(new Date().toISOString());
+      }
+      const tag = "[TOOL]";
+      if (this.useColors) {
+        parts.push(`${Logger.MAGENTA}${tag}${Logger.RESET}`);
+      } else {
+        parts.push(tag);
+      }
+      parts.push(message);
+      console.log(parts.join(" "), ...args);
+    }
+  }
+
+  question(message: string, ...args: unknown[]): void {
+    if (this.shouldLog("info")) {
+      const parts: string[] = [];
+      if (this.useTimestamps) {
+        parts.push(new Date().toISOString());
+      }
+      const tag = "[QUESTION]";
+      if (this.useColors) {
+        parts.push(`${Logger.GREEN}${tag}${Logger.RESET}`);
+      } else {
+        parts.push(tag);
+      }
+      parts.push(message);
+      console.log(parts.join(" "), ...args);
+    }
+  }
+
+  answer(message: string, ...args: unknown[]): void {
+    if (this.shouldLog("info")) {
+      const parts: string[] = [];
+      if (this.useTimestamps) {
+        parts.push(new Date().toISOString());
+      }
+      const tag = "[ANSWER]";
+      if (this.useColors) {
+        parts.push(`${Logger.BLUE}${tag}${Logger.RESET}`);
+      } else {
+        parts.push(tag);
+      }
+      parts.push(message);
+      console.log(parts.join(" "), ...args);
     }
   }
 }

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "run:guestbook": "tsx src/cli/guestbook/main.ts",
+    "run:name-explorer": "pnpm -s node:tsx -- src/cli/name-explorer/main.ts",
     "run:scrape-publications": "tsx src/cli/scrape-publications/main.ts",
+    "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -36,7 +38,9 @@
     "eslint-plugin-import": "2.32.0",
     "jiti": "2.6.1",
     "jsdom": "27.4.0",
+    "marked": "17.0.1",
     "node-html-markdown": "^2.0.0",
+    "playwright": "1.57.0",
     "prettier": "3.7.4",
     "sanitize-html": "2.17.0",
     "slug": "11.0.1",
@@ -45,8 +49,6 @@
     "typescript-eslint": "8.52.0",
     "vitest": "4.0.16",
     "zod": "4.3.5",
-    "zx": "8.8.5",
-    "marked": "17.0.1",
-    "playwright": "1.57.0"
+    "zx": "8.8.5"
   }
 }
