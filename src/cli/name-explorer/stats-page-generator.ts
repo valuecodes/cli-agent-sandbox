@@ -970,8 +970,8 @@ details > div { padding: 1rem; }
       </table>
 
       <div class="section-header">
-        <h2>Finnish Special Characters (a, o)</h2>
-        <p>Percentage of names containing a or o</p>
+        <h2>Finnish Special Characters (ä, ö)</h2>
+        <p>Percentage of names containing ä or ö</p>
       </div>
       <table>
         <thead>
