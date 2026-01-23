@@ -3,7 +3,7 @@ import path from "node:path";
 import { Fetch } from "../../clients/fetch";
 import type { Logger } from "../../clients/logger";
 import type { ConsolidatedData } from "./database";
-import { NameDatabase } from "./database";
+import { AggregatedNameDatabase, NameDatabase } from "./database";
 import type { ParsedNames } from "./parse-names";
 import { parseNamesHtml } from "./parse-names";
 
@@ -34,6 +34,7 @@ export interface SetupResult {
   cachedPages: number;
   fetchedPages: number;
   db: NameDatabase;
+  aggregatedDb: AggregatedNameDatabase | null;
 }
 
 const BASE_URL = "https://nimipalvelu.dvv.fi/suosituimmat-etunimet";
@@ -204,12 +205,16 @@ export class NameSuggesterPipeline {
       this.logger.info(
         `Loaded existing data from JSON (${this.db.getTotalCount()} records)`
       );
+
+      const aggregatedDb = await this.loadAggregatedCsvData();
+
       return {
         outputPath,
         totalPages: 0,
         cachedPages: 0,
         fetchedPages: 0,
         db: this.db,
+        aggregatedDb,
       };
     }
 
@@ -228,6 +233,46 @@ export class NameSuggesterPipeline {
 
     this.logger.info("Name data setup completed.");
 
-    return { outputPath, totalPages, cachedPages, fetchedPages, db: this.db };
+    const aggregatedDb = await this.loadAggregatedCsvData();
+
+    return {
+      outputPath,
+      totalPages,
+      cachedPages,
+      fetchedPages,
+      db: this.db,
+      aggregatedDb,
+    };
+  }
+
+  private async loadAggregatedCsvData(): Promise<AggregatedNameDatabase | null> {
+    const maleCsvPath = path.join(this.outputDir, "etunimi-miehet.csv");
+    const femaleCsvPath = path.join(this.outputDir, "etunimi-naiset.csv");
+
+    const [maleExists, femaleExists] = await Promise.all([
+      this.fileExists(maleCsvPath),
+      this.fileExists(femaleCsvPath),
+    ]);
+
+    if (!maleExists && !femaleExists) {
+      this.logger.debug("No CSV files found, skipping aggregated database");
+      return null;
+    }
+
+    const aggregatedDb = new AggregatedNameDatabase(this.logger);
+
+    if (maleExists) {
+      aggregatedDb.loadFromCsv(maleCsvPath, "male");
+    }
+
+    if (femaleExists) {
+      aggregatedDb.loadFromCsv(femaleCsvPath, "female");
+    }
+
+    this.logger.info(
+      `Loaded aggregated CSV data (${aggregatedDb.getTotalCount()} records)`
+    );
+
+    return aggregatedDb;
   }
 }
