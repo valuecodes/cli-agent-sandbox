@@ -3,7 +3,6 @@
 
 import "dotenv/config";
 import { writeFile } from "fs/promises";
-import { question } from "zx";
 import { z } from "zod";
 import { Agent, run } from "@openai/agents";
 import { Logger } from "../../clients/logger";
@@ -12,6 +11,7 @@ import { StatsGenerator } from "./stats-generator";
 import { StatsPageGenerator } from "./stats-page-generator";
 import { createSqlQueryTool } from "./sql-tool";
 import { parseArgs } from "../../utils/parse-args";
+import { QuestionHandler } from "../../utils/question-handler";
 
 const logger = new Logger();
 
@@ -71,7 +71,10 @@ Use the SQL tool to query the database and answer questions about name trends, p
 Be helpful, concise, and provide interesting insights.`,
   });
 
-  const userQuestion = await question("Ask about Finnish names: ");
+  const questionHandler = new QuestionHandler({ logger });
+  const userQuestion = await questionHandler.askString({
+    prompt: "Ask about Finnish names: ",
+  });
 
   const result = await run(agent, userQuestion);
 
