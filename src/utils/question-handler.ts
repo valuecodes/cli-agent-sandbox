@@ -63,13 +63,11 @@ export class QuestionHandler {
     while (attempts < maxRetries) {
       attempts++;
 
-      const rawInput = await question(prompt);
+      this.logger.question(prompt.trim());
+      const rawInput = await question("Answer: ");
       const trimmedInput = rawInput.trim();
 
-      this.logger.debug(`User answered: "${trimmedInput}"`);
-
       if (trimmedInput === "" && defaultValue !== undefined) {
-        this.logger.debug(`Using default value: "${String(defaultValue)}"`);
         return {
           answer: defaultValue,
           rawInput,
@@ -79,7 +77,6 @@ export class QuestionHandler {
       const result = effectiveSchema.safeParse(trimmedInput);
 
       if (result.success) {
-        this.logger.debug(`Validated answer: "${String(result.data)}"`);
         return {
           answer: result.data as z.infer<T>,
           rawInput,
@@ -89,10 +86,10 @@ export class QuestionHandler {
       const validationMessage =
         errorMessage ?? result.error.issues[0]?.message ?? "Invalid input";
 
-      this.logger.warn(`Validation failed: ${validationMessage}`);
+      this.logger.question(`Validation failed: ${validationMessage}`);
 
       if (attempts < maxRetries) {
-        this.logger.info(
+        this.logger.question(
           `Please try again (${maxRetries - attempts} attempts remaining)`
         );
       }
@@ -101,7 +98,7 @@ export class QuestionHandler {
     const error = new Error(
       `Maximum retries (${maxRetries}) exceeded for prompt: "${prompt}"`
     );
-    this.logger.error(error.message);
+    this.logger.question(error.message);
     throw error;
   }
 

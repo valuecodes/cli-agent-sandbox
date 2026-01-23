@@ -4,7 +4,7 @@
 import "dotenv/config";
 import { writeFile } from "fs/promises";
 import { z } from "zod";
-import { Agent, run } from "@openai/agents";
+import { Agent, Runner } from "@openai/agents";
 import { Logger } from "../../clients/logger";
 import { NameSuggesterPipeline } from "./pipeline";
 import { StatsGenerator } from "./stats-generator";
@@ -71,12 +71,35 @@ Use the SQL tool to query the database and answer questions about name trends, p
 Be helpful, concise, and provide interesting insights.`,
   });
 
+  const runner = new Runner();
+
+  const toolsInProgress = new Set<string>();
+
+  runner.on("agent_tool_start", (_context, _agent, tool, details) => {
+    const toolCall = details.toolCall as Record<string, unknown>;
+    const callId = toolCall.id as string;
+    if (toolsInProgress.has(callId)) return;
+    toolsInProgress.add(callId);
+
+    const args = String(toolCall.arguments);
+    logger.tool(`Calling ${tool.name}: ${args || "no arguments"}`);
+  });
+
+  runner.on("agent_tool_end", (_context, _agent, tool, result) => {
+    logger.tool(`${tool.name} completed`);
+    const preview =
+      result.length > 200 ? result.substring(0, 200) + "..." : result;
+    logger.debug(`Result: ${preview}`);
+  });
+
   const questionHandler = new QuestionHandler({ logger });
   const userQuestion = await questionHandler.askString({
     prompt: "Ask about Finnish names: ",
   });
 
-  const result = await run(agent, userQuestion);
+  const result = await runner.run(agent, userQuestion);
 
-  console.log("\n" + result.finalOutput);
+  if (result.finalOutput) {
+    logger.answer(result.finalOutput);
+  }
 }
