@@ -3,12 +3,13 @@
 // Scrape publication links from a given webpage and save them to tmp/scraped-publications/[url-slug]/
 
 import "dotenv/config";
-import { question, argv } from "zx";
+import { question } from "zx";
 import slug from "slug";
 import path from "node:path";
 import { z } from "zod";
 import { Logger } from "../../clients/logger";
 import { PublicationPipeline } from "../../clients/publication-pipeline";
+import { parseArgs } from "../../utils/parse-args";
 
 const logger = new Logger({ level: "info", useColors: true });
 
@@ -19,13 +20,14 @@ const {
   url: targetUrl,
   refetch: shouldRefetch,
   filterUrl,
-} = z
-  .object({
+} = parseArgs({
+  logger,
+  schema: z.object({
     url: z.url(),
     refetch: z.coerce.boolean().default(false),
     filterUrl: z.string().optional(),
-  })
-  .parse(argv);
+  }),
+});
 
 // 2. Create slugified directory path
 const urlWithoutProtocol = targetUrl

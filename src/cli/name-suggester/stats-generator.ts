@@ -416,7 +416,10 @@ export class StatsGenerator {
           this.db
             .query<{
               name: string;
-            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [fromDecade, gender])
+            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [
+              fromDecade,
+              gender,
+            ])
             .map((r) => r.name)
         );
 
@@ -424,7 +427,10 @@ export class StatsGenerator {
           this.db
             .query<{
               name: string;
-            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [toDecade, gender])
+            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [
+              toDecade,
+              gender,
+            ])
             .map((r) => r.name)
         );
 

@@ -109,6 +109,14 @@ export class NameDatabase {
     return result.count;
   }
 
+  loadFromConsolidatedData(data: ConsolidatedData): void {
+    for (const decadeData of data.decades) {
+      this.insertNames(decadeData.decade, "boy", decadeData.boys);
+      this.insertNames(decadeData.decade, "girl", decadeData.girls);
+    }
+    this.logger.debug(`Loaded ${this.getTotalCount()} records from JSON`);
+  }
+
   query<T>(sql: string, params: SQLInputValue[] = []): T[] {
     const stmt = this.db.prepare(sql);
     return stmt.all(...params) as T[];

@@ -193,6 +193,26 @@ export class NameSuggesterPipeline {
 
     await this.initialize();
 
+    const outputPath = path.join(this.outputDir, "all-names.json");
+    const jsonExists = await this.fileExists(outputPath);
+
+    // Skip processing if JSON exists and not forcing refetch - load from JSON instead
+    if (jsonExists && !this.refetch) {
+      const jsonContent = await fs.readFile(outputPath, "utf-8");
+      const data = JSON.parse(jsonContent) as ConsolidatedData;
+      this.db.loadFromConsolidatedData(data);
+      this.logger.info(
+        `Loaded existing data from JSON (${this.db.getTotalCount()} records)`
+      );
+      return {
+        outputPath,
+        totalPages: 0,
+        cachedPages: 0,
+        fetchedPages: 0,
+        db: this.db,
+      };
+    }
+
     const { totalPages, cachedPages, fetchedPages } =
       await this.processAllDecades();
 
@@ -204,7 +224,7 @@ export class NameSuggesterPipeline {
       `Database contains ${this.db.getTotalCount()} name records`
     );
 
-    const outputPath = await this.saveConsolidatedData();
+    await this.saveConsolidatedData();
 
     this.logger.info("Name data setup completed.");
 
