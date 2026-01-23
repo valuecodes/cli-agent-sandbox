@@ -9,6 +9,7 @@ import { Logger } from "../../clients/logger";
 import { NameSuggesterPipeline } from "./pipeline";
 import { StatsGenerator } from "./stats-generator";
 import { StatsPageGenerator } from "./stats-page-generator";
+import { createFetchNameTool } from "./fetch-name-tool";
 import { createAggregatedSqlQueryTool, createSqlQueryTool } from "./sql-tool";
 import { parseArgs } from "../../utils/parse-args";
 import { QuestionHandler } from "../../utils/question-handler";
@@ -66,7 +67,13 @@ async function runStatsMode() {
 async function runAiMode() {
   logger.info("Starting AI mode...");
 
-  const tools = [createSqlQueryTool(db)];
+  const tools = [
+    createSqlQueryTool(db),
+    createFetchNameTool({
+      cacheDir: "tmp/name-explorer/individual",
+      refetch: shouldRefetch,
+    }),
+  ];
   if (aggregatedDb) {
     tools.push(createAggregatedSqlQueryTool(aggregatedDb));
   }
@@ -77,11 +84,14 @@ async function runAiMode() {
     tools,
     outputType: NameSuggesterOutputTypeSchema,
     instructions: `You are an expert on Finnish name statistics.
-You have access to two databases:
+You have access to multiple data sources:
 1. Decade database (query_names_database): Top 100 Finnish names per decade (1889-2020) with columns: decade, gender ('boy'|'girl'), rank, name, count
 2. Aggregated database (query_aggregated_names): Total name counts across all time with columns: name, count, gender ('male'|'female')
+3. DVV live lookup (fetch_name_statistics): Fetch real-time statistics for any individual name from the official DVV registry
 
-Use the appropriate SQL tool to query the databases and answer questions about name trends, popularity, and patterns.
+Use the SQL tools for questions about top names, trends, and comparisons within the top 100.
+Use fetch_name_statistics for looking up specific names that might not be in the top 100, or for getting the most current data.
+
 Be helpful, concise, and provide interesting insights.
 
 IMPORTANT: Respond with ONLY a valid JSON object:
