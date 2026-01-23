@@ -1,14 +1,15 @@
+import { Agent, run } from "@openai/agents";
 import { JSDOM } from "jsdom";
 import { NodeHtmlMarkdown } from "node-html-markdown";
-import { Agent, run } from "@openai/agents";
 import type { z } from "zod";
+
+import type { Logger } from "../../../clients/logger";
 import {
+  ContentSelectorResult,
   PublicationLink,
   SelectorResult,
-  ContentSelectorResult,
 } from "../types/index";
 import type { LinkCandidate } from "../types/index";
-import type { Logger } from "../../../clients/logger";
 
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;

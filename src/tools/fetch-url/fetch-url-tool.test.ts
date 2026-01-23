@@ -1,8 +1,9 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import type { FetchResult } from "./fetch-url-tool";
-import { fetchUrlTool } from "./fetch-url-tool";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { invokeTool } from "../utils/test-utils";
 import * as urlSafety from "../utils/url-safety";
+import type { FetchResult } from "./fetch-url-tool";
+import { fetchUrlTool } from "./fetch-url-tool";
 
 // Mock the url-safety module
 vi.mock("../utils/url-safety", async (importOriginal) => {

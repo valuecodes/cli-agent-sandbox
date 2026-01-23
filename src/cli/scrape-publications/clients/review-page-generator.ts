@@ -1,7 +1,8 @@
 import { marked } from "marked";
 import type { z } from "zod";
-import type { Publication } from "../types/index";
+
 import type { Logger } from "../../../clients/logger";
+import type { Publication } from "../types/index";
 
 export type ReviewPageGeneratorConfig = {
   logger: Logger;

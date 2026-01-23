@@ -1,10 +1,11 @@
 import { chromium } from "playwright";
 import type { Browser, Page } from "playwright";
-import type { Logger } from "./logger";
+
 import {
-  sanitizeHtml,
   convertToMarkdown,
+  sanitizeHtml,
 } from "../tools/utils/html-processing";
+import type { Logger } from "./logger";
 
 /**
  * Wait strategies for page loading

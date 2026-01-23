@@ -1,20 +1,21 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import slug from "slug";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import slug from "slug";
 import type { z } from "zod";
+
 import { Fetch } from "../../../clients/fetch";
+import type { Logger } from "../../../clients/logger";
 import { PlaywrightScraper } from "../../../clients/playwright-scraper";
+import type {
+  LinkCandidate,
+  Publication,
+  PublicationLink,
+  SelectorResult,
+} from "../types/index";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
-import type { Logger } from "../../../clients/logger";
-import type {
-  PublicationLink,
-  LinkCandidate,
-  SelectorResult,
-  Publication,
-} from "../types/index";
 
 export type FetchSource = "playwright" | "basic-fetch";
 

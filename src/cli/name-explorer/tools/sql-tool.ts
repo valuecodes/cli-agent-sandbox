@@ -1,5 +1,6 @@
 import { tool } from "@openai/agents";
 import { z } from "zod";
+
 import type { AggregatedNameDatabase, NameDatabase } from "../clients/database";
 
 const DANGEROUS_KEYWORDS = [

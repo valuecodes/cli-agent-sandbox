@@ -1,6 +1,6 @@
-import sanitize from "sanitize-html";
 import { JSDOM } from "jsdom";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import sanitize from "sanitize-html";
 
 /**
  * Result of processing HTML content

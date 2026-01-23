@@ -1,6 +1,7 @@
-import { tool } from "@openai/agents";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { tool } from "@openai/agents";
+
 import { resolveTmpPathForList, TMP_ROOT } from "../utils/fs";
 
 export const listFilesTool = tool({

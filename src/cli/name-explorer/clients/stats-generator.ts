@@ -1,4 +1,3 @@
-import type { NameDatabase } from "./database";
 import { DECADES, FIRST_DECADE, LAST_DECADE } from "../constants";
 import type {
   AllStats,
@@ -16,6 +15,7 @@ import type {
   TopName,
   UnisexName,
 } from "../types";
+import type { NameDatabase } from "./database";
 
 export class StatsGenerator {
   constructor(private db: NameDatabase) {}

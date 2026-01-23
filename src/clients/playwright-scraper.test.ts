@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlaywrightScraper } from "./playwright-scraper";
+
 import { Logger } from "./logger";
+import { PlaywrightScraper } from "./playwright-scraper";
 
 const { launchMock } = vi.hoisted(() => ({
   launchMock: vi.fn(),

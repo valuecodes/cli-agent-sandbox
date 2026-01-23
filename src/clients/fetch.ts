@@ -1,5 +1,6 @@
-import sanitize from "sanitize-html";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import sanitize from "sanitize-html";
+
 import type { Logger } from "./logger";
 
 export type FetchConfig = {

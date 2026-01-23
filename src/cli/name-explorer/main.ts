@@ -3,9 +3,11 @@
 
 import "dotenv/config";
 import { writeFile } from "fs/promises";
-import { z } from "zod";
 import { Agent, MemorySession, Runner } from "@openai/agents";
+import { z } from "zod";
 import { Logger } from "../../clients/logger";
+import { parseArgs } from "../../utils/parse-args";
+import { QuestionHandler } from "../../utils/question-handler";
 import { NameSuggesterPipeline } from "./clients/pipeline";
 import { StatsGenerator } from "./clients/stats-generator";
 import { StatsPageGenerator } from "./clients/stats-page-generator";
@@ -14,8 +16,6 @@ import {
   createAggregatedSqlQueryTool,
   createSqlQueryTool,
 } from "./tools/sql-tool";
-import { parseArgs } from "../../utils/parse-args";
-import { QuestionHandler } from "../../utils/question-handler";
 import {
   NameSuggesterOutputSchema,
   NameSuggesterOutputTypeSchema,
