@@ -45,6 +45,8 @@ The publication pipeline uses `PlaywrightScraper` to render JavaScript-heavy pag
 
 The `run:name-explorer` script explores Finnish name statistics. It supports an AI Q&A mode (default) backed by SQL tools, plus a `stats` mode that generates an HTML report.
 
+![Name Explorer demo](src/cli/name-explorer/demo-1.png)
+
 Usage:
 
 ```
