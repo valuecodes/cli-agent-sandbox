@@ -1,5 +1,5 @@
 import type { NameDatabase } from "./database";
-import { DECADES } from "./decades";
+import { DECADES, FIRST_DECADE, LAST_DECADE } from "../constants";
 import type {
   AllStats,
   ChurnMetrics,
@@ -15,10 +15,7 @@ import type {
   SuffixStats,
   TopName,
   UnisexName,
-} from "./stats-types";
-
-const FIRST_DECADE = DECADES[0] ?? "1889";
-const LAST_DECADE = DECADES[DECADES.length - 1] ?? "2020";
+} from "../types";
 
 export class StatsGenerator {
   constructor(private db: NameDatabase) {}

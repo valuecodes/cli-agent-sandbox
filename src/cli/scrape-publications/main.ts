@@ -8,7 +8,7 @@ import slug from "slug";
 import path from "node:path";
 import { z } from "zod";
 import { Logger } from "../../clients/logger";
-import { PublicationPipeline } from "../../clients/publication-pipeline";
+import { PublicationPipeline } from "./clients/publication-pipeline";
 import { parseArgs } from "../../utils/parse-args";
 
 const logger = new Logger({ level: "info", useColors: true });

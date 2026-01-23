@@ -4,11 +4,11 @@ import crypto from "node:crypto";
 import slug from "slug";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import type { z } from "zod";
-import { Fetch } from "./fetch";
-import { PlaywrightScraper } from "./playwright-scraper";
+import { Fetch } from "../../../clients/fetch";
+import { PlaywrightScraper } from "../../../clients/playwright-scraper";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
-import type { Logger } from "./logger";
+import type { Logger } from "../../../clients/logger";
 import type {
   PublicationLink,
   LinkCandidate,

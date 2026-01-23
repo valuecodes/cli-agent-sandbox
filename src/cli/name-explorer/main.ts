@@ -6,11 +6,14 @@ import { writeFile } from "fs/promises";
 import { z } from "zod";
 import { Agent, MemorySession, Runner } from "@openai/agents";
 import { Logger } from "../../clients/logger";
-import { NameSuggesterPipeline } from "./pipeline";
-import { StatsGenerator } from "./stats-generator";
-import { StatsPageGenerator } from "./stats-page-generator";
-import { createFetchNameTool } from "./fetch-name-tool";
-import { createAggregatedSqlQueryTool, createSqlQueryTool } from "./sql-tool";
+import { NameSuggesterPipeline } from "./clients/pipeline";
+import { StatsGenerator } from "./clients/stats-generator";
+import { StatsPageGenerator } from "./clients/stats-page-generator";
+import { createFetchNameTool } from "./tools/fetch-name-tool";
+import {
+  createAggregatedSqlQueryTool,
+  createSqlQueryTool,
+} from "./tools/sql-tool";
 import { parseArgs } from "../../utils/parse-args";
 import { QuestionHandler } from "../../utils/question-handler";
 import {

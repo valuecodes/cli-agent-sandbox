@@ -8,7 +8,7 @@ import {
   ContentSelectorResult,
 } from "../types/index";
 import type { LinkCandidate } from "../types/index";
-import type { Logger } from "./logger";
+import type { Logger } from "../../../clients/logger";
 
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;

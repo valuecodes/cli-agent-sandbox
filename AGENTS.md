@@ -31,33 +31,36 @@ Available pnpm scripts for development and testing:
 
 ## Project layout
 
-| Path                                      | Description                                     |
-| ----------------------------------------- | ----------------------------------------------- |
-| `src/cli/guestbook/main.ts`               | Guestbook CLI entry point                       |
-| `src/cli/guestbook/README.md`             | Guestbook CLI docs                              |
-| `src/cli/name-explorer/main.ts`           | Name Explorer CLI entry point                   |
-| `src/cli/name-explorer/README.md`         | Name Explorer CLI docs                          |
-| `src/cli/scrape-publications/main.ts`     | Publication scraping CLI entry point            |
-| `src/cli/scrape-publications/README.md`   | Publication scraping CLI docs                   |
-| `src/clients/*`                           | Publication scraping pipeline clients           |
-| `src/utils/parse-args.ts`                 | Shared CLI argument parsing helper              |
-| `src/utils/question-handler.ts`           | Shared CLI prompt + validation helper           |
-| `src/tools/index.ts`                      | Tool exports                                    |
-| `src/tools/fetch-url/fetch-url-tool.ts`   | Safe HTTP fetch tool with SSRF protection       |
-| `src/tools/read-file/read-file-tool.ts`   | Agent tool for reading files under `tmp`        |
-| `src/tools/write-file/write-file-tool.ts` | Agent tool for writing files under `tmp`        |
-| `src/tools/list-files/list-files-tool.ts` | Agent tool for listing files under `tmp`        |
-| `src/tools/utils/fs.ts`                   | Path safety utilities                           |
-| `src/tools/utils/html-processing.ts`      | HTML sanitization + extraction helpers          |
-| `src/tools/utils/url-safety.ts`           | URL safety + SSRF protection helpers            |
-| `src/tools/utils/test-utils.ts`           | Shared test helpers                             |
-| `src/tools/*/*.test.ts`                   | Vitest tests for tools and safety utils         |
-| `src/types/index.ts`                      | Zod schemas for publication pipeline            |
-| `eslint.config.ts`                        | ESLint configuration                            |
-| `prettier.config.ts`                      | Prettier configuration                          |
-| `tsconfig.json`                           | TypeScript configuration                        |
-| `vitest.config.ts`                        | Vitest configuration                            |
-| `tmp/`                                    | Runtime scratch space for tool + scraper output |
+| Path                                         | Description                                     |
+| -------------------------------------------- | ----------------------------------------------- |
+| `src/cli/guestbook/main.ts`                  | Guestbook CLI entry point                       |
+| `src/cli/guestbook/README.md`                | Guestbook CLI docs                              |
+| `src/cli/name-explorer/main.ts`              | Name Explorer CLI entry point                   |
+| `src/cli/name-explorer/README.md`            | Name Explorer CLI docs                          |
+| `src/cli/scrape-publications/main.ts`        | Publication scraping CLI entry point            |
+| `src/cli/scrape-publications/README.md`      | Publication scraping CLI docs                   |
+| `src/cli/scrape-publications/clients/*`      | Publication scraping pipeline clients           |
+| `src/cli/scrape-publications/types/index.ts` | Publication Zod schemas                         |
+| `src/clients/logger.ts`                      | Shared console logger                           |
+| `src/clients/fetch.ts`                       | Shared HTTP fetch + sanitization helpers        |
+| `src/clients/playwright-scraper.ts`          | Playwright-based web scraper                    |
+| `src/utils/parse-args.ts`                    | Shared CLI argument parsing helper              |
+| `src/utils/question-handler.ts`              | Shared CLI prompt + validation helper           |
+| `src/tools/index.ts`                         | Tool exports                                    |
+| `src/tools/fetch-url/fetch-url-tool.ts`      | Safe HTTP fetch tool with SSRF protection       |
+| `src/tools/read-file/read-file-tool.ts`      | Agent tool for reading files under `tmp`        |
+| `src/tools/write-file/write-file-tool.ts`    | Agent tool for writing files under `tmp`        |
+| `src/tools/list-files/list-files-tool.ts`    | Agent tool for listing files under `tmp`        |
+| `src/tools/utils/fs.ts`                      | Path safety utilities                           |
+| `src/tools/utils/html-processing.ts`         | HTML sanitization + extraction helpers          |
+| `src/tools/utils/url-safety.ts`              | URL safety + SSRF protection helpers            |
+| `src/tools/utils/test-utils.ts`              | Shared test helpers                             |
+| `src/tools/*/*.test.ts`                      | Vitest tests for tools and safety utils         |
+| `eslint.config.ts`                           | ESLint configuration                            |
+| `prettier.config.ts`                         | Prettier configuration                          |
+| `tsconfig.json`                              | TypeScript configuration                        |
+| `vitest.config.ts`                           | Vitest configuration                            |
+| `tmp/`                                       | Runtime scratch space for tool + scraper output |
 
 ## Tools
 

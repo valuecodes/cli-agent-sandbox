@@ -78,42 +78,33 @@ src/
 │   │   ├── main.ts            # Name Explorer CLI entry point
 │   │   └── README.md          # Name Explorer CLI docs
 │   └── scrape-publications/
-│       ├── main.ts            # Publication scraping CLI
-│       └── README.md          # Publication scraping docs
+│       ├── main.ts            # Publication scraping CLI entry point
+│       ├── README.md          # Publication scraping docs
+│       ├── clients/           # Publication-specific clients
+│       │   ├── publication-pipeline.ts # Pipeline orchestration
+│       │   ├── publication-scraper.ts  # Link discovery + selector inference
+│       │   └── review-page-generator.ts # Review HTML generator
+│       └── types/
+│           └── index.ts       # Publication Zod schemas
 ├── clients/
-│   ├── fetch.ts                # HTTP fetch + sanitization helpers
-│   ├── logger.ts               # Console logger
-│   ├── playwright-scraper.ts   # Playwright-based scraper for JS-rendered pages
-│   ├── publication-pipeline.ts # Pipeline orchestration
-│   ├── publication-scraper.ts  # Link discovery + selector inference
-│   └── review-page-generator.ts # Review HTML generator
+│   ├── fetch.ts               # Shared HTTP fetch + sanitization
+│   ├── logger.ts              # Shared console logger
+│   └── playwright-scraper.ts  # Playwright-based web scraper
 ├── utils/
 │   ├── parse-args.ts          # Shared CLI arg parsing helper
 │   └── question-handler.ts    # Shared CLI prompt + validation helper
 ├── tools/
-│   ├── fetch-url/
-│   │   ├── fetch-url-tool.ts      # Safe fetch tool
-│   │   └── fetch-url-tool.test.ts # Fetch tool tests
-│   ├── index.ts          # Tool exports
-│   ├── list-files/
-│   │   ├── list-files-tool.ts      # List tool implementation
-│   │   └── list-files-tool.test.ts # List tool tests
-│   ├── read-file/
-│   │   ├── read-file-tool.ts       # Read tool implementation
-│   │   └── read-file-tool.test.ts  # Read tool tests
-│   ├── write-file/
-│   │   ├── write-file-tool.ts      # Write tool implementation
-│   │   └── write-file-tool.test.ts # Write tool tests
+│   ├── index.ts               # Tool exports
+│   ├── fetch-url/             # Safe fetch tool
+│   ├── list-files/            # List files tool
+│   ├── read-file/             # Read file tool
+│   ├── write-file/            # Write file tool
 │   └── utils/
-│       ├── fs.ts               # Path safety utilities
-│       ├── html-processing.ts  # HTML sanitization + extraction helpers
-│       ├── html-processing.test.ts # HTML processing tests
-│       ├── url-safety.ts       # SSRF protection helpers
-│       ├── url-safety.test.ts  # URL safety tests
-│       └── test-utils.ts       # Shared test helpers
-└── types/
-    └── index.ts                    # Zod schemas for publication pipeline
-tmp/                      # Runtime scratch space (tool I/O)
+│       ├── fs.ts              # Path safety utilities
+│       ├── html-processing.ts # HTML sanitization + extraction helpers
+│       ├── url-safety.ts      # SSRF protection helpers
+│       └── test-utils.ts      # Shared test helpers
+tmp/                           # Runtime scratch space (tool I/O)
 ```
 
 ## CLI conventions
