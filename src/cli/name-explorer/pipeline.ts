@@ -4,6 +4,7 @@ import { Fetch } from "../../clients/fetch";
 import type { Logger } from "../../clients/logger";
 import type { ConsolidatedData } from "./database";
 import { AggregatedNameDatabase, NameDatabase } from "./database";
+import { FETCH_DECADES } from "./decades";
 import type { ParsedNames } from "./parse-names";
 import { parseNamesHtml } from "./parse-names";
 
@@ -71,11 +72,7 @@ export class NameSuggesterPipeline {
   }
 
   private generateDecades(): string[] {
-    const decades: string[] = [];
-    for (let year = 2020; year >= 1900; year -= 10) {
-      decades.push(String(year));
-    }
-    return [...decades, "1889"]; // Include 1889 for all years before 1900
+    return [...FETCH_DECADES];
   }
 
   async initialize(): Promise<void> {

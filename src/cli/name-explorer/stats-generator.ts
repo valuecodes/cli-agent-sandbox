@@ -1,4 +1,5 @@
 import type { NameDatabase } from "./database";
+import { DECADES } from "./decades";
 import type {
   AllStats,
   ChurnMetrics,
@@ -15,23 +16,6 @@ import type {
   TopName,
   UnisexName,
 } from "./stats-types";
-
-const DECADES: string[] = [
-  "1889",
-  "1900",
-  "1910",
-  "1920",
-  "1930",
-  "1940",
-  "1950",
-  "1960",
-  "1970",
-  "1980",
-  "1990",
-  "2000",
-  "2010",
-  "2020",
-];
 
 const FIRST_DECADE = DECADES[0] ?? "1889";
 const LAST_DECADE = DECADES[DECADES.length - 1] ?? "2020";

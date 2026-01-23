@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -9,19 +9,21 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
 5. Run the demo: `pnpm run:guestbook`
-6. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
+6. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
+7. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 
 ## Commands
 
-| Command                        | Description                                      |
-| ------------------------------ | ------------------------------------------------ |
-| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo           |
-| `pnpm run:scrape-publications` | Scrape publication links and build a review page |
-| `pnpm typecheck`               | Run TypeScript type checking                     |
-| `pnpm lint`                    | Run ESLint for code quality                      |
-| `pnpm format`                  | Format code with Prettier                        |
-| `pnpm format:check`            | Check code formatting                            |
-| `pnpm test`                    | Run Vitest test suite                            |
+| Command                        | Description                                       |
+| ------------------------------ | ------------------------------------------------- |
+| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo            |
+| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats) |
+| `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
+| `pnpm typecheck`               | Run TypeScript type checking                      |
+| `pnpm lint`                    | Run ESLint for code quality                       |
+| `pnpm format`                  | Format code with Prettier                         |
+| `pnpm format:check`            | Check code formatting                             |
+| `pnpm test`                    | Run Vitest test suite                             |
 
 ## Publication scraping
 
@@ -38,6 +40,18 @@ Outputs are written under `tmp/scraped-publications/<url-slug>/`, including sour
 ### Playwright scraper
 
 The publication pipeline uses `PlaywrightScraper` to render JavaScript-heavy pages and sanitize the resulting HTML before Markdown conversion. It supports per-request timeouts, load wait strategies (`load`, `domcontentloaded`, `networkidle`), and an optional `waitForSelector` for SPA content.
+
+## Name explorer
+
+The `run:name-explorer` script explores Finnish name statistics. It supports an AI Q&A mode (default) backed by SQL tools, plus a `stats` mode that generates an HTML report.
+
+Usage:
+
+```
+pnpm run:name-explorer -- [--mode ai|stats] [--refetch]
+```
+
+Outputs are written under `tmp/name-explorer/`, including `statistics.html` in stats mode.
 
 ## Tools
 
@@ -58,6 +72,9 @@ src/
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point
 │   │   └── README.md          # Guestbook CLI docs
+│   ├── name-explorer/
+│   │   ├── main.ts            # Name Explorer CLI entry point
+│   │   └── README.md          # Name Explorer CLI docs
 │   └── scrape-publications/
 │       ├── main.ts            # Publication scraping CLI
 │       └── README.md          # Publication scraping docs
@@ -68,6 +85,9 @@ src/
 │   ├── publication-pipeline.ts # Pipeline orchestration
 │   ├── publication-scraper.ts  # Link discovery + selector inference
 │   └── review-page-generator.ts # Review HTML generator
+├── utils/
+│   ├── parse-args.ts          # Shared CLI arg parsing helper
+│   └── question-handler.ts    # Shared CLI prompt + validation helper
 ├── tools/
 │   ├── fetch-url/
 │   │   ├── fetch-url-tool.ts      # Safe fetch tool
@@ -93,6 +113,11 @@ src/
     └── index.ts                    # Zod schemas for publication pipeline
 tmp/                      # Runtime scratch space (tool I/O)
 ```
+
+## CLI conventions
+
+- When using `Logger`, initialize it in the CLI entry point and pass it into clients/pipelines via constructor options.
+- Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom argument parsing or prompt logic.
 
 ## Security
 

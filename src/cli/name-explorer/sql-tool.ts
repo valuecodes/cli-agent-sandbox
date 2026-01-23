@@ -2,6 +2,45 @@ import { tool } from "@openai/agents";
 import { z } from "zod";
 import type { AggregatedNameDatabase, NameDatabase } from "./database";
 
+const DANGEROUS_KEYWORDS = [
+  "DROP",
+  "DELETE",
+  "INSERT",
+  "UPDATE",
+  "ALTER",
+  "CREATE",
+  "TRUNCATE",
+  "EXEC",
+  "EXECUTE",
+];
+
+function validateReadOnlyQuery(sql: string): {
+  valid: boolean;
+  error?: string;
+} {
+  const trimmedSql = sql.trim();
+
+  // Must start with SELECT
+  if (!trimmedSql.toUpperCase().startsWith("SELECT")) {
+    return { valid: false, error: "Only SELECT queries are allowed" };
+  }
+
+  // No semicolons (prevents multiple statements)
+  if (sql.includes(";")) {
+    return { valid: false, error: "Multiple statements are not allowed" };
+  }
+
+  // Check for dangerous keywords using word boundaries
+  for (const keyword of DANGEROUS_KEYWORDS) {
+    const regex = new RegExp(`\\b${keyword}\\b`, "i");
+    if (regex.test(sql)) {
+      return { valid: false, error: `Forbidden keyword: ${keyword}` };
+    }
+  }
+
+  return { valid: true };
+}
+
 export function createSqlQueryTool(db: NameDatabase) {
   return tool({
     name: "query_names_database",
@@ -17,8 +56,9 @@ Example queries:
       sql: z.string().describe("The SQL SELECT query to execute"),
     }),
     execute: ({ sql }: { sql: string }) => {
-      if (!sql.trim().toUpperCase().startsWith("SELECT")) {
-        return { error: "Only SELECT queries are allowed" };
+      const validation = validateReadOnlyQuery(sql);
+      if (!validation.valid) {
+        return { error: validation.error };
       }
       try {
         const results = db.query(sql);
@@ -46,8 +86,9 @@ Example queries:
       sql: z.string().describe("The SQL SELECT query to execute"),
     }),
     execute: ({ sql }: { sql: string }) => {
-      if (!sql.trim().toUpperCase().startsWith("SELECT")) {
-        return { error: "Only SELECT queries are allowed" };
+      const validation = validateReadOnlyQuery(sql);
+      if (!validation.valid) {
+        return { error: validation.error };
       }
       try {
         const results = db.query(sql);
