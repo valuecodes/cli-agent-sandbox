@@ -32,29 +32,35 @@ Writes under `tmp/name-explorer/`:
 
 ```mermaid
 flowchart TD
-  A[Start run CLI] --> B[Parse args (zod)]
-  B --> C[Init NameSuggesterPipeline]
-  C --> D[Setup caches and databases]
-  D --> E{Mode?}
-  E -->|stats| F[Compute statistics]
-  F --> G[Generate HTML report]
-  G --> H[Write statistics.html]
-  E -->|ai| I[Create SQL tools]
-  I --> J[Create agent and runner]
-  J --> K[Prompt user question]
-  K --> L{Empty?}
-  L -->|yes| M[Exit]
-  L -->|no| N[Run agent with question]
-  N --> O{Output valid?}
-  O -->|no| P[Warn and exit]
-  O -->|needs clarification| Q[Prompt for clarification]
+  A["Start run CLI"] --> B["Parse args (zod)"]
+  B --> C["Init NameSuggesterPipeline"]
+  C --> D["Setup caches and databases"]
+  D --> E{"Mode?"}
+
+  E -->|stats| F["Compute statistics"]
+  F --> G["Generate HTML report"]
+  G --> H["Write statistics.html"]
+
+  E -->|ai| I["Create SQL tools"]
+  I --> J["Create agent and runner"]
+  J --> K["Prompt user question"]
+  K --> L{"Empty?"}
+
+  L -->|yes| M["Exit"]
+  L -->|no| N["Run agent with question"]
+  N --> O{"Output valid?"}
+
+  O -->|no| P["Warn and exit"]
+  O -->|needs clarification| Q["Prompt for clarification"]
   Q --> L
-  O -->|final| R[Print answer]
-  H --> S[Close databases]
+  O -->|final| R["Print answer"]
+
+  H --> S["Close databases"]
   M --> S
   P --> S
   R --> S
-  S --> T[Done]
+  S --> T["Done"]
+
 ```
 
 ## Data sources

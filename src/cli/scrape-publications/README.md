@@ -22,28 +22,28 @@ Writes under `tmp/scraped-publications/<url-slug>/`, including `review.html`.
 
 ```mermaid
 flowchart TD
-  A[Start: run CLI] --> B[Parse and validate args (zod)]
-  B --> C[Derive output path (slugify URL)]
-  C --> D[Init PublicationPipeline]
-  D --> E[Fetch source HTML]
-  E --> F{Filter substring?}
-  F -->|--filterUrl| G[Use provided substring]
-  F -->|prompt| H[Ask user for substring]
-  G --> I[Discover link candidates]
-  H --> I[Discover link candidates]
-  I --> J{Playwright found none?}
-  J -->|yes| K[Fallback to basic HTTP]
-  J -->|no| L[Use Playwright results]
-  K --> M[Identify selectors and extract metadata]
-  L --> M[Identify selectors and extract metadata]
-  M --> N[Fetch publication pages]
-  N --> O[Extract publication content]
-  O --> P{Any content?}
-  P -->|yes| Q[Generate review.html]
-  P -->|no| R[Skip review page]
-  Q --> S[Close pipeline]
-  R --> S[Close pipeline]
-  S --> T[Done]
+  A["Start run CLI"] --> B["Parse and validate args (zod)"]
+  B --> C["Derive output path (slugify URL)"]
+  C --> D["Init PublicationPipeline"]
+  D --> E["Fetch source HTML"]
+  E --> F{"Filter substring?"}
+  F -->|--filterUrl| G["Use provided substring"]
+  F -->|prompt| H["Ask user for substring"]
+  G --> I["Discover link candidates"]
+  H --> I["Discover link candidates"]
+  I --> J{"Playwright found none?"}
+  J -->|yes| K["Fallback to basic HTTP"]
+  J -->|no| L["Use Playwright results"]
+  K --> M["Identify selectors and extract metadata"]
+  L --> M["Identify selectors and extract metadata"]
+  M --> N["Fetch publication pages"]
+  N --> O["Extract publication content"]
+  O --> P{"Any content?"}
+  P -->|yes| Q["Generate review.html"]
+  P -->|no| R["Skip review page"]
+  Q --> S["Close pipeline"]
+  R --> S["Close pipeline"]
+  S --> T["Done"]
 ```
 
 ## Notes
