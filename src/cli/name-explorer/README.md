@@ -65,4 +65,4 @@ flowchart TD
 ## Notes
 
 - AI mode requires `OPENAI_API_KEY` in your environment.
-- Type `exit`, `quit`, or `q` to leave the interactive prompt.
+- Press Enter on an empty line to leave the interactive prompt.
