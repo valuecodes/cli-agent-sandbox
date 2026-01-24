@@ -86,6 +86,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 
 - Initialize `Logger` in CLI entry points and pass it into clients/pipelines via constructor options.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom logic.
+- Prefer TypeScript path aliases over deep relative imports: `~tools/*`, `~clients/*`, `~utils/*`.
 - Use Zod schemas for CLI args and tool IO.
 - For HTTP fetching in code, prefer `Fetch` (sanitized) or `PlaywrightScraper` for JS-heavy pages.
 - When adding tools that touch files, use `src/tools/utils/fs.ts` for path validation.

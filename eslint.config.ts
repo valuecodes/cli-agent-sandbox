@@ -76,6 +76,19 @@ export default defineConfig(
       curly: ["error", "all"],
       "import/no-default-export": "error",
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+      // Enforce path aliases for cross-module imports
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../../*", "../../../*", "../../../../*"],
+              message:
+                "Use path aliases (e.g. ~tools/...) instead of ../../ imports.",
+            },
+          ],
+        },
+      ],
     },
   },
   {

@@ -112,6 +112,8 @@ tmp/                           # Runtime scratch space (tool I/O)
 
 - When using `Logger`, initialize it in the CLI entry point and pass it into clients/pipelines via constructor options.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom argument parsing or prompt logic.
+- Use the TypeScript path aliases for shared modules: `~tools/*`, `~clients/*`, `~utils/*`.
+  Example: `import { readFileTool } from "~tools/read-file/read-file-tool";`
 
 ## Security
 
