@@ -6,7 +6,8 @@ import "dotenv/config";
 
 import { question } from "zx";
 
-import { readFileTool, writeFileTool } from "../../tools";
+import { readFileTool } from "../../tools/read-file/read-file-tool";
+import { writeFileTool } from "../../tools/write-file/write-file-tool";
 
 console.log("Guestbook running...");
 
