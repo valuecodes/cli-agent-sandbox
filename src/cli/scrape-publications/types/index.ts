@@ -25,5 +25,5 @@ export const Publication = z.object({
   url: z.url(),
   date: z.iso.date().optional(),
   content: z.string(),
-  extractedAt: z.string().datetime(),
+  extractedAt: z.iso.datetime(),
 });

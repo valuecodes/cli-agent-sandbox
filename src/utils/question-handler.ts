@@ -1,12 +1,12 @@
-import { question } from "zx";
+import type { Logger } from "~clients/logger";
 import { z } from "zod";
-import type { Logger } from "../clients/logger";
+import { question } from "zx";
 
-export interface QuestionHandlerConfig {
+export type QuestionHandlerConfig = {
   logger: Logger;
-}
+};
 
-export interface AskOptions<T extends z.ZodTypeAny = z.ZodString> {
+export type AskOptions<T extends z.ZodType = z.ZodString> = {
   /** The prompt to display to the user */
   prompt: string;
 
@@ -24,26 +24,40 @@ export interface AskOptions<T extends z.ZodTypeAny = z.ZodString> {
 
   /** Maximum retry attempts (default: 3) */
   maxRetries?: number;
-}
+};
 
-export interface AskResult<T> {
+export type AskResult<T> = {
   /** The validated and processed answer */
   answer: T;
 
   /** Raw input before trimming/validation */
   rawInput: string;
-}
+};
 
 const NonEmptyString = z.string().trim().min(1, "Input cannot be empty");
 
+/**
+ * Handles interactive CLI prompts with validation and retry logic.
+ * Uses Zod schemas for input validation and provides configurable retry attempts.
+ */
 export class QuestionHandler {
   private logger: Logger;
 
+  /**
+   * Creates a new QuestionHandler instance.
+   * @param config - Configuration with logger
+   */
   constructor(config: QuestionHandlerConfig) {
     this.logger = config.logger;
   }
 
-  async ask<T extends z.ZodTypeAny = z.ZodString>(
+  /**
+   * Prompts the user for input with validation and retry logic.
+   * @param options - Configuration for prompt, validation, and retry behavior
+   * @returns Validated answer and raw input
+   * @throws If maximum retries are exceeded
+   */
+  async ask<T extends z.ZodType = z.ZodString>(
     options: AskOptions<T>
   ): Promise<AskResult<z.infer<T>>> {
     const {
@@ -55,7 +69,7 @@ export class QuestionHandler {
       maxRetries = 3,
     } = options;
 
-    const effectiveSchema: z.ZodTypeAny =
+    const effectiveSchema: z.ZodType =
       schema ?? (allowEmpty ? z.string().trim() : NonEmptyString);
 
     let attempts = 0;
@@ -102,6 +116,11 @@ export class QuestionHandler {
     throw error;
   }
 
+  /**
+   * Simplified method to ask for a string input.
+   * @param options - Prompt text and optional default value
+   * @returns The trimmed string answer
+   */
   async askString(options: {
     prompt: string;
     defaultValue?: string;

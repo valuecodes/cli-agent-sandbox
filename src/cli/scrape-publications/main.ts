@@ -3,13 +3,15 @@
 // Scrape publication links from a given webpage and save them to tmp/scraped-publications/[url-slug]/
 
 import "dotenv/config";
-import { question } from "zx";
-import slug from "slug";
+
 import path from "node:path";
+import { Logger } from "~clients/logger";
+import { parseArgs } from "~utils/parse-args";
+import slug from "slug";
 import { z } from "zod";
-import { Logger } from "../../clients/logger";
-import { PublicationPipeline } from "../../clients/publication-pipeline";
-import { parseArgs } from "../../utils/parse-args";
+import { question } from "zx";
+
+import { PublicationPipeline } from "./clients/publication-pipeline";
 
 const logger = new Logger({ level: "info", useColors: true });
 

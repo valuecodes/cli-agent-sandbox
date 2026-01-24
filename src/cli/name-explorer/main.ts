@@ -2,17 +2,22 @@
 // pnpm run:name-explorer --mode ai
 
 import "dotenv/config";
+
 import { writeFile } from "fs/promises";
-import { z } from "zod";
 import { Agent, MemorySession, Runner } from "@openai/agents";
-import { Logger } from "../../clients/logger";
-import { NameSuggesterPipeline } from "./pipeline";
-import { StatsGenerator } from "./stats-generator";
-import { StatsPageGenerator } from "./stats-page-generator";
-import { createFetchNameTool } from "./fetch-name-tool";
-import { createAggregatedSqlQueryTool, createSqlQueryTool } from "./sql-tool";
-import { parseArgs } from "../../utils/parse-args";
-import { QuestionHandler } from "../../utils/question-handler";
+import { Logger } from "~clients/logger";
+import { parseArgs } from "~utils/parse-args";
+import { QuestionHandler } from "~utils/question-handler";
+import { z } from "zod";
+
+import { NameSuggesterPipeline } from "./clients/pipeline";
+import { StatsGenerator } from "./clients/stats-generator";
+import { StatsPageGenerator } from "./clients/stats-page-generator";
+import { createFetchNameTool } from "./tools/fetch-name-tool";
+import {
+  createAggregatedSqlQueryTool,
+  createSqlQueryTool,
+} from "./tools/sql-tool";
 import {
   NameSuggesterOutputSchema,
   NameSuggesterOutputTypeSchema,
@@ -38,18 +43,8 @@ const pipeline = new NameSuggesterPipeline({
 
 const { db, aggregatedDb } = await pipeline.setup();
 
-// --- Run selected mode ---
-if (mode === "stats") {
-  await runStatsMode();
-} else {
-  await runAiMode();
-}
-
-db.close();
-aggregatedDb?.close();
-
 // --- Stats Mode: Generate HTML statistics page ---
-async function runStatsMode() {
+const runStatsMode = async () => {
   logger.info("Computing statistics...");
   const statsGenerator = new StatsGenerator(db);
   const stats = statsGenerator.computeAll();
@@ -61,10 +56,10 @@ async function runStatsMode() {
   const outputPath = "tmp/name-explorer/statistics.html";
   await writeFile(outputPath, html, "utf-8");
   logger.info(`Statistics page written to ${outputPath}`);
-}
+};
 
 // --- AI Mode: Interactive Q&A with SQL agent ---
-async function runAiMode() {
+const runAiMode = async () => {
   logger.info("Starting AI mode...");
 
   const tools = [
@@ -109,7 +104,9 @@ When answering, do not include any questions. Do not include markdown or extra k
   runner.on("agent_tool_start", (_context, _agent, tool, details) => {
     const toolCall = details.toolCall as Record<string, unknown>;
     const callId = toolCall.id as string;
-    if (toolsInProgress.has(callId)) return;
+    if (toolsInProgress.has(callId)) {
+      return;
+    }
     toolsInProgress.add(callId);
 
     const args = String(toolCall.arguments);
@@ -160,4 +157,14 @@ When answering, do not include any questions. Do not include markdown or extra k
     logger.answer(output.content);
     break;
   }
+};
+
+// --- Run selected mode ---
+if (mode === "stats") {
+  await runStatsMode();
+} else {
+  await runAiMode();
 }
+
+db.close();
+aggregatedDb?.close();

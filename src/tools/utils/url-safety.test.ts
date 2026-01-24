@@ -1,10 +1,11 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import dns from "node:dns/promises";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
-  isPrivateOrReservedIp,
   isBlockedHostname,
-  validateUrlProtocol,
+  isPrivateOrReservedIp,
   resolveAndValidateUrl,
+  validateUrlProtocol,
 } from "./url-safety";
 
 vi.mock("node:dns/promises", () => ({

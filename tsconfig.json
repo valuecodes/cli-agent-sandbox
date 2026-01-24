@@ -1,6 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~tools/*": ["src/tools/*"],
+      "~clients/*": ["src/clients/*"],
+      "~utils/*": ["src/utils/*"]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2024",

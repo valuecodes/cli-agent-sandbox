@@ -5,13 +5,12 @@
     "defaultMode": "default",
     "allow": [
       "Bash(pnpm lint:*)",
+      "Bash(pnpm lint:fix:*)",
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm agents:check:*)",
-      "Bash(pnpm agents:sync:*)"
+      "Bash(pnpm test:*)"
     ],
     "ask": [
       "Bash(pnpm install:*)",

@@ -1,11 +1,12 @@
+import type { Logger } from "~clients/logger";
 import { marked } from "marked";
 import type { z } from "zod";
-import type { Publication } from "../types/index";
-import type { Logger } from "./logger";
 
-export interface ReviewPageGeneratorConfig {
+import type { Publication } from "../types/index";
+
+export type ReviewPageGeneratorConfig = {
   logger: Logger;
-}
+};
 
 export class ReviewPageGenerator {
   private logger: Logger;

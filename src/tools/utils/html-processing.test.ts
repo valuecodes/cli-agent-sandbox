@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
+
 import {
-  sanitizeHtml,
-  extractMainContent,
   convertToMarkdown,
   convertToPlainText,
+  extractMainContent,
   extractTitle,
   processHtmlContent,
+  sanitizeHtml,
 } from "./html-processing";
 
 describe("html-processing", () => {

@@ -1,56 +1,57 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import slug from "slug";
+import { Fetch } from "~clients/fetch";
+import type { Logger } from "~clients/logger";
+import { PlaywrightScraper } from "~clients/playwright-scraper";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+import slug from "slug";
 import type { z } from "zod";
-import { Fetch } from "./fetch";
-import { PlaywrightScraper } from "./playwright-scraper";
+
+import type {
+  LinkCandidate,
+  Publication,
+  PublicationLink,
+  SelectorResult,
+} from "../types/index";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
-import type { Logger } from "./logger";
-import type {
-  PublicationLink,
-  LinkCandidate,
-  SelectorResult,
-  Publication,
-} from "../types/index";
 
 export type FetchSource = "playwright" | "basic-fetch";
 
-export interface PublicationPipelineConfig {
+export type PublicationPipelineConfig = {
   logger: Logger;
   outputDir: string;
   refetch?: boolean;
-}
+};
 
-export interface FetchSourceResult {
+export type FetchSourceResult = {
   markdown: string;
   html: string;
   fromCache: { markdown: boolean; html: boolean };
   source: FetchSource;
-}
+};
 
-export interface DiscoverLinksResult {
+export type DiscoverLinksResult = {
   allLinks: string[];
   filteredLinks: string[];
   linkCandidates: z.infer<typeof LinkCandidate>[];
   source: FetchSource;
   usedFallback: boolean;
-}
+};
 
-export interface IdentifyAndExtractResult {
+export type IdentifyAndExtractResult = {
   selectors: z.infer<typeof SelectorResult>;
   publications: z.infer<typeof PublicationLink>[];
-}
+};
 
-export interface FetchPublicationsResult {
+export type FetchPublicationsResult = {
   fetchedCount: number;
   skippedCount: number;
   markdownCount: number;
-}
+};
 
-export interface ExtractContentResult {
+export type ExtractContentResult = {
   publications: z.infer<typeof Publication>[];
   report: {
     total: number;
@@ -58,10 +59,15 @@ export interface ExtractContentResult {
     failed: number;
     results: { success: boolean; filename: string; error?: string }[];
   };
-}
+};
 
 const MAX_TITLE_SLUG_LENGTH = 80;
 
+/**
+ * Orchestrates the full publication scraping pipeline.
+ * Handles fetching source content, discovering links, extracting metadata,
+ * fetching individual publications, and generating review pages.
+ */
 export class PublicationPipeline {
   private logger: Logger;
   private outputDir: string;
@@ -72,6 +78,10 @@ export class PublicationPipeline {
   private reviewGenerator: ReviewPageGenerator;
   private htmlToMarkdown: NodeHtmlMarkdown;
 
+  /**
+   * Creates a new PublicationPipeline instance.
+   * @param config - Configuration with logger, output directory, and refetch flag
+   */
   constructor(config: PublicationPipelineConfig) {
     this.logger = config.logger;
     this.outputDir = config.outputDir;
@@ -83,6 +93,11 @@ export class PublicationPipeline {
     this.htmlToMarkdown = new NodeHtmlMarkdown();
   }
 
+  /**
+   * Checks if a file exists at the given path.
+   * @param filePath - Path to check
+   * @returns True if file exists, false otherwise
+   */
   private async fileExists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);
@@ -92,6 +107,11 @@ export class PublicationPipeline {
     }
   }
 
+  /**
+   * Converts a title to a URL-safe slug.
+   * @param title - The title to convert
+   * @returns Slugified title, truncated to MAX_TITLE_SLUG_LENGTH
+   */
   private titleToSlug(title: string): string {
     const baseSlug = slug(title, { lower: true });
     const trimmedSlug = baseSlug.replace(/^-+|-+$/g, "");
@@ -109,10 +129,21 @@ export class PublicationPipeline {
     return shortened || "untitled-publication";
   }
 
+  /**
+   * Generates a short hash from a URL for disambiguation.
+   * @param url - The URL to hash
+   * @returns First 8 characters of SHA-256 hash
+   */
   private urlToShortHash(url: string): string {
     return crypto.createHash("sha256").update(url).digest("hex").slice(0, 8);
   }
 
+  /**
+   * Fetches source content from a URL using Playwright or basic HTTP.
+   * Caches results to avoid refetching unless explicitly requested.
+   * @param options - Target URL and optional source override
+   * @returns Fetched content with cache status and source used
+   */
   async fetchSourceContent({
     targetUrl,
     forceSource,
@@ -171,6 +202,12 @@ export class PublicationPipeline {
     return { markdown, html, fromCache, source };
   }
 
+  /**
+   * Discovers and filters links from HTML content.
+   * Falls back to basic fetch if Playwright finds no candidates.
+   * @param options - HTML content, target URL, and optional filter substring
+   * @returns Discovered links, filtered links, and link candidates
+   */
   async discoverLinks({
     html,
     targetUrl,
@@ -281,6 +318,11 @@ export class PublicationPipeline {
     };
   }
 
+  /**
+   * Identifies CSS selectors and extracts publication metadata.
+   * @param options - Link candidates to analyze
+   * @returns Identified selectors and extracted publications
+   */
   async identifyAndExtractMetadata({
     linkCandidates,
   }: {
@@ -318,6 +360,12 @@ export class PublicationPipeline {
     return { selectors, publications };
   }
 
+  /**
+   * Fetches HTML pages for each publication and converts to markdown.
+   * Skips already-cached pages unless refetch is enabled.
+   * @param options - Publications to fetch
+   * @returns Fetch statistics (fetched, skipped, markdown counts)
+   */
   async fetchPublicationPages({
     publications,
   }: {
@@ -412,6 +460,12 @@ export class PublicationPipeline {
     return { fetchedCount, skippedCount, markdownCount };
   }
 
+  /**
+   * Extracts main content from fetched publication HTML files.
+   * Uses AI to identify content selectors and converts to markdown.
+   * @param options - Publications to extract content from
+   * @returns Extracted publications with content and extraction report
+   */
   async extractPublicationContent({
     publications,
   }: {
@@ -549,6 +603,11 @@ export class PublicationPipeline {
     return { publications: publicationsWithContent, report };
   }
 
+  /**
+   * Generates an HTML review page for extracted publications.
+   * @param options - Publications and source URL
+   * @returns Path to the generated review.html file
+   */
   async generateReviewPage({
     publications,
     targetUrl,
@@ -567,6 +626,9 @@ export class PublicationPipeline {
     return reviewPath;
   }
 
+  /**
+   * Closes all resources including the Playwright browser.
+   */
   async close(): Promise<void> {
     await this.playwrightScraper.close();
   }

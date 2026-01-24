@@ -1,11 +1,12 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { invokeTool } from "~tools/utils/test-utils";
+import * as urlSafety from "~tools/utils/url-safety";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { FetchResult } from "./fetch-url-tool";
 import { fetchUrlTool } from "./fetch-url-tool";
-import { invokeTool } from "../utils/test-utils";
-import * as urlSafety from "../utils/url-safety";
 
 // Mock the url-safety module
-vi.mock("../utils/url-safety", async (importOriginal) => {
+vi.mock("~tools/utils/url-safety", async (importOriginal) => {
   const original = await importOriginal<typeof urlSafety>();
   return {
     ...original,
@@ -14,12 +15,12 @@ vi.mock("../utils/url-safety", async (importOriginal) => {
 });
 
 // Helper to create a mock response
-function createMockResponse(options: {
+const createMockResponse = (options: {
   status?: number;
   headers?: Record<string, string>;
   body?: string;
   ok?: boolean;
-}): Response {
+}): Response => {
   const {
     status = 200,
     headers = {},
@@ -52,12 +53,11 @@ function createMockResponse(options: {
     }),
     body: readableStream,
   } as Response;
-}
+};
 
 // Parse the JSON result from the tool
-function parseResult(result: string): FetchResult {
-  return JSON.parse(result) as FetchResult;
-}
+const parseResult = (result: string): FetchResult =>
+  JSON.parse(result) as FetchResult;
 
 describe("fetchUrlTool", () => {
   beforeEach(() => {

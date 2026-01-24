@@ -1,42 +1,43 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Fetch } from "../../clients/fetch";
-import type { Logger } from "../../clients/logger";
+import { Fetch } from "~clients/fetch";
+import type { Logger } from "~clients/logger";
+
+import { FETCH_DECADES } from "../constants";
 import type { ConsolidatedData } from "./database";
 import { AggregatedNameDatabase, NameDatabase } from "./database";
-import { FETCH_DECADES } from "./decades";
 import type { ParsedNames } from "./parse-names";
 import { parseNamesHtml } from "./parse-names";
 
-export interface NameSuggesterPipelineConfig {
+export type NameSuggesterPipelineConfig = {
   logger: Logger;
   outputDir: string;
   refetch?: boolean;
-}
+};
 
 export type { DecadeData, ConsolidatedData } from "./database";
 
-export interface FetchDecadePageResult {
+export type FetchDecadePageResult = {
   html: string;
   markdown: string;
   parsedNames: ParsedNames;
   fromCache: boolean;
-}
+};
 
-export interface ProcessAllDecadesResult {
+export type ProcessAllDecadesResult = {
   totalPages: number;
   cachedPages: number;
   fetchedPages: number;
-}
+};
 
-export interface SetupResult {
+export type SetupResult = {
   outputPath: string;
   totalPages: number;
   cachedPages: number;
   fetchedPages: number;
   db: NameDatabase;
   aggregatedDb: AggregatedNameDatabase | null;
-}
+};
 
 const BASE_URL = "https://nimipalvelu.dvv.fi/suosituimmat-etunimet";
 const REQUEST_DELAY_MS = 500;

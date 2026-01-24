@@ -16,3 +16,6 @@ export const DECADES: string[] = [
 ];
 
 export const FETCH_DECADES: string[] = DECADES.slice().reverse();
+
+export const FIRST_DECADE = DECADES[0] ?? "1889";
+export const LAST_DECADE = DECADES[DECADES.length - 1] ?? "2020";

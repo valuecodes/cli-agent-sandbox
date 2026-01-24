@@ -36,6 +36,7 @@ Documentation files to consider:
 - When adding new commands, include both the command and a brief explanation
 - Do not introduce instructions that conflict with `AGENTS.md`
 - Do not edit `CLAUDE.md` directly; update `AGENTS.md` instead
+- Mermaid: wrap node text in quotes like `A["Label"]` and `B{"Question?"}` to avoid parse issues with punctuation
 
 ## Output Requirements
 

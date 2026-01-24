@@ -1,11 +1,16 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-export interface LoggerConfig {
+export type LoggerConfig = {
   level?: LogLevel;
   useColors?: boolean;
   useTimestamps?: boolean;
-}
+};
 
+/**
+ * Configurable console logger with support for log levels, colors, and timestamps.
+ * Provides standard logging methods (debug, info, warn, error) and specialized
+ * methods for tool output, questions, and answers.
+ */
 export class Logger {
   private level: LogLevel;
   private useColors: boolean;
@@ -31,16 +36,31 @@ export class Logger {
 
   private static readonly RESET = "\x1b[0m";
 
+  /**
+   * Creates a new Logger instance.
+   * @param config - Optional configuration for level, colors, and timestamps
+   */
   constructor(config?: LoggerConfig) {
     this.level = config?.level ?? "info";
-    this.useColors = config?.useColors ?? Boolean(process.stdout.isTTY);
+    this.useColors = config?.useColors ?? process.stdout.isTTY;
     this.useTimestamps = config?.useTimestamps ?? true;
   }
 
+  /**
+   * Checks if a message at the given level should be logged.
+   * @param level - The log level to check
+   * @returns True if the level meets or exceeds the configured threshold
+   */
   private shouldLog(level: LogLevel): boolean {
     return Logger.LEVELS[level] >= Logger.LEVELS[this.level];
   }
 
+  /**
+   * Formats a log message with timestamp and level tag.
+   * @param level - The log level for coloring
+   * @param message - The message to format
+   * @returns Formatted message string
+   */
   private formatMessage(level: LogLevel, message: string): string {
     const parts: string[] = [];
 
@@ -60,30 +80,55 @@ export class Logger {
     return parts.join(" ");
   }
 
+  /**
+   * Logs a debug message (lowest priority).
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.debug
+   */
   debug(message: string, ...args: unknown[]): void {
     if (this.shouldLog("debug")) {
       console.debug(this.formatMessage("debug", message), ...args);
     }
   }
 
+  /**
+   * Logs an info message.
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.log
+   */
   info(message: string, ...args: unknown[]): void {
     if (this.shouldLog("info")) {
       console.log(this.formatMessage("info", message), ...args);
     }
   }
 
+  /**
+   * Logs a warning message.
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.warn
+   */
   warn(message: string, ...args: unknown[]): void {
     if (this.shouldLog("warn")) {
       console.warn(this.formatMessage("warn", message), ...args);
     }
   }
 
+  /**
+   * Logs an error message (highest priority).
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.error
+   */
   error(message: string, ...args: unknown[]): void {
     if (this.shouldLog("error")) {
       console.error(this.formatMessage("error", message), ...args);
     }
   }
 
+  /**
+   * Logs a tool-related message with magenta [TOOL] tag.
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.log
+   */
   tool(message: string, ...args: unknown[]): void {
     if (this.shouldLog("info")) {
       const parts: string[] = [];
@@ -101,6 +146,11 @@ export class Logger {
     }
   }
 
+  /**
+   * Logs a question message with green [QUESTION] tag.
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.log
+   */
   question(message: string, ...args: unknown[]): void {
     if (this.shouldLog("info")) {
       const parts: string[] = [];
@@ -118,6 +168,11 @@ export class Logger {
     }
   }
 
+  /**
+   * Logs an answer message with blue [ANSWER] tag.
+   * @param message - The message to log
+   * @param args - Additional arguments to pass to console.log
+   */
   answer(message: string, ...args: unknown[]): void {
     if (this.shouldLog("info")) {
       const parts: string[] = [];
