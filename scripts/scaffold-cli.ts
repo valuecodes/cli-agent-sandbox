@@ -15,9 +15,9 @@ const TEMPLATE_DIR = path.join(process.cwd(), "templates", "cli-basic");
 const CLI_DIR = path.join(process.cwd(), "src", "cli");
 
 type Placeholders = {
-  __CLI_NAME__: string;
-  __CLI_NAME_TITLE__: string;
-  __CLI_DESCRIPTION__: string;
+  _CLI_NAME_: string;
+  _CLI_TITLE_: string;
+  _CLI_DESCRIPTION_: string;
 };
 
 const KEBAB_CASE_REGEX = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
@@ -105,13 +105,13 @@ const main = async (): Promise<void> => {
   }
 
   const placeholders: Placeholders = {
-    __CLI_NAME__: name,
-    __CLI_NAME_TITLE__: toTitleCase(name),
-    __CLI_DESCRIPTION__: description,
+    _CLI_NAME_: name,
+    _CLI_TITLE_: toTitleCase(name),
+    _CLI_DESCRIPTION_: description,
   };
 
   console.log(`Scaffolding new CLI: ${name}`);
-  console.log(`  Title: ${placeholders.__CLI_NAME_TITLE__}`);
+  console.log(`  Title: ${placeholders._CLI_TITLE_}`);
   console.log(`  Description: ${description}`);
   console.log(`  Target: src/cli/${name}/`);
   console.log();

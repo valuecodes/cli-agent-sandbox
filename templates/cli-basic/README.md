@@ -1,11 +1,11 @@
-# **__CLI_NAME_TITLE__** CLI
+# _CLI_TITLE_
 
-**__CLI_DESCRIPTION__**
+_CLI_DESCRIPTION_
 
 ## Run
 
 ```
-pnpm run:__CLI_NAME__
+pnpm run:_CLI_NAME_
 ```
 
 ## Arguments
@@ -14,7 +14,7 @@ pnpm run:__CLI_NAME__
 
 ## Output
 
-Writes under `tmp/__CLI_NAME__/`.
+Writes under `tmp/_CLI_NAME_/`.
 
 ## Flowchart
 
