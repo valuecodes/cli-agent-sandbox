@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import type { SQLInputValue } from "node:sqlite";
+import type { Logger } from "~clients/logger";
 
-import type { Logger } from "../../../clients/logger";
 import type { NameEntry } from "./parse-names";
 
 export type NameRow = {

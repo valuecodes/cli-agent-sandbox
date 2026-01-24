@@ -1,8 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { tool } from "@openai/agents";
-
-import { resolveTmpPathForWrite, TMP_ROOT } from "../utils/fs";
+import { resolveTmpPathForWrite, TMP_ROOT } from "~tools/utils/fs";
 
 export const writeFileTool = tool({
   name: "writeFile",

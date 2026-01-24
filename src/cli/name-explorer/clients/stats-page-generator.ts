@@ -1,4 +1,5 @@
-import type { Logger } from "../../../clients/logger";
+import type { Logger } from "~clients/logger";
+
 import type { AllStats, LetterStats, TopName, UnisexName } from "../types";
 
 export type StatsPageGeneratorConfig = {

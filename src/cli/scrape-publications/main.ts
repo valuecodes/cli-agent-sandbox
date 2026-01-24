@@ -5,12 +5,12 @@
 import "dotenv/config";
 
 import path from "node:path";
+import { Logger } from "~clients/logger";
+import { parseArgs } from "~utils/parse-args";
 import slug from "slug";
 import { z } from "zod";
 import { question } from "zx";
 
-import { Logger } from "../../clients/logger";
-import { parseArgs } from "../../utils/parse-args";
 import { PublicationPipeline } from "./clients/publication-pipeline";
 
 const logger = new Logger({ level: "info", useColors: true });

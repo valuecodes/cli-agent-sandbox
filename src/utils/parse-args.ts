@@ -1,7 +1,6 @@
+import type { Logger } from "~clients/logger";
 import type { z } from "zod";
 import { argv } from "zx";
-
-import type { Logger } from "../clients/logger";
 
 export type ParseArgsOptions<T extends z.ZodType> = {
   logger: Logger;

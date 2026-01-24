@@ -1,10 +1,7 @@
+import { convertToMarkdown, sanitizeHtml } from "~tools/utils/html-processing";
 import { chromium } from "playwright";
 import type { Browser, Page } from "playwright";
 
-import {
-  convertToMarkdown,
-  sanitizeHtml,
-} from "../tools/utils/html-processing";
 import type { Logger } from "./logger";
 
 // Possible wait strategies for page load

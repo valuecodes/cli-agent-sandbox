@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Fetch } from "~clients/fetch";
+import type { Logger } from "~clients/logger";
 
-import { Fetch } from "../../../clients/fetch";
-import type { Logger } from "../../../clients/logger";
 import { FETCH_DECADES } from "../constants";
 import type { ConsolidatedData } from "./database";
 import { AggregatedNameDatabase, NameDatabase } from "./database";

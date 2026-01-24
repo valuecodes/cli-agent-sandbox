@@ -1,8 +1,7 @@
 import crypto from "node:crypto";
 import { tool } from "@openai/agents";
-
-import { processHtmlContent } from "../utils/html-processing";
-import { resolveAndValidateUrl } from "../utils/url-safety";
+import { processHtmlContent } from "~tools/utils/html-processing";
+import { resolveAndValidateUrl } from "~tools/utils/url-safety";
 
 /**
  * Result of a fetch operation

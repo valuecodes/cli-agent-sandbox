@@ -91,6 +91,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 - When adding tools that touch files, use `src/tools/utils/fs.ts` for path validation.
 - Comments should capture invariants or subtle behavior, not restate code.
 - Prefer a class over a function when state/lifecycle or shared dependencies make it appropriate.
+- Avoid `index.ts` barrel exports; use explicit module paths.
 
 ### Comment guidance (short)
 

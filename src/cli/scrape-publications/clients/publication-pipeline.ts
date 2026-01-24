@@ -1,13 +1,13 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { Fetch } from "~clients/fetch";
+import type { Logger } from "~clients/logger";
+import { PlaywrightScraper } from "~clients/playwright-scraper";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import slug from "slug";
 import type { z } from "zod";
 
-import { Fetch } from "../../../clients/fetch";
-import type { Logger } from "../../../clients/logger";
-import { PlaywrightScraper } from "../../../clients/playwright-scraper";
 import type {
   LinkCandidate,
   Publication,

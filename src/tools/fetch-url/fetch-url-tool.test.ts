@@ -1,12 +1,12 @@
+import { invokeTool } from "~tools/utils/test-utils";
+import * as urlSafety from "~tools/utils/url-safety";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { invokeTool } from "../utils/test-utils";
-import * as urlSafety from "../utils/url-safety";
 import type { FetchResult } from "./fetch-url-tool";
 import { fetchUrlTool } from "./fetch-url-tool";
 
 // Mock the url-safety module
-vi.mock("../utils/url-safety", async (importOriginal) => {
+vi.mock("~tools/utils/url-safety", async (importOriginal) => {
   const original = await importOriginal<typeof urlSafety>();
   return {
     ...original,
