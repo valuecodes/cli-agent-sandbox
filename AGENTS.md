@@ -40,6 +40,20 @@
 - `pnpm format` / `pnpm format:check`
 - `pnpm test`
 
+**Scaffolding a new CLI:**
+
+```
+pnpm scaffold:cli -- --name=my-cli --description="What it does"
+```
+
+Creates `src/cli/my-cli/` with starter files. After scaffolding:
+
+1. Add `"run:my-cli": "tsx src/cli/my-cli/main.ts"` to `package.json`
+2. Implement logic in `main.ts`
+3. Follow the checklist in `CHECKLIST.md`
+
+**Rule:** When creating a new CLI, use `pnpm scaffold:cli` — don't create ad-hoc folders.
+
 ---
 
 ## 3) Hard rules (security & repo safety)
