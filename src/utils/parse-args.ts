@@ -8,6 +8,12 @@ export type ParseArgsOptions<T extends z.ZodType> = {
   schema: T;
 };
 
+/**
+ * Parses and validates CLI arguments using a Zod schema.
+ * @param options - Logger and Zod schema for validation
+ * @returns Validated arguments matching the schema type
+ * @throws If arguments fail schema validation
+ */
 export const parseArgs = <T extends z.ZodType>({
   logger,
   schema,

@@ -198,7 +198,7 @@ const executeFetch = async (params: {
             ok: false,
             status: response.status,
             finalUrl: currentUrl,
-            error: `Redirect blocked: ${redirectValidation.error}`,
+            error: `Redirect blocked: ${redirectValidation.error ?? "Unknown error"}`,
             warnings,
             fetchedAt,
           };

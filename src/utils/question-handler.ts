@@ -37,13 +37,27 @@ export type AskResult<T> = {
 
 const NonEmptyString = z.string().trim().min(1, "Input cannot be empty");
 
+/**
+ * Handles interactive CLI prompts with validation and retry logic.
+ * Uses Zod schemas for input validation and provides configurable retry attempts.
+ */
 export class QuestionHandler {
   private logger: Logger;
 
+  /**
+   * Creates a new QuestionHandler instance.
+   * @param config - Configuration with logger
+   */
   constructor(config: QuestionHandlerConfig) {
     this.logger = config.logger;
   }
 
+  /**
+   * Prompts the user for input with validation and retry logic.
+   * @param options - Configuration for prompt, validation, and retry behavior
+   * @returns Validated answer and raw input
+   * @throws If maximum retries are exceeded
+   */
   async ask<T extends z.ZodType = z.ZodString>(
     options: AskOptions<T>
   ): Promise<AskResult<z.infer<T>>> {
@@ -103,6 +117,11 @@ export class QuestionHandler {
     throw error;
   }
 
+  /**
+   * Simplified method to ask for a string input.
+   * @param options - Prompt text and optional default value
+   * @returns The trimmed string answer
+   */
   async askString(options: {
     prompt: string;
     defaultValue?: string;

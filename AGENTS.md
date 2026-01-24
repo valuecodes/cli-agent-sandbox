@@ -1,84 +1,113 @@
-## Repository overview
+# AGENTS.md — Operating Guide for AI Agents
 
-- **Name:** cli-agent-sandbox
-- **Purpose:** Minimal TypeScript CLI sandbox for testing agent workflows.
-- **Entry points:** `src/cli/guestbook/main.ts`, `src/cli/name-explorer/main.ts`, `src/cli/scrape-publications/main.ts`.
-- **Framework:** Uses `@openai/agents` with file tools scoped to `tmp`.
+## 0) TL;DR (Agent quick start)
 
-## Setup
+**Goal:** Make small, safe, test-covered changes in this TypeScript CLI sandbox.
 
-1. Install Node.js and pnpm.
-2. Install dependencies: `pnpm install`
+**Repo:** `cli-agent-sandbox` — minimal TypeScript CLI sandbox built with `@openai/agents` and tool sandboxing under `tmp/`.
 
-## Environment
+1. Start at `src/cli/<cli>/main.ts` and the matching `src/cli/<cli>/README.md`.
+2. Follow the pipeline classes under `src/cli/<cli>/clients/*` and schemas under `src/cli/<cli>/types/*`.
+3. Reuse shared helpers: `src/utils/parse-args.ts`, `src/utils/question-handler.ts`, `src/clients/logger.ts`.
+4. Keep changes minimal; add/update **Vitest** tests (`*.test.ts`) when behavior changes.
+5. Run: `pnpm typecheck`, `pnpm lint`, `pnpm test` (and `pnpm format:check` if formatting changed).
+6. All runtime artifacts go under `tmp/` (never commit them).
 
-- Set `OPENAI_API_KEY` (export it or use a `.env`) to run the guestbook, name explorer (AI mode), and publication scraper.
+**Scratch space:** Use `tmp/` for generated HTML/markdown/JSON/reports.
 
-## Common commands
+---
 
-Available pnpm scripts for development and testing:
+## 1) Fast map (where to look first)
 
-| Command                        | Description                                       |
-| ------------------------------ | ------------------------------------------------- |
-| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo            |
-| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats) |
-| `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
-| `pnpm typecheck`               | Run TypeScript type checking                      |
-| `pnpm lint`                    | Run ESLint for code quality                       |
-| `pnpm format`                  | Format code with Prettier                         |
-| `pnpm format:check`            | Check code formatting                             |
-| `pnpm test`                    | Run Vitest test suite                             |
+- Entry points: `src/cli/*/main.ts`
+- Shared clients: `src/clients/*`
+- Shared helpers: `src/utils/*`
+- Agent tools: `src/tools/*`
 
-## Project layout
+---
 
-| Path                                         | Description                                     |
-| -------------------------------------------- | ----------------------------------------------- |
-| `src/cli/guestbook/main.ts`                  | Guestbook CLI entry point                       |
-| `src/cli/guestbook/README.md`                | Guestbook CLI docs                              |
-| `src/cli/name-explorer/main.ts`              | Name Explorer CLI entry point                   |
-| `src/cli/name-explorer/README.md`            | Name Explorer CLI docs                          |
-| `src/cli/scrape-publications/main.ts`        | Publication scraping CLI entry point            |
-| `src/cli/scrape-publications/README.md`      | Publication scraping CLI docs                   |
-| `src/cli/scrape-publications/clients/*`      | Publication scraping pipeline clients           |
-| `src/cli/scrape-publications/types/index.ts` | Publication Zod schemas                         |
-| `src/clients/logger.ts`                      | Shared console logger                           |
-| `src/clients/fetch.ts`                       | Shared HTTP fetch + sanitization helpers        |
-| `src/clients/playwright-scraper.ts`          | Playwright-based web scraper                    |
-| `src/utils/parse-args.ts`                    | Shared CLI argument parsing helper              |
-| `src/utils/question-handler.ts`              | Shared CLI prompt + validation helper           |
-| `src/tools/index.ts`                         | Tool exports                                    |
-| `src/tools/fetch-url/fetch-url-tool.ts`      | Safe HTTP fetch tool with SSRF protection       |
-| `src/tools/read-file/read-file-tool.ts`      | Agent tool for reading files under `tmp`        |
-| `src/tools/write-file/write-file-tool.ts`    | Agent tool for writing files under `tmp`        |
-| `src/tools/list-files/list-files-tool.ts`    | Agent tool for listing files under `tmp`        |
-| `src/tools/utils/fs.ts`                      | Path safety utilities                           |
-| `src/tools/utils/html-processing.ts`         | HTML sanitization + extraction helpers          |
-| `src/tools/utils/url-safety.ts`              | URL safety + SSRF protection helpers            |
-| `src/tools/utils/test-utils.ts`              | Shared test helpers                             |
-| `src/tools/*/*.test.ts`                      | Vitest tests for tools and safety utils         |
-| `eslint.config.ts`                           | ESLint configuration                            |
-| `prettier.config.ts`                         | Prettier configuration                          |
-| `tsconfig.json`                              | TypeScript configuration                        |
-| `vitest.config.ts`                           | Vitest configuration                            |
-| `tmp/`                                       | Runtime scratch space for tool + scraper output |
+## 2) Setup & commands
 
-## Tools
+- Install deps: `pnpm install`
+- Set `OPENAI_API_KEY` via env or `.env` (humans do this; agents must not read secrets)
+- If a task requires Playwright, follow the repo README for system deps
 
-File tools provide operations sandboxed to the `tmp/` directory with path validation. The `fetchUrl` tool adds SSRF protection and sanitizes HTML content before conversion.
+**Common scripts (see `package.json` for all):**
 
-| Tool        | Location                                  | Parameters                                                                               | Description                                             |
-| ----------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | `url`, `timeoutMs?`, `maxBytes?`, `maxRedirects?`, `maxChars?`, `etag?`, `lastModified?` | Fetches URLs safely and returns sanitized Markdown/text |
-| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | `path` (string)                                                                          | Reads file content from `tmp`                           |
-| `writeFile` | `src/tools/write-file/write-file-tool.ts` | `path`, `content` (strings)                                                              | Writes content to file in `tmp`                         |
-| `listFiles` | `src/tools/list-files/list-files-tool.ts` | `path` (string, optional)                                                                | Lists files under `tmp`                                 |
+- `pnpm run:[cli-name-here]`
+- `pnpm typecheck`
+- `pnpm lint` (use `pnpm lint:fix` if errors are auto-fixable)
+- `pnpm format` / `pnpm format:check`
+- `pnpm test`
 
-## Agent notes
+---
 
-- Use pnpm for scripts and dependency changes.
-- Keep changes small and focused; update tests when behavior changes.
-- Do not run git operations that change repo state: no `git commit`, `git push`, or opening PRs.
-- Read-only git commands are allowed (e.g., `git status`, `git diff`, `git log`).
-- Do not read `.env` files or any other secrets.
+## 3) Hard rules (security & repo safety)
+
+### MUST NOT
+
+- **Do not read** `.env` files or any secrets.
+- **Do not run** git commands that change repo state: `git commit`, `git push`, PR creation.
+- **Do not bypass** SSRF protections or URL/path safety utilities.
+
+### Allowed
+
+- Read-only git commands: `git status`, `git diff`, `git log`.
+- Writing runtime artifacts under `tmp/`.
+
+---
+
+## 4) Agent tools (runtime tool catalog)
+
+All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/fs.ts`).
+
+### File tools
+
+- **`readFile`** (`src/tools/read-file/read-file-tool.ts`)
+  - Reads a file under `tmp/`.
+  - Params: `{ path: string }` (path is **relative to `tmp/`**)
+- **`writeFile`** (`src/tools/write-file/write-file-tool.ts`)
+  - Writes a file under `tmp/`.
+  - Params: `{ path: string, content: string }` (path is **relative to `tmp/`**)
+- **`listFiles`** (`src/tools/list-files/list-files-tool.ts`)
+  - Lists files/dirs under `tmp/`.
+  - Params: `{ path?: string }` (defaults to `tmp/` root)
+
+### Safe web fetch tool
+
+- **`fetchUrl`** (`src/tools/fetch-url/fetch-url-tool.ts`)
+  - SSRF protection + redirect validation + HTML sanitization + markdown/text conversion.
+  - Params: `{ url, timeoutMs?, maxBytes?, maxRedirects?, maxChars?, etag?, lastModified? }`
+  - Output: sanitized content, metadata, and warnings.
+
+---
+
+## 5) Coding conventions (how changes should look)
+
 - Initialize `Logger` in CLI entry points and pass it into clients/pipelines via constructor options.
-- Prefer shared helpers in `src/utils` over custom parsing or prompt logic.
+- Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom logic.
+- Use Zod schemas for CLI args and tool IO.
+- For HTTP fetching in code, prefer `Fetch` (sanitized) or `PlaywrightScraper` for JS-heavy pages.
+- When adding tools that touch files, use `src/tools/utils/fs.ts` for path validation.
+- Comments should capture invariants or subtle behavior, not restate code.
+- Prefer a class over a function when state/lifecycle or shared dependencies make it appropriate.
+
+### Comment guidance (short)
+
+- Use comments for intent/tradeoffs, contracts (inputs/outputs, invariants, side effects, errors), non-obvious behavior (ordering, caching, perf), or domain meanings.
+- Avoid `@param`/`@returns` boilerplate and step-by-step narration that repeats the signature or body.
+- Rule of thumb: each comment should say something the types cannot.
+
+---
+
+## 6) Definition of Done (before finishing)
+
+- [ ] Change is minimal and localized
+- [ ] Tests added/updated if behavior changed (`pnpm test`)
+- [ ] Typecheck passes (`pnpm typecheck`)
+- [ ] Lint passes (`pnpm lint`)
+- [ ] Formatting is clean (`pnpm format:check` or `pnpm format`)
+- [ ] No secrets accessed, no unsafe file/network behavior introduced
+- [ ] Any generated artifacts are in `tmp/` only
+
+---

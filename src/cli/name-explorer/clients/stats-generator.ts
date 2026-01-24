@@ -17,9 +17,23 @@ import type {
 } from "../types";
 import type { NameDatabase } from "./database";
 
+/**
+ * Generates statistical analysis from Finnish names data stored in a NameDatabase.
+ * Computes various metrics including decade stats, top names, name dynamics,
+ * rank changes, churn metrics, and phonetic analysis.
+ */
 export class StatsGenerator {
+  /**
+   * Creates a new StatsGenerator instance.
+   * @param db - The NameDatabase instance to query for statistics
+   */
   constructor(private db: NameDatabase) {}
 
+  /**
+   * Computes comprehensive statistics for each decade and gender combination.
+   * Includes birth totals, name counts, top-N concentration, diversity indices, and entropy.
+   * @returns Array of decade/gender statistics
+   */
   computeDecadeStats(): DecadeGenderStats[] {
     const results: DecadeGenderStats[] = [];
 
@@ -70,6 +84,14 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Calculates the share of births for the top N names.
+   * @param decade - The decade to query
+   * @param gender - The gender category
+   * @param n - Number of top names to include
+   * @param total - Total births for normalization
+   * @returns Share as a decimal (0-1)
+   */
   private getTopNShare(
     decade: string,
     gender: string,
@@ -83,6 +105,14 @@ export class StatsGenerator {
     return total > 0 ? (row?.topSum ?? 0) / total : 0;
   }
 
+  /**
+   * Calculates how many names are needed to reach a given percentage of births.
+   * @param decade - The decade to query
+   * @param gender - The gender category
+   * @param pct - Target percentage as decimal (e.g., 0.5 for 50%)
+   * @param total - Total births for the decade/gender
+   * @returns Number of names needed to reach the percentage
+   */
   private getNamesToReachPct(
     decade: string,
     gender: string,
@@ -105,6 +135,13 @@ export class StatsGenerator {
     return rows.length;
   }
 
+  /**
+   * Computes diversity indices for name distribution.
+   * @param decade - The decade to query
+   * @param gender - The gender category
+   * @param total - Total births for normalization
+   * @returns Object containing HHI, effective names count, and Shannon entropy
+   */
   private computeDiversityIndices(
     decade: string,
     gender: string,
@@ -133,6 +170,11 @@ export class StatsGenerator {
     };
   }
 
+  /**
+   * Retrieves the top-ranked names for each decade and gender.
+   * @param limit - Maximum number of names per decade/gender (default: 10)
+   * @returns Array of top names with rank, count, and share
+   */
   computeTopNames(limit = 10): TopName[] {
     const results: TopName[] = [];
 
@@ -169,6 +211,11 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Analyzes the lifecycle dynamics of each name across decades.
+   * Computes peak decade, longevity, average rank, and rank stability.
+   * @returns Array of name dynamics with timing and consistency metrics
+   */
   computeNameDynamics(): NameDynamics[] {
     const rows = this.db.query<{
       name: string;
@@ -241,6 +288,10 @@ export class StatsGenerator {
     });
   }
 
+  /**
+   * Identifies names with the largest rank changes between consecutive decades.
+   * @returns Object containing top 20 climbers and top 20 fallers
+   */
   computeRankChanges(): { climbers: RankChange[]; fallers: RankChange[] } {
     const changes: RankChange[] = [];
 
@@ -290,6 +341,10 @@ export class StatsGenerator {
     return { climbers, fallers };
   }
 
+  /**
+   * Finds names that newly appeared in each decade (not present in the previous decade).
+   * @returns Array of new entries with their debut decade and initial rank
+   */
   computeNewEntries(): NewEntry[] {
     const results: NewEntry[] = [];
 
@@ -330,6 +385,10 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Identifies names that returned to the rankings after one or more decades of absence.
+   * @returns Array of comebacks sorted by gap length (longest gaps first)
+   */
   computeComebacks(): Comeback[] {
     const results: Comeback[] = [];
 
@@ -393,6 +452,11 @@ export class StatsGenerator {
     return results.sort((a, b) => b.gapDecades - a.gapDecades);
   }
 
+  /**
+   * Computes name churn metrics between consecutive decades.
+   * Measures how much the name pool changes over time.
+   * @returns Array of churn metrics including new/exited names and Jaccard similarity
+   */
   computeChurnMetrics(): ChurnMetrics[] {
     const results: ChurnMetrics[] = [];
 
@@ -453,6 +517,10 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Finds names used for both boys and girls in the same decade.
+   * @returns Array of unisex names with rankings and counts for each gender
+   */
   computeUnisexNames(): UnisexName[] {
     return this.db.query<UnisexName>(`
       SELECT
@@ -469,6 +537,10 @@ export class StatsGenerator {
     `);
   }
 
+  /**
+   * Identifies names that have remained popular across 10 or more decades.
+   * @returns Array of evergreen names sorted by longevity and average rank
+   */
   computeEvergreenNames(): EvergreenName[] {
     return this.db.query<EvergreenName>(`
       SELECT
@@ -484,6 +556,10 @@ export class StatsGenerator {
     `);
   }
 
+  /**
+   * Analyzes the distribution of first letters across names.
+   * @returns Array of letter statistics with counts and shares per decade/gender
+   */
   computeLetterStats(): LetterStats[] {
     const results: LetterStats[] = [];
 
@@ -529,6 +605,10 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Analyzes the distribution of name endings (suffixes like -nen, -us, -ja).
+   * @returns Array of suffix statistics with counts and shares per decade/gender
+   */
   computeSuffixStats(): SuffixStats[] {
     const results: SuffixStats[] = [];
 
@@ -584,6 +664,10 @@ export class StatsGenerator {
     return results;
   }
 
+  /**
+   * Computes name length statistics (average, min, max) per decade and gender.
+   * @returns Array of name length statistics
+   */
   computeNameLengthStats(): NameLengthStats[] {
     return this.db.query<NameLengthStats>(`
       SELECT
@@ -598,6 +682,10 @@ export class StatsGenerator {
     `);
   }
 
+  /**
+   * Analyzes the usage of Finnish special characters (ä, ö) in names.
+   * @returns Array of special character statistics with shares per decade/gender
+   */
   computeSpecialCharStats(): SpecialCharStats[] {
     const rows = this.db.query<{
       decade: string;
@@ -624,6 +712,10 @@ export class StatsGenerator {
     }));
   }
 
+  /**
+   * Computes all available statistics in a single call.
+   * @returns Comprehensive statistics object containing all metrics
+   */
   computeAll(): AllStats {
     const decadeStats = this.computeDecadeStats();
     const topNames = this.computeTopNames(10);

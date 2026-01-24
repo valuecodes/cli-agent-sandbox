@@ -47,10 +47,20 @@ export default defineConfig(
         { ignoreVoid: true },
       ],
       "@typescript-eslint/switch-exhaustiveness-check": "error",
-      "@typescript-eslint/no-non-null-assertion": "error", // Disallow non-null assertions
-      "@typescript-eslint/consistent-type-exports": "error", // Ensure consistent usage of type exports
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"], // Use 'type' over 'interface'
-      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/consistent-type-exports": "error",
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowAny: false,
+          allowBoolean: true,
+          allowNever: false,
+          allowNullish: false,
+          allowNumber: true,
+          allowRegExp: false,
+        },
+      ],
       "prefer-const": "error",
       "no-var": "error",
       // --- Async correctness ---

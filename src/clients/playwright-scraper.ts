@@ -7,50 +7,24 @@ import {
 } from "../tools/utils/html-processing";
 import type { Logger } from "./logger";
 
-/**
- * Wait strategies for page loading
- */
+// Possible wait strategies for page load
 export type WaitStrategy = "load" | "domcontentloaded" | "networkidle";
 
-/**
- * Configuration for the PlaywrightScraper client
- */
 export type PlaywrightScraperConfig = {
-  /** Logger instance for debug/info/warn/error logging */
   logger: Logger;
-
-  /** Run browser in headless mode (default: true) */
-  headless?: boolean;
-
-  /** Default timeout in milliseconds for page operations (default: 30000) */
-  defaultTimeoutMs?: number;
-
-  /** Default wait strategy for page loads (default: "load") */
-  defaultWaitStrategy?: WaitStrategy;
+  headless?: boolean; // Whether to run browser in headless mode (default: true)
+  defaultTimeoutMs?: number; // Default timeout for operations in milliseconds
+  defaultWaitStrategy?: WaitStrategy; // Default wait strategy
 };
 
-/**
- * Options for individual scrape operations
- */
+// Options for a single scrape operation
 export type ScrapeOptions = {
-  /** Timeout in milliseconds for this specific operation */
-  timeoutMs?: number;
-
-  /** Wait strategy for this specific page load */
-  waitStrategy?: WaitStrategy;
-
-  /**
-   * Optional CSS selector to wait for before extracting content.
-   * Useful for SPAs that render content dynamically.
-   */
-  waitForSelector?: string;
+  timeoutMs?: number; // Timeout in milliseconds for this specific operation
+  waitStrategy?: WaitStrategy; // Page load wait strategy
+  waitForSelector?: string; // CSS selector to wait for before scraping
 };
 
-/**
- * Parameters for individual scrape operations.
- */
 export type ScrapeRequest = {
-  /** URL to scrape */
   targetUrl: string;
 } & ScrapeOptions;
 
@@ -65,6 +39,10 @@ export class PlaywrightScraper {
   private defaultWaitStrategy: WaitStrategy;
   private browser: Browser | null = null;
 
+  /**
+   * Creates a new PlaywrightScraper instance.
+   * @param config - Configuration with logger and optional browser settings
+   */
   constructor(config: PlaywrightScraperConfig) {
     this.logger = config.logger;
     this.headless = config.headless ?? true;
@@ -75,6 +53,8 @@ export class PlaywrightScraper {
   /**
    * Get or launch the browser instance.
    * Browser is reused across scrapes for performance.
+   * @returns Promise that resolves to the Browser instance
+   * @throws If browser launch fails
    */
   private async getBrowser(): Promise<Browser> {
     if (!this.browser?.isConnected()) {
@@ -86,6 +66,10 @@ export class PlaywrightScraper {
 
   /**
    * Navigate to a URL and wait for the page to be ready.
+   * @param page - Playwright Page instance
+   * @param targetUrl - The URL to navigate to
+   * @param options - Additional scrape options
+   * @returns Promise that resolves when navigation and waiting is complete
    */
   private async navigateAndWait({
     page,
@@ -118,6 +102,9 @@ export class PlaywrightScraper {
   /**
    * Scrape a URL and return sanitized HTML.
    * Uses Playwright to render JavaScript and extract the final DOM.
+   * @param targetUrl - The URL to scrape.
+   * @param options - Additional scrape options.
+   * @returns The scraped content in sanitized HTML format.
    */
   async scrapeHtml({ targetUrl, ...options }: ScrapeRequest): Promise<string> {
     const browser = await this.getBrowser();
@@ -143,6 +130,9 @@ export class PlaywrightScraper {
   /**
    * Scrape a URL and return Markdown.
    * Uses Playwright to render JavaScript, then sanitizes and converts to Markdown.
+   * @param targetUrl - The URL to scrape.
+   * @param options - Additional scrape options.
+   * @returns The scraped content in Markdown format.
    */
   async scrapeMarkdown({
     targetUrl,
@@ -157,6 +147,9 @@ export class PlaywrightScraper {
 
   /**
    * Handle and categorize errors for better debugging.
+   * Logs specific messages based on error type.
+   * @param targetUrl - The URL that was being scraped when the error occurred.
+   * @param error - The error object caught during scraping.
    */
   private handleError({
     targetUrl,
@@ -196,6 +189,7 @@ export class PlaywrightScraper {
   /**
    * Close the browser and release resources.
    * MUST be called when done scraping.
+   * @returns Promise that resolves when browser is closed
    */
   async close(): Promise<void> {
     if (this.browser) {

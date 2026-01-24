@@ -20,12 +20,20 @@ export type PublicationScraperConfig = {
   contentSelectorAgent?: ContentSelectorAgent;
 };
 
+/**
+ * Scrapes publication data from HTML pages using AI-powered CSS selector identification.
+ * Extracts titles, dates, and content from publication listing pages.
+ */
 export class PublicationScraper {
   private logger: Logger;
   private selectorAgent: SelectorAgent;
   private contentSelectorAgent: ContentSelectorAgent;
   private htmlToMarkdown: NodeHtmlMarkdown;
 
+  /**
+   * Creates a new PublicationScraper instance.
+   * @param config - Configuration with logger and optional custom agents
+   */
   constructor(config: PublicationScraperConfig) {
     this.logger = config.logger;
     this.selectorAgent = config.selectorAgent ?? this.createSelectorAgent();
@@ -34,6 +42,10 @@ export class PublicationScraper {
     this.htmlToMarkdown = new NodeHtmlMarkdown();
   }
 
+  /**
+   * Creates the default AI agent for identifying CSS selectors in publication listings.
+   * @returns Configured selector agent
+   */
   private createSelectorAgent(): SelectorAgent {
     return new Agent({
       name: "SelectorAnalyzer",
@@ -64,6 +76,10 @@ Do not include any explanation or markdown - only the JSON object.`,
     });
   }
 
+  /**
+   * Creates the default AI agent for identifying main content selectors.
+   * @returns Configured content selector agent
+   */
   private createContentSelectorAgent(): ContentSelectorAgent {
     return new Agent({
       name: "ContentSelectorAnalyzer",
@@ -91,6 +107,11 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     });
   }
 
+  /**
+   * Parses various date formats to ISO format (YYYY-MM-DD).
+   * @param rawDate - Raw date string in various formats
+   * @returns ISO date string or undefined if parsing fails
+   */
   private parseToIsoDate(rawDate: string): string | undefined {
     // Already ISO format
     if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
@@ -120,6 +141,11 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     return undefined;
   }
 
+  /**
+   * Finds the parent container element for an anchor (article card, list item, etc.).
+   * @param anchor - The anchor element to find a container for
+   * @returns The container element or the anchor's parent as fallback
+   */
   private findParentContainer(anchor: Element): Element {
     const containerTags = ["LI", "ARTICLE", "DIV", "SECTION", "TR", "DD"];
     let container: Element | null = anchor.parentElement;
@@ -406,6 +432,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     return undefined;
   }
 
+  /**
+   * Discovers all links in an HTML page.
+   * @param html - The HTML content to parse
+   * @param baseUrl - Base URL for resolving relative links
+   * @returns Array of discovered publication links
+   */
   discoverLinks(
     html: string,
     baseUrl: string
@@ -447,6 +479,13 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     return links;
   }
 
+  /**
+   * Extracts link candidates with their HTML context for selector analysis.
+   * @param html - The HTML content to parse
+   * @param baseUrl - Base URL for resolving relative links
+   * @param filterUrls - Set of URLs to include (others are filtered out)
+   * @returns Array of link candidates with URL and surrounding HTML
+   */
   extractLinkCandidates(
     html: string,
     baseUrl: string,
@@ -491,6 +530,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     return candidates;
   }
 
+  /**
+   * Uses AI to identify CSS selectors for extracting title and date from HTML samples.
+   * @param candidates - Link candidates to analyze
+   * @returns Identified CSS selectors for title and date
+   * @throws If no candidates are provided
+   */
   async identifySelectors(
     candidates: z.infer<typeof LinkCandidate>[]
   ): Promise<z.infer<typeof SelectorResult>> {
@@ -526,6 +571,12 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
     return SelectorResult.parse(response.finalOutput);
   }
 
+  /**
+   * Extracts publication data from candidates using identified selectors.
+   * @param candidates - Link candidates to extract data from
+   * @param selectors - CSS selectors to use for extraction
+   * @returns Array of extracted publication links with title, URL, and optional date
+   */
   extractPublicationData(
     candidates: z.infer<typeof LinkCandidate>[],
     selectors: z.infer<typeof SelectorResult>
@@ -562,6 +613,11 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
     return publications;
   }
 
+  /**
+   * Uses AI to identify a CSS selector for main article content.
+   * @param sampleHtml - Sample HTML from a publication page
+   * @returns Identified content selector
+   */
   async identifyContentSelector(
     sampleHtml: string
   ): Promise<z.infer<typeof ContentSelectorResult>> {
@@ -578,6 +634,12 @@ Identify a selector that captures the article body text, excluding navigation, h
     return ContentSelectorResult.parse(response.finalOutput);
   }
 
+  /**
+   * Extracts and converts main content to markdown using the identified selector.
+   * @param html - The HTML content to extract from
+   * @param contentSelector - CSS selector for the main content area
+   * @returns Extracted content as markdown, or null if not found
+   */
   extractContent(html: string, contentSelector: string): string | null {
     const dom = new JSDOM(html);
     const document = dom.window.document;

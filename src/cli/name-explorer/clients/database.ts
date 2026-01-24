@@ -24,10 +24,20 @@ export type ConsolidatedData = {
   decades: DecadeData[];
 };
 
+/**
+ * Manages an in-memory SQLite database for Finnish names data.
+ * Provides methods to create the schema, insert data, and query the database.
+ * The database schema includes a 'names' table with columns for decade,
+ * gender, rank, name, and count.
+ */
 export class NameDatabase {
   private db: DatabaseSync;
   private logger: Logger;
 
+  /**
+   * Creates a new NameDatabase instance with an in-memory SQLite database.
+   * @param logger - Logger instance for debug output
+   */
   constructor(logger: Logger) {
     this.logger = logger;
     this.logger.debug("Initializing in-memory SQLite database");
@@ -36,6 +46,9 @@ export class NameDatabase {
     this.logger.debug("Database schema created");
   }
 
+  /**
+   * Creates the database schema with the names table and indexes.
+   */
   private createSchema(): void {
     this.db.exec(`
       CREATE TABLE names (
@@ -53,6 +66,12 @@ export class NameDatabase {
     `);
   }
 
+  /**
+   * Inserts name entries for a specific decade and gender.
+   * @param decade - The decade identifier (e.g., "1980")
+   * @param gender - The gender category
+   * @param entries - Array of name entries to insert
+   */
   insertNames(
     decade: string,
     gender: "boy" | "girl",
@@ -78,11 +97,20 @@ export class NameDatabase {
     );
   }
 
+  /**
+   * Retrieves all name records for a specific decade.
+   * @param decade - The decade to query
+   * @returns Array of name rows for the decade
+   */
   getByDecade(decade: string): NameRow[] {
     const stmt = this.db.prepare("SELECT * FROM names WHERE decade = ?");
     return stmt.all(decade) as unknown as NameRow[];
   }
 
+  /**
+   * Retrieves all data organized by decade with separate boy/girl arrays.
+   * @returns Consolidated data structure with all decades
+   */
   getAll(): ConsolidatedData {
     const decades = this.db
       .prepare("SELECT DISTINCT decade FROM names ORDER BY decade DESC")
@@ -104,6 +132,10 @@ export class NameDatabase {
     return { decades: result };
   }
 
+  /**
+   * Returns the total number of records in the database.
+   * @returns Total record count
+   */
   getTotalCount(): number {
     const result = this.db
       .prepare("SELECT COUNT(*) as count FROM names")
@@ -111,6 +143,10 @@ export class NameDatabase {
     return result.count;
   }
 
+  /**
+   * Loads data from a consolidated data structure into the database.
+   * @param data - The consolidated data to load
+   */
   loadFromConsolidatedData(data: ConsolidatedData): void {
     for (const decadeData of data.decades) {
       this.insertNames(decadeData.decade, "boy", decadeData.boys);
@@ -119,6 +155,13 @@ export class NameDatabase {
     this.logger.debug(`Loaded ${this.getTotalCount()} records from JSON`);
   }
 
+  /**
+   * Executes a SQL query and returns all matching rows.
+   * @param sql - The SQL query string
+   * @param params - Query parameters
+   * @param mapRow - Optional row mapping function
+   * @returns Array of query results
+   */
   query<T>(
     sql: string,
     params: SQLInputValue[] = [],
@@ -129,6 +172,13 @@ export class NameDatabase {
     return mapRow ? rows.map(mapRow) : (rows as T[]);
   }
 
+  /**
+   * Executes a SQL query and returns the first matching row.
+   * @param sql - The SQL query string
+   * @param params - Query parameters
+   * @param mapRow - Optional row mapping function
+   * @returns The first result or undefined if no match
+   */
   queryOne<T>(
     sql: string,
     params: SQLInputValue[] = [],
@@ -155,10 +205,19 @@ export type AggregatedNameRow = {
   gender: "male" | "female";
 };
 
+/**
+ * Manages an in-memory SQLite database for aggregated Finnish names data.
+ * Stores total name counts across all time (not broken down by decade).
+ * Used for looking up overall name popularity.
+ */
 export class AggregatedNameDatabase {
   private db: DatabaseSync;
   private logger: Logger;
 
+  /**
+   * Creates a new AggregatedNameDatabase instance with an in-memory SQLite database.
+   * @param logger - Logger instance for debug output
+   */
   constructor(logger: Logger) {
     this.logger = logger;
     this.logger.debug("Initializing aggregated names SQLite database");
@@ -167,6 +226,9 @@ export class AggregatedNameDatabase {
     this.logger.debug("Aggregated database schema created");
   }
 
+  /**
+   * Creates the database schema for aggregated names.
+   */
   private createSchema(): void {
     this.db.exec(`
       CREATE TABLE names (
@@ -181,6 +243,12 @@ export class AggregatedNameDatabase {
     `);
   }
 
+  /**
+   * Loads name data from a CSV file.
+   * Expects CSV with name and count columns, handles thousand separators.
+   * @param filePath - Path to the CSV file
+   * @param gender - Gender to assign to all loaded names
+   */
   loadFromCsv(filePath: string, gender: "male" | "female"): void {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.trim().split("\n");
@@ -221,6 +289,10 @@ export class AggregatedNameDatabase {
     this.logger.debug(`Loaded ${gender} names from ${filePath}`);
   }
 
+  /**
+   * Returns the total number of records in the database.
+   * @returns Total record count
+   */
   getTotalCount(): number {
     const result = this.db
       .prepare("SELECT COUNT(*) as count FROM names")
@@ -228,6 +300,13 @@ export class AggregatedNameDatabase {
     return result.count;
   }
 
+  /**
+   * Executes a SQL query and returns all matching rows.
+   * @param sql - The SQL query string
+   * @param params - Query parameters
+   * @param mapRow - Optional row mapping function
+   * @returns Array of query results
+   */
   query<T>(
     sql: string,
     params: SQLInputValue[] = [],
@@ -238,6 +317,13 @@ export class AggregatedNameDatabase {
     return mapRow ? rows.map(mapRow) : (rows as T[]);
   }
 
+  /**
+   * Executes a SQL query and returns the first matching row.
+   * @param sql - The SQL query string
+   * @param params - Query parameters
+   * @param mapRow - Optional row mapping function
+   * @returns The first result or undefined if no match
+   */
   queryOne<T>(
     sql: string,
     params: SQLInputValue[] = [],

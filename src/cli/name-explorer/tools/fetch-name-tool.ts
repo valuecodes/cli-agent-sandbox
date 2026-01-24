@@ -303,7 +303,7 @@ For aggregate statistics across top 100 names per decade, use the SQL database t
       const validation = await resolveAndValidateUrl(url);
       if (!validation.valid) {
         return JSON.stringify({
-          error: `URL validation failed: ${validation.error}`,
+          error: `URL validation failed: ${validation.error ?? "Unknown error"}`,
           name: normalizedName,
         });
       }
