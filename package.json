@@ -7,6 +7,7 @@
     "run:guestbook": "tsx src/cli/guestbook/main.ts",
     "run:name-explorer": "pnpm -s node:tsx -- src/cli/name-explorer/main.ts",
     "run:scrape-publications": "tsx src/cli/scrape-publications/main.ts",
+    "scaffold:cli": "pnpm -s node:tsx -- scripts/scaffold-cli.ts",
     "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

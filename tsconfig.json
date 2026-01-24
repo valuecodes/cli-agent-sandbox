@@ -27,6 +27,12 @@
     "moduleResolution": "Bundler",
     "noEmit": true
   },
-  "include": ["src", "eslint.config.ts", "prettier.config.ts"],
+  "include": [
+    "src",
+    "scripts",
+    "templates",
+    "eslint.config.ts",
+    "prettier.config.ts"
+  ],
   "exclude": ["node_modules"]
 }
