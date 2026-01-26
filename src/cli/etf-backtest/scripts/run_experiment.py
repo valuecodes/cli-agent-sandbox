@@ -7,7 +7,6 @@ Accepts input via stdin JSON, outputs results as JSON to stdout.
 
 Input format:
 {
-    "ticker": "SPY",
     "featureIds": ["mom_1m", "mom_3m", "vol_1m", "px_sma50"],
     "seed": 42
 }
@@ -250,7 +249,7 @@ def compute_uncertainty_adjusted(
     }
 
 
-def run_experiment(ticker: str, feature_ids: list[str], seed: int, data_path: Path) -> dict:
+def run_experiment(feature_ids: list[str], seed: int, data_path: Path) -> dict:
     """Run a single experiment with given features."""
     set_seed(seed)
 
@@ -348,7 +347,6 @@ def main():
         print(json.dumps({"error": f"Invalid JSON input: {e}"}), file=sys.stdout)
         sys.exit(1)
 
-    ticker = input_data.get("ticker", "SPY")
     feature_ids = input_data.get("featureIds")
     if feature_ids is None:
         feature_ids = input_data.get("feature_ids", [])
@@ -370,7 +368,7 @@ def main():
         sys.exit(1)
 
     try:
-        result = run_experiment(ticker, feature_ids, seed, data_path)
+        result = run_experiment(feature_ids, seed, data_path)
         print(json.dumps(result, indent=2), file=sys.stdout)
     except Exception as e:
         print(json.dumps({"error": str(e)}), file=sys.stdout)

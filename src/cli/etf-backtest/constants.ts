@@ -1,7 +1,6 @@
 import path from "node:path";
 
 export const DEFAULT_VERBOSE = false;
-export const DEFAULT_TICKER = "SPY";
 export const DEFAULT_MAX_ITERATIONS = 5;
 export const DEFAULT_SEED = 42;
 export const DEFAULT_REFRESH = false;
