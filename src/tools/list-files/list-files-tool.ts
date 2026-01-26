@@ -26,7 +26,7 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
       additionalProperties: false,
     },
     execute: async ({ path: dirPath }: { path?: string }) => {
-      logger.tool(`Listing files: ${dirPath ?? "tmp root"}`);
+      logger.tool("Listing files", { path: dirPath ?? "tmp root" });
       const targetPath = await resolveTmpPathForList(dirPath);
 
       const entries = await fs.readdir(targetPath, { withFileTypes: true });
@@ -37,7 +37,10 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
 
       const relativePath = path.relative(TMP_ROOT, targetPath);
       const displayPath = relativePath || "tmp";
-      logger.tool(`Listed ${entries.length} entries in ${displayPath}`);
+      logger.tool("Listed entries", {
+        count: entries.length,
+        displayPath,
+      });
       return lines.length > 0
         ? `Contents of ${displayPath}:\n${lines.join("\n")}`
         : `${displayPath} is empty`;

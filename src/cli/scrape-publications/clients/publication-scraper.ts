@@ -242,9 +242,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     if (firstGroup) {
       const [topSignature, topGroup] = firstGroup;
       if (topGroup.length > 0) {
-        this.logger.debug(
-          `Selected structure group: ${topSignature} (${topGroup.length} candidates, score: ${this.scoreStructureSignature(topSignature)})`
-        );
+        const score = this.scoreStructureSignature(topSignature);
+        this.logger.debug("Selected structure group", {
+          signature: topSignature,
+          candidates: topGroup.length,
+          score,
+        });
         return topGroup.slice(0, maxSamples);
       }
     }
@@ -590,7 +593,9 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
       const date = this.extractDate(candidate.html, selectors, candidate.url);
 
       if (!title) {
-        this.logger.warn(`Could not extract title for: ${candidate.url}`);
+        this.logger.warn("Could not extract title for candidate", {
+          url: candidate.url,
+        });
         continue;
       }
 
@@ -604,9 +609,10 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
       if (result.success) {
         publications.push(result.data);
       } else {
-        this.logger.warn(
-          `Validation failed for ${candidate.url}: ${result.error.message}`
-        );
+        this.logger.warn("Validation failed for candidate", {
+          url: candidate.url,
+          error: result.error.message,
+        });
       }
     }
 

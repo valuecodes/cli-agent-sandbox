@@ -71,7 +71,7 @@ const result = await agentRunner.run({ prompt });
 const parseResult = OutputSchema.safeParse(result.finalOutput);
 
 if (parseResult.success) {
-  logger.info(`Result: ${parseResult.data.message}`);
+  logger.info("Result", { message: parseResult.data.message });
 } else {
   logger.warn("Unexpected response format");
   logger.info(String(result.finalOutput));

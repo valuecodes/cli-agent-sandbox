@@ -55,7 +55,7 @@ const runStatsMode = async () => {
 
   const outputPath = "tmp/name-explorer/statistics.html";
   await writeFile(outputPath, html, "utf-8");
-  logger.info(`Statistics page written to ${outputPath}`);
+  logger.info("Statistics page written", { outputPath });
 };
 
 // --- AI Mode: Interactive Q&A with SQL agent ---

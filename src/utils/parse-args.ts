@@ -19,6 +19,6 @@ export const parseArgs = <T extends z.ZodType>({
 }: ParseArgsOptions<T>): z.infer<T> => {
   logger.debug("Parsing CLI arguments...");
   const args = schema.parse(argv);
-  logger.debug(`Parsed args: ${JSON.stringify(args)}`);
+  logger.debug("Parsed args", { args });
   return args;
 };
