@@ -21,7 +21,8 @@ export type AgentRunnerConfig<TOutput> = {
   resultPreviewLimit?: number;
 };
 
-export type RunOptions = {
+export type RunProps = {
+  prompt: string;
   maxTurns?: number;
 };
 
@@ -96,13 +97,13 @@ export class AgentRunner<TOutput> {
     });
   }
 
-  async run(
-    prompt: string,
-    options?: RunOptions
-  ): Promise<RunResult<unknown, AgentType<TOutput>>> {
+  async run({
+    prompt,
+    ...rest
+  }: RunProps): Promise<RunResult<unknown, AgentType<TOutput>>> {
     return this.runner.run(this.agent, prompt, {
       session: this.session,
-      maxTurns: options?.maxTurns,
+      ...rest,
     });
   }
 
