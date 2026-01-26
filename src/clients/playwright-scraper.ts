@@ -25,6 +25,23 @@ export type ScrapeRequest = {
   targetUrl: string;
 } & ScrapeOptions;
 
+// Options for network capture during scraping
+export type NetworkCaptureOptions<T = unknown> = ScrapeOptions & {
+  captureUrlPattern: RegExp; // Pattern to match API requests to capture
+  captureTimeoutMs?: number; // Timeout waiting for API response (default: 15000)
+  validateResponse?: (data: unknown) => data is T; // Optional validator to filter responses
+  localStorage?: Record<string, string>; // Key-value pairs to set in localStorage before navigation
+};
+
+export type NetworkCaptureRequest<T = unknown> = {
+  targetUrl: string;
+} & NetworkCaptureOptions<T>;
+
+export type NetworkCaptureResult<T> = {
+  data: T;
+  capturedUrl: string;
+};
+
 /**
  * A web scraper client that uses Playwright to scrape webpages
  * requiring JavaScript rendering. Returns sanitized HTML or Markdown.
@@ -191,6 +208,123 @@ export class PlaywrightScraper {
       });
     } else {
       this.logger.error("Unknown error scraping", { targetUrl }, error);
+    }
+  }
+
+  /**
+   * Scrape a URL while capturing a specific network response.
+   * Sets up route interception to capture JSON responses matching the URL pattern.
+   * If validateResponse is provided, only responses passing validation are captured.
+   */
+  async scrapeWithNetworkCapture<T>({
+    targetUrl,
+    captureUrlPattern,
+    captureTimeoutMs = 15000,
+    validateResponse,
+    localStorage,
+    ...options
+  }: NetworkCaptureRequest<T>): Promise<NetworkCaptureResult<T>> {
+    const browser = await this.getBrowser();
+    const page = await browser.newPage();
+
+    // Set localStorage before any navigation if provided
+    if (localStorage && Object.keys(localStorage).length > 0) {
+      const entries = Object.entries(localStorage);
+      this.logger.debug("Setting localStorage entries", {
+        keys: entries.map(([k]) => k),
+      });
+
+      // Add init script that runs before page load to set localStorage
+      await page.addInitScript((items: [string, string][]) => {
+        for (const [key, value] of items) {
+          window.localStorage.setItem(key, value);
+        }
+      }, entries);
+    }
+
+    let resolveCapture: (result: NetworkCaptureResult<T>) => void;
+    let rejectCapture: (error: Error) => void;
+    let captured = false;
+
+    const capturePromise = new Promise<NetworkCaptureResult<T>>(
+      (resolve, reject) => {
+        resolveCapture = resolve;
+        rejectCapture = reject;
+      }
+    );
+
+    const captureTimeout = setTimeout(() => {
+      rejectCapture(
+        new Error(
+          `Network capture timeout: No response matching ${captureUrlPattern.source} within ${captureTimeoutMs}ms`
+        )
+      );
+    }, captureTimeoutMs);
+
+    try {
+      await page.route("**/*", async (route) => {
+        // Skip route handling if page is closing or already captured
+        if (page.isClosed()) {
+          return;
+        }
+
+        const request = route.request();
+        const url = request.url();
+
+        if (captureUrlPattern.test(url) && !captured) {
+          this.logger.debug("Intercepted matching request", { url });
+
+          try {
+            const response = await route.fetch();
+            const body = await response.text();
+            const data = JSON.parse(body) as unknown;
+
+            // If validator provided, check if response matches expected shape
+            if (validateResponse && !validateResponse(data)) {
+              this.logger.debug("Response did not pass validation, skipping", { url });
+              await route.fulfill({ response });
+              return;
+            }
+
+            this.logger.debug("Captured network response", {
+              url,
+              bodyLength: body.length,
+            });
+
+            captured = true;
+            clearTimeout(captureTimeout);
+
+            // Fulfill the route before resolving to avoid race condition
+            await route.fulfill({ response });
+            resolveCapture({ data: data as T, capturedUrl: url });
+          } catch (err) {
+            // Only continue if not already handled and page is still open
+            if (!page.isClosed()) {
+              this.logger.warn("Failed to capture response", { url, error: err });
+              try {
+                await route.continue();
+              } catch {
+                // Route may already be handled, ignore
+              }
+            }
+          }
+        } else {
+          try {
+            await route.continue();
+          } catch {
+            // Route may already be handled or page closed, ignore
+          }
+        }
+      });
+
+      await this.navigateAndWait({ page, targetUrl, options });
+      return await capturePromise;
+    } catch (error) {
+      clearTimeout(captureTimeout);
+      this.handleError({ targetUrl, error });
+      throw error;
+    } finally {
+      await page.close();
     }
   }
 
