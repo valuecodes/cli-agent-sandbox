@@ -111,7 +111,7 @@ When answering, do not include any questions. Do not include markdown or extra k
 
   let currentQuestion = userQuestion;
   while (true) {
-    const result = await agentRunner.run(currentQuestion);
+    const result = await agentRunner.run({ prompt: currentQuestion });
     const parseResult = NameSuggesterOutputSchema.safeParse(result.finalOutput);
 
     if (!parseResult.success) {

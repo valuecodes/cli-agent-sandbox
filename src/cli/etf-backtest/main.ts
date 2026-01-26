@@ -159,7 +159,8 @@ After running the experiment, analyze the results and decide whether to continue
 
     let runResult;
     try {
-      runResult = await agentRunner.run(currentPrompt, {
+      runResult = await agentRunner.run({
+        prompt: currentPrompt,
         maxTurns: MAX_TURNS_PER_ITERATION, // Limit turns per iteration: 1 tool call + 1 result + 1 output
       });
     } catch (err) {
