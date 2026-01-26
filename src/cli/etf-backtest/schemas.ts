@@ -5,7 +5,6 @@ import {
   DEFAULT_MAX_ITERATIONS,
   DEFAULT_REFRESH,
   DEFAULT_SEED,
-  DEFAULT_TICKER,
   DEFAULT_VERBOSE,
 } from "./constants";
 
@@ -16,7 +15,6 @@ const IsinSchema = z
 
 export const CliArgsSchema = z.object({
   verbose: z.coerce.boolean().default(DEFAULT_VERBOSE),
-  ticker: z.string().default(DEFAULT_TICKER),
   isin: IsinSchema.default(DEFAULT_ISIN),
   refresh: z.coerce.boolean().default(DEFAULT_REFRESH),
   maxIterations: z.coerce.number().default(DEFAULT_MAX_ITERATIONS),

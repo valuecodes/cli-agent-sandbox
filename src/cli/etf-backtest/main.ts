@@ -40,7 +40,7 @@ import { computeScore } from "./utils/scoring";
 const logger = new Logger();
 
 // --- Parse CLI arguments ---
-const { verbose, ticker, isin, refresh, maxIterations, seed } = parseArgs({
+const { verbose, isin, refresh, maxIterations, seed } = parseArgs({
   logger,
   schema: CliArgsSchema,
 });
@@ -101,7 +101,7 @@ IMPORTANT: Run exactly ONE experiment per turn. Do not run multiple experiments.
 
 Call runPython with:
 - scriptName: "run_experiment.py"
-- input: { "ticker": "<ticker>", "featureIds": [...], "seed": <seed>, "dataPath": "<dataPath>" }
+- input: { "featureIds": [...], "seed": <seed>, "dataPath": "<dataPath>" }
 
 After you receive results, respond with your analysis. Do not call runPython again in the same turn.
 
@@ -143,14 +143,14 @@ const runAgentOptimization = async (dataPath: string) => {
 
   // Initial prompt
   let currentPrompt = `
-Start feature selection optimization for ${ticker} (ISIN: ${isin}).
+Start feature selection optimization for ISIN ${isin}.
 
 Begin by selecting ${MIN_FEATURES}-${MAX_FEATURES} features that you think will best predict ${PREDICTION_HORIZON_MONTHS}-month returns.
 Consider using a mix from each category (momentum, trend, risk).
 
 Use runPython with:
 - scriptName: "run_experiment.py"
-- input: { "ticker": "${ticker}", "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
+- input: { "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
 
 After running the experiment, analyze the results and decide whether to continue or stop.
 `;
