@@ -16,12 +16,22 @@ export type PythonResult = {
 };
 
 /**
+ * Repo venv Python path for CLIs that use the project .venv.
+ */
+export const PYTHON_BINARY = path.join(
+  process.cwd(),
+  ".venv",
+  "bin",
+  "python3"
+);
+
+/**
  * Default configuration values
  */
 const DEFAULTS = {
   timeoutMs: 30000,
   maxOutputBytes: 50 * 1024, // 50KB
-  pythonBinary: "python3",
+  pythonBinary: PYTHON_BINARY,
 } as const;
 
 /**
