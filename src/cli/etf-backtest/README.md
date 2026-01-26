@@ -124,8 +124,6 @@ Past performance does not guarantee future results.
 | ------------------- | ------------------------------------------------- |
 | `run_experiment.py` | Unified experiment runner (backtest + prediction) |
 | `shared.py`         | Feature registry and model training utilities     |
-| `backtest.py`       | Legacy: standalone backtest                       |
-| `predict.py`        | Legacy: standalone prediction                     |
 
 ## Uncertainty Estimation
 
