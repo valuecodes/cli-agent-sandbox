@@ -1,19 +1,28 @@
 // pnpm run:guestbook
 
-import { Agent, run } from "@openai/agents";
-
 import "dotenv/config";
 
+import { AgentRunner } from "~clients/agent-runner";
+import { Logger } from "~clients/logger";
 import { readFileTool } from "~tools/read-file/read-file-tool";
 import { writeFileTool } from "~tools/write-file/write-file-tool";
+import { z } from "zod";
 import { question } from "zx";
 
-console.log("Guestbook running...");
+const logger = new Logger();
 
-const agent = new Agent({
+logger.info("Guestbook running...");
+
+const OutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+const agentRunner = new AgentRunner({
   name: "GuestbookAgent",
   model: "gpt-5-mini",
   tools: [writeFileTool, readFileTool],
+  outputType: OutputSchema,
   instructions: `
 You maintain a shared "greeting guestbook" at guestbook.md.
 Rules:
@@ -23,7 +32,12 @@ Rules:
 - If it doesn't exist, create it with a header and an Entries section.
 - Each entry must include the user's name.
 - Keep it upbeat and a little nerdy, but not cringe.
+
+IMPORTANT: Always respond with a JSON object in this format:
+{"success": true/false, "message": "description of what was done"}
 `,
+  logger,
+  stateless: true, // Each run is independent
 });
 
 const userName = await question("Enter user name: ");
@@ -53,11 +67,23 @@ Steps:
 4) Write the final Markdown back to guestbook.md.
 `;
 
-const result = await run(agent, prompt);
+const result = await agentRunner.run({ prompt });
+const parseResult = OutputSchema.safeParse(result.finalOutput);
 
-console.log("Agent result:", result.finalOutput);
+if (parseResult.success) {
+  logger.info(`Result: ${parseResult.data.message}`);
+} else {
+  logger.warn("Unexpected response format");
+  logger.info(String(result.finalOutput));
+}
 
-// Optional: show the file contents after write
-const preview = await run(agent, `Read and print the contents of guestbook.md`);
-console.log("\n--- Preview ---\n");
-console.log(preview.finalOutput);
+// Show the file contents after write
+const preview = await agentRunner.run({
+  prompt: `Read guestbook.md and include its full contents in your response message.`,
+});
+const previewResult = OutputSchema.safeParse(preview.finalOutput);
+if (previewResult.success) {
+  logger.answer(previewResult.data.message);
+} else {
+  logger.answer(JSON.stringify(preview.finalOutput, null, 2));
+}

@@ -19,11 +19,19 @@ export type AgentRunnerConfig<TOutput> = {
   logToolArgs?: boolean;
   logToolResults?: boolean;
   resultPreviewLimit?: number;
+
+  /**
+   * If true, each run() call uses a fresh context (no session history).
+   * Required for reasoning models (gpt-5-mini) when making multiple independent runs.
+   */
+  stateless?: boolean;
 };
 
 export type RunProps = {
   prompt: string;
   maxTurns?: number;
+  /** If true, run without session history (fresh context). Useful for independent follow-up queries. */
+  stateless?: boolean;
 };
 
 type AgentType<TOutput> = Agent<unknown, ZodType<TOutput>>;
@@ -42,6 +50,7 @@ export class AgentRunner<TOutput> {
   private logToolArgs: boolean;
   private logToolResults: boolean;
   private resultPreviewLimit: number;
+  private stateless: boolean;
 
   constructor(config: AgentRunnerConfig<TOutput>) {
     this.logger = config.logger;
@@ -50,6 +59,7 @@ export class AgentRunner<TOutput> {
     this.resultPreviewLimit =
       config.resultPreviewLimit ?? DEFAULT_RESULT_PREVIEW_LIMIT;
     this.toolsInProgress = new Set();
+    this.stateless = config.stateless ?? false;
 
     this.agent = new Agent({
       name: config.name,
@@ -101,8 +111,11 @@ export class AgentRunner<TOutput> {
     prompt,
     ...rest
   }: RunProps): Promise<RunResult<unknown, AgentType<TOutput>>> {
+    // When stateless=true, omit session to avoid reasoning item sequence errors
+    // that occur when reusing MemorySession with reasoning models
+    const sessionOption = this.stateless ? {} : { session: this.session };
     return this.runner.run(this.agent, prompt, {
-      session: this.session,
+      ...sessionOption,
       ...rest,
     });
   }
