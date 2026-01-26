@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { tool } from "@openai/agents";
+import type { Logger } from "~clients/logger";
 import { processHtmlContent } from "~tools/utils/html-processing";
 import { resolveAndValidateUrl } from "~tools/utils/url-safety";
 
@@ -358,75 +359,75 @@ const executeFetch = async (params: {
   }
 };
 
+export type FetchUrlToolOptions = {
+  logger: Logger;
+};
+
 /**
  * Safe HTTP GET fetch tool for agent runtime.
  * Fetches web pages with SSRF protection, HTML sanitization, and Markdown conversion.
  */
-export const fetchUrlTool = tool({
-  name: "fetchUrl",
-  description:
-    "Fetches a web page via HTTP GET and returns clean, sanitized Markdown content. " +
-    "Includes SSRF protection (blocks localhost, private IPs, cloud metadata endpoints). " +
-    "HTML content is sanitized to remove scripts, iframes, and event handlers before conversion.",
-  parameters: {
-    type: "object",
-    properties: {
-      url: {
-        type: "string",
-        description: "The URL to fetch (must be http or https)",
+export const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
+  tool({
+    name: "fetchUrl",
+    description:
+      "Fetches a web page via HTTP GET and returns clean, sanitized Markdown content. " +
+      "Includes SSRF protection (blocks localhost, private IPs, cloud metadata endpoints). " +
+      "HTML content is sanitized to remove scripts, iframes, and event handlers before conversion.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "The URL to fetch (must be http or https)",
+        },
+        timeoutMs: {
+          type: "number",
+          description:
+            "Request timeout in milliseconds (default: 15000, max: 30000)",
+        },
+        maxBytes: {
+          type: "number",
+          description:
+            "Maximum response size in bytes (default: 2097152 / 2MB, max: 5242880 / 5MB)",
+        },
+        maxRedirects: {
+          type: "number",
+          description:
+            "Maximum number of redirects to follow (default: 5, max: 10)",
+        },
+        maxChars: {
+          type: "number",
+          description:
+            "Maximum characters in output markdown/text (default: 50000)",
+        },
+        etag: {
+          type: "string",
+          description: "ETag from previous request for conditional fetch",
+        },
+        lastModified: {
+          type: "string",
+          description:
+            "Last-Modified value from previous request for conditional fetch",
+        },
       },
-      timeoutMs: {
-        type: "number",
-        description:
-          "Request timeout in milliseconds (default: 15000, max: 30000)",
-      },
-      maxBytes: {
-        type: "number",
-        description:
-          "Maximum response size in bytes (default: 2097152 / 2MB, max: 5242880 / 5MB)",
-      },
-      maxRedirects: {
-        type: "number",
-        description:
-          "Maximum number of redirects to follow (default: 5, max: 10)",
-      },
-      maxChars: {
-        type: "number",
-        description:
-          "Maximum characters in output markdown/text (default: 50000)",
-      },
-      etag: {
-        type: "string",
-        description: "ETag from previous request for conditional fetch",
-      },
-      lastModified: {
-        type: "string",
-        description:
-          "Last-Modified value from previous request for conditional fetch",
-      },
+      required: ["url"],
+      additionalProperties: false,
     },
-    required: ["url"],
-    additionalProperties: false,
-  },
-  execute: async (params: {
-    url: string;
-    timeoutMs?: number;
-    maxBytes?: number;
-    maxRedirects?: number;
-    maxChars?: number;
-    etag?: string;
-    lastModified?: string;
-  }) => {
-    console.log("Fetching URL:", params.url);
-    const result = await executeFetch(params);
-    console.log("Fetch result:", {
-      ok: result.ok,
-      status: result.status,
-      finalUrl: result.finalUrl,
-      hasMarkdown: !!result.markdown,
-      hasText: !!result.text,
-      error: result.error,
-    });
-    return JSON.stringify(result, null, 2);
-  },
-});
+    execute: async (params: {
+      url: string;
+      timeoutMs?: number;
+      maxBytes?: number;
+      maxRedirects?: number;
+      maxChars?: number;
+      etag?: string;
+      lastModified?: string;
+    }) => {
+      logger.tool(`Fetching URL: ${params.url}`);
+      const result = await executeFetch(params);
+      logger.tool(
+        `Fetch result: ok=${result.ok}, status=${result.status}, finalUrl=${result.finalUrl}${result.error ? `, error=${result.error}` : ""}`
+      );
+      return JSON.stringify(result, null, 2);
+    },
+  });

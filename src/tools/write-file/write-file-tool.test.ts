@@ -4,11 +4,13 @@ import { TMP_ROOT } from "~tools/utils/fs";
 import { invokeTool, tryCreateSymlink } from "~tools/utils/test-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { writeFileTool } from "./write-file-tool";
+import { createWriteFileTool } from "./write-file-tool";
 
-describe("writeFileTool tmp path safety", () => {
+describe("createWriteFileTool tmp path safety", () => {
   let testDir = "";
   let relativeDir = "";
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const mockLogger = { tool: () => {} } as never;
 
   beforeEach(async () => {
     await fs.mkdir(TMP_ROOT, { recursive: true });
@@ -28,6 +30,7 @@ describe("writeFileTool tmp path safety", () => {
     const relativePath = path.join(relativeDir, "relative.txt");
     const content = "hello";
 
+    const writeFileTool = createWriteFileTool({ logger: mockLogger });
     const writeResult = await invokeTool<string>(writeFileTool, {
       path: relativePath,
       content,
@@ -44,6 +47,7 @@ describe("writeFileTool tmp path safety", () => {
     const absolutePath = path.join(testDir, "absolute.txt");
     const content = "absolute";
 
+    const writeFileTool = createWriteFileTool({ logger: mockLogger });
     const writeResult = await invokeTool<string>(writeFileTool, {
       path: absolutePath,
       content,
@@ -54,6 +58,7 @@ describe("writeFileTool tmp path safety", () => {
   });
 
   it("rejects path traversal attempts", async () => {
+    const writeFileTool = createWriteFileTool({ logger: mockLogger });
     const writeResult = await invokeTool<string>(writeFileTool, {
       path: "../outside.txt",
       content: "nope",
@@ -73,6 +78,7 @@ describe("writeFileTool tmp path safety", () => {
 
     const symlinkPath = path.join(relativeDir, "link", "file.txt");
 
+    const writeFileTool = createWriteFileTool({ logger: mockLogger });
     const writeResult = await invokeTool<string>(writeFileTool, {
       path: symlinkPath,
       content: "nope",
