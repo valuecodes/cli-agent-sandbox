@@ -43,7 +43,7 @@ const outputDir = path.join(
   urlSlug
 );
 
-logger.info(`Output directory: ${outputDir}`);
+logger.info("Output directory", { outputDir });
 
 // 3. Create pipeline
 const pipeline = new PublicationPipeline({

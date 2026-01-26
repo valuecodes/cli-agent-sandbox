@@ -89,6 +89,22 @@ export default defineConfig(
           ],
         },
       ],
+      // Avoid template literals in logger calls for better structured logging
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.object.name='logger'][callee.property.name=/^(debug|info|warn|error|tool|question|answer)$/] > TemplateLiteral",
+          message:
+            "Avoid template literals in logger calls. Use a plain string and pass data as extra args (e.g. logger.info('Saved file', { path })).",
+        },
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.object.type='MemberExpression'][callee.object.property.name='logger'][callee.property.name=/^(debug|info|warn|error|tool|question|answer)$/] > TemplateLiteral",
+          message:
+            "Avoid template literals in logger calls. Use a plain string and pass data as extra args (e.g. logger.info('Saved file', { path })).",
+        },
+      ],
     },
   },
   {

@@ -24,9 +24,9 @@ export const createReadFileTool = ({ logger }: ReadFileToolOptions) =>
       additionalProperties: false,
     },
     execute: async ({ path: filePath }: { path: string }) => {
-      logger.tool(`Reading file: ${filePath}`);
+      logger.tool("Reading file", { path: filePath });
       const targetPath = await resolveTmpPathForRead(filePath);
-      logger.tool(`Read file result: ${targetPath}`);
+      logger.tool("Read file result", { targetPath });
       return fs.readFile(targetPath, "utf8");
     },
   });

@@ -88,21 +88,24 @@ export class AgentRunner<TOutput> {
 
       if (this.logToolArgs) {
         const args = String(toolCall.arguments);
-        this.logger.tool(`Calling ${tool.name}: ${args || "no arguments"}`);
+        this.logger.tool("Calling tool", {
+          name: tool.name,
+          args: args || "no arguments",
+        });
       } else {
-        this.logger.tool(`Calling ${tool.name}`);
+        this.logger.tool("Calling tool", { name: tool.name });
       }
     });
 
     this.runner.on("agent_tool_end", (_context, _agent, tool, result) => {
-      this.logger.tool(`${tool.name} completed`);
+      this.logger.tool("Tool completed", { name: tool.name });
 
       if (this.logToolResults) {
         const preview =
           result.length > this.resultPreviewLimit
             ? result.substring(0, this.resultPreviewLimit) + "..."
             : result;
-        this.logger.debug(`Result: ${preview}`);
+        this.logger.debug("Tool result preview", { preview });
       }
     });
   }

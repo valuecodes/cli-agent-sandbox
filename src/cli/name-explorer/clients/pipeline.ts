@@ -108,12 +108,12 @@ export class NameSuggesterPipeline {
     let fromCache = false;
 
     if (htmlExists && mdExists && !this.refetch) {
-      this.logger.debug(`Cached: ${decade} page ${page}`);
+      this.logger.debug("Cache hit", { decade, page });
       html = await fs.readFile(htmlFile, "utf-8");
       markdown = await fs.readFile(mdFile, "utf-8");
       fromCache = true;
     } else {
-      this.logger.info(`Fetching ${decade} page ${page}...`);
+      this.logger.info("Fetching decade page", { decade, page });
       html = await this.fetchClient.fetchHtml(url);
       markdown = await this.fetchClient.fetchMarkdown(url);
 
@@ -141,14 +141,19 @@ export class NameSuggesterPipeline {
     pages?: number[];
   } = {}): Promise<ProcessAllDecadesResult> {
     this.logger.info(
-      `Will process ${decades.length} decades × ${pages.length} pages = ${decades.length * pages.length} combinations`
+      "Processing plan",
+      {
+        decades: decades.length,
+        pages: pages.length,
+        combinations: decades.length * pages.length,
+      }
     );
 
     let cachedPages = 0;
     let fetchedPages = 0;
 
     for (const decade of decades) {
-      this.logger.info(`Processing decade ${decade}...`);
+      this.logger.info("Processing decade", { decade });
 
       for (const page of pages) {
         const { parsedNames, fromCache } = await this.fetchDecadePage({
@@ -183,7 +188,7 @@ export class NameSuggesterPipeline {
     const consolidatedData: ConsolidatedData = this.db.getAll();
     const outputPath = path.join(this.outputDir, filename);
     await fs.writeFile(outputPath, JSON.stringify(consolidatedData, null, 2));
-    this.logger.info(`Saved consolidated data to ${outputPath}`);
+    this.logger.info("Saved consolidated data", { outputPath });
     return outputPath;
   }
 
@@ -200,9 +205,9 @@ export class NameSuggesterPipeline {
       const jsonContent = await fs.readFile(outputPath, "utf-8");
       const data = JSON.parse(jsonContent) as ConsolidatedData;
       this.db.loadFromConsolidatedData(data);
-      this.logger.info(
-        `Loaded existing data from JSON (${this.db.getTotalCount()} records)`
-      );
+      this.logger.info("Loaded existing data from JSON", {
+        count: this.db.getTotalCount(),
+      });
 
       const aggregatedDb = await this.loadAggregatedCsvData();
 
@@ -219,13 +224,15 @@ export class NameSuggesterPipeline {
     const { totalPages, cachedPages, fetchedPages } =
       await this.processAllDecades();
 
-    this.logger.info(
-      `Processing complete: ${fetchedPages} fetched, ${cachedPages} cached, ${totalPages} total`
-    );
+    this.logger.info("Processing complete", {
+      fetchedPages,
+      cachedPages,
+      totalPages,
+    });
 
-    this.logger.info(
-      `Database contains ${this.db.getTotalCount()} name records`
-    );
+    this.logger.info("Database contains name records", {
+      count: this.db.getTotalCount(),
+    });
 
     await this.saveConsolidatedData();
 
@@ -267,9 +274,9 @@ export class NameSuggesterPipeline {
       aggregatedDb.loadFromCsv(femaleCsvPath, "female");
     }
 
-    this.logger.info(
-      `Loaded aggregated CSV data (${aggregatedDb.getTotalCount()} records)`
-    );
+    this.logger.info("Loaded aggregated CSV data", {
+      count: aggregatedDb.getTotalCount(),
+    });
 
     return aggregatedDb;
   }

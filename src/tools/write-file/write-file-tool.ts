@@ -32,12 +32,13 @@ export const createWriteFileTool = ({ logger }: WriteFileToolOptions) =>
       path: string;
       content: string;
     }) => {
-      logger.tool(`Writing file: ${filePath}`);
+      logger.tool("Writing file", { path: filePath });
       const targetPath = await resolveTmpPathForWrite(filePath);
       await fs.writeFile(targetPath, content, "utf8");
       const relativePath = path.relative(TMP_ROOT, targetPath);
+      const displayPath = path.join("tmp", relativePath);
       const bytes = Buffer.byteLength(content, "utf8");
-      logger.tool(`Wrote ${bytes} bytes to tmp/${relativePath}`);
-      return `Wrote ${bytes} bytes to tmp/${relativePath}`;
+      logger.tool("Wrote file", { bytes, path: displayPath });
+      return `Wrote ${bytes} bytes to ${displayPath}`;
     },
   });

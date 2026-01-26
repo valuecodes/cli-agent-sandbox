@@ -155,7 +155,7 @@ After running the experiment, analyze the results and decide whether to continue
 
   while (iteration < maxIterations) {
     iteration++;
-    logger.info(`\n--- Iteration ${iteration}/${maxIterations} ---`);
+    logger.info("\n--- Iteration ---", { iteration, maxIterations });
 
     let runResult;
     try {
@@ -199,7 +199,7 @@ After running the experiment, analyze the results and decide whether to continue
     if (!parseResult.success) {
       logger.warn("Invalid agent response format, continuing...");
       if (verbose) {
-        logger.debug(`Parse error: ${JSON.stringify(parseResult.error)}`);
+        logger.debug("Parse error", { error: parseResult.error });
       }
       currentPrompt =
         "Your response was not valid JSON. Please respond with the correct format.";
@@ -207,35 +207,35 @@ After running the experiment, analyze the results and decide whether to continue
     }
 
     const output = parseResult.data;
-    logger.info(`Features: ${output.selectedFeatures.join(", ")}`);
-    logger.info(
-      `Reasoning: ${output.reasoning.substring(ZERO, REASONING_PREVIEW_LIMIT)}...`
-    );
+    logger.info("Features selected", { features: output.selectedFeatures });
+    logger.info("Reasoning preview", {
+      preview: output.reasoning.substring(ZERO, REASONING_PREVIEW_LIMIT),
+    });
 
     // Try to extract experiment result from the tool call outputs
     const lastToolResult = extractLastExperimentResult(runResult);
 
     if (lastToolResult) {
       const score = computeScore(lastToolResult.metrics);
-      logger.info(
-        `Prediction: R²_no=${formatFixed(
+      logger.info("Prediction metrics", {
+        r2NonOverlapping: formatFixed(
           lastToolResult.metrics.r2NonOverlapping,
           DECIMAL_PLACES.r2
-        )}, ` +
-          `DirAcc_no=${formatPercent(
-            lastToolResult.metrics.directionAccuracyNonOverlapping
-          )}, ` +
-          `MAE=${formatPercent(
-            lastToolResult.metrics.mae
-          )}, Score=${formatFixed(score, DECIMAL_PLACES.score)}`
-      );
+        ),
+        directionAccuracyNonOverlapping: formatPercent(
+          lastToolResult.metrics.directionAccuracyNonOverlapping
+        ),
+        mae: formatPercent(lastToolResult.metrics.mae),
+        score: formatFixed(score, DECIMAL_PLACES.score),
+      });
       if (verbose) {
-        logger.debug(
-          `Backtest: Sharpe=${formatFixed(
+        logger.debug("Backtest metrics", {
+          sharpe: formatFixed(
             lastToolResult.metrics.sharpe,
             DECIMAL_PLACES.sharpe
-          )}, ` + `MaxDD=${formatPercent(lastToolResult.metrics.maxDrawdown)}`
-        );
+          ),
+          maxDrawdown: formatPercent(lastToolResult.metrics.maxDrawdown),
+        });
       }
 
       if (score > bestScore) {
@@ -246,16 +246,17 @@ After running the experiment, analyze the results and decide whether to continue
         logger.info("New best result!");
       } else {
         noImprovementCount++;
-        logger.info(
-          `No improvement (${noImprovementCount}/${MAX_NO_IMPROVEMENT})`
-        );
+        logger.info("No improvement", {
+          noImprovementCount,
+          maxNoImprovement: MAX_NO_IMPROVEMENT,
+        });
       }
     }
 
     // Check stop conditions
     if (output.status === "final") {
       stopReason = output.stopReason ?? "Agent decided to stop";
-      logger.info(`Agent stopped: ${stopReason}`);
+      logger.info("Agent stopped", { stopReason });
       break;
     }
 

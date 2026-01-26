@@ -80,8 +80,11 @@ export class PlaywrightScraper {
     const timeout = options.timeoutMs ?? this.defaultTimeoutMs;
     const waitStrategy = options.waitStrategy ?? this.defaultWaitStrategy;
 
-    this.logger.debug(`Navigating to: ${targetUrl}`);
-    this.logger.debug(`Wait strategy: ${waitStrategy}, timeout: ${timeout}ms`);
+    this.logger.debug("Navigating to URL", { targetUrl });
+    this.logger.debug("Wait strategy", {
+      waitStrategy,
+      timeoutMs: timeout,
+    });
 
     await page.goto(targetUrl, {
       timeout,
@@ -89,7 +92,9 @@ export class PlaywrightScraper {
     });
 
     if (options.waitForSelector) {
-      this.logger.debug(`Waiting for selector: ${options.waitForSelector}`);
+      this.logger.debug("Waiting for selector", {
+        selector: options.waitForSelector,
+      });
       await page.waitForSelector(options.waitForSelector, { timeout });
     }
 
@@ -112,9 +117,9 @@ export class PlaywrightScraper {
       const html = await page.content();
       const sanitized = sanitizeHtml(html);
 
-      this.logger.debug(
-        `Scraped and sanitized HTML (${sanitized.length} chars)`
-      );
+      this.logger.debug("Scraped and sanitized HTML", {
+        length: sanitized.length,
+      });
       return sanitized;
     } catch (error) {
       this.handleError({ targetUrl, error });
@@ -138,7 +143,7 @@ export class PlaywrightScraper {
     const html = await this.scrapeHtml({ targetUrl, ...options });
     const markdown = convertToMarkdown(html);
 
-    this.logger.debug(`Converted to Markdown (${markdown.length} chars)`);
+    this.logger.debug("Converted to Markdown", { length: markdown.length });
     return markdown;
   }
 
@@ -157,29 +162,35 @@ export class PlaywrightScraper {
   }): void {
     if (error instanceof Error) {
       if (error.name === "TimeoutError" || error.message.includes("Timeout")) {
-        this.logger.error(
-          `Timeout while scraping ${targetUrl}: ${error.message}`
-        );
+        this.logger.error("Timeout while scraping", {
+          targetUrl,
+          message: error.message,
+        });
         return;
       }
 
       if (error.message.includes("net::ERR_")) {
-        this.logger.error(
-          `Network error scraping ${targetUrl}: ${error.message}`
-        );
+        this.logger.error("Network error scraping", {
+          targetUrl,
+          message: error.message,
+        });
         return;
       }
 
       if (error.message.includes("Navigation failed")) {
-        this.logger.error(
-          `Navigation failed for ${targetUrl}: ${error.message}`
-        );
+        this.logger.error("Navigation failed", {
+          targetUrl,
+          message: error.message,
+        });
         return;
       }
 
-      this.logger.error(`Error scraping ${targetUrl}: ${error.message}`);
+      this.logger.error("Error scraping", {
+        targetUrl,
+        message: error.message,
+      });
     } else {
-      this.logger.error(`Unknown error scraping ${targetUrl}:`, error);
+      this.logger.error("Unknown error scraping", { targetUrl }, error);
     }
   }
 

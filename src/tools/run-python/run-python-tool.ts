@@ -242,7 +242,7 @@ export const createRunPythonTool = ({
       additionalProperties: false,
     },
     execute: async (params: { scriptName: string; input: string }) => {
-      logger.tool(`Running Python script: ${params.scriptName}`);
+      logger.tool("Running Python script", { scriptName: params.scriptName });
 
       // Parse the input string to object if provided (empty string means no input)
       let parsedInput: Record<string, unknown> | undefined;
@@ -267,9 +267,12 @@ export const createRunPythonTool = ({
         input: parsedInput,
         pythonBinary,
       });
-      logger.tool(
-        `Python result: success=${result.success}, exitCode=${String(result.exitCode)}, durationMs=${result.durationMs}${result.error ? `, error=${result.error}` : ""}`
-      );
+      logger.tool("Python result", {
+        success: result.success,
+        exitCode: result.exitCode,
+        durationMs: result.durationMs,
+        error: result.error,
+      });
       return JSON.stringify(result, null, 2);
     },
   });

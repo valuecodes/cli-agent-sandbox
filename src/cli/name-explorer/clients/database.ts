@@ -92,9 +92,11 @@ export class NameDatabase {
       this.db.exec("ROLLBACK");
       throw error;
     }
-    this.logger.debug(
-      `Inserted ${entries.length} ${gender} names for decade ${decade}`
-    );
+    this.logger.debug("Inserted names for decade", {
+      count: entries.length,
+      gender,
+      decade,
+    });
   }
 
   /**
@@ -152,7 +154,9 @@ export class NameDatabase {
       this.insertNames(decadeData.decade, "boy", decadeData.boys);
       this.insertNames(decadeData.decade, "girl", decadeData.girls);
     }
-    this.logger.debug(`Loaded ${this.getTotalCount()} records from JSON`);
+    this.logger.debug("Loaded records from JSON", {
+      count: this.getTotalCount(),
+    });
   }
 
   /**
@@ -286,7 +290,7 @@ export class AggregatedNameDatabase {
       this.db.exec("ROLLBACK");
       throw error;
     }
-    this.logger.debug(`Loaded ${gender} names from ${filePath}`);
+    this.logger.debug("Loaded names from file", { gender, filePath });
   }
 
   /**

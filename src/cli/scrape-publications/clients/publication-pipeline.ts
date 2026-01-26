@@ -197,7 +197,7 @@ export class PublicationPipeline {
       `content.md (${fromCache.markdown ? "cached" : sourceLabel})`,
       `content.html (${fromCache.html ? "cached" : sourceLabel})`,
     ];
-    this.logger.info(`Content ready: ${contentStatus.join(", ")}`);
+    this.logger.info("Content ready", { contentStatus });
 
     return { markdown, html, fromCache, source };
   }
@@ -226,7 +226,10 @@ export class PublicationPipeline {
       path.join(this.outputDir, "links.json"),
       JSON.stringify(allLinks, null, 2)
     );
-    this.logger.info(`Saved ${allLinks.length} links to links.json`);
+    this.logger.info("Saved links", {
+      count: allLinks.length,
+      file: "links.json",
+    });
 
     let filteredLinks = (
       filterSubstring
@@ -238,9 +241,10 @@ export class PublicationPipeline {
       path.join(this.outputDir, "filtered-links.json"),
       JSON.stringify(filteredLinks, null, 2)
     );
-    this.logger.info(
-      `Saved ${filteredLinks.length} filtered links to filtered-links.json`
-    );
+    this.logger.info("Saved filtered links", {
+      count: filteredLinks.length,
+      file: "filtered-links.json",
+    });
 
     let filteredUrlSet = new Set(filteredLinks);
     let linkCandidates = this.scraper.extractLinkCandidates(
@@ -296,18 +300,19 @@ export class PublicationPipeline {
       usedFallback = true;
       currentSource = "basic-fetch";
 
-      this.logger.info(
-        `Fallback fetch found ${linkCandidates.length} link candidates`
-      );
+      this.logger.info("Fallback fetch found link candidates", {
+        count: linkCandidates.length,
+      });
     }
 
     await fs.writeFile(
       path.join(this.outputDir, "link-candidates.json"),
       JSON.stringify(linkCandidates, null, 2)
     );
-    this.logger.info(
-      `Saved ${linkCandidates.length} link candidates to link-candidates.json`
-    );
+    this.logger.info("Saved link candidates", {
+      count: linkCandidates.length,
+      file: "link-candidates.json",
+    });
 
     return {
       allLinks,
@@ -337,9 +342,11 @@ export class PublicationPipeline {
       JSON.stringify(selectors, null, 2)
     );
 
-    this.logger.info(`Identified selectors:`);
-    this.logger.info(`  Title: ${selectors.titleSelector}`);
-    this.logger.info(`  Date:  ${selectors.dateSelector ?? "(not found)"}`);
+    this.logger.info("Identified selectors");
+    this.logger.info("Title selector", { selector: selectors.titleSelector });
+    this.logger.info("Date selector", {
+      selector: selectors.dateSelector ?? "(not found)",
+    });
 
     this.logger.info("Extracting publication data...");
 
@@ -353,9 +360,10 @@ export class PublicationPipeline {
       JSON.stringify(publications, null, 2)
     );
 
-    this.logger.info(
-      `Saved ${publications.length} publications to publication-links.json`
-    );
+    this.logger.info("Saved publication links", {
+      count: publications.length,
+      file: "publication-links.json",
+    });
 
     return { selectors, publications };
   }
@@ -382,7 +390,9 @@ export class PublicationPipeline {
       titleSlugCounts.set(titleSlug, (titleSlugCounts.get(titleSlug) ?? 0) + 1);
     }
 
-    this.logger.info(`Found ${publications.length} publication links to fetch`);
+    this.logger.info("Found publication links to fetch", {
+      count: publications.length,
+    });
 
     let fetchedCount = 0;
     let skippedCount = 0;
@@ -393,7 +403,7 @@ export class PublicationPipeline {
       const titleSlug = titleSlugs[index];
 
       if (!titleSlug) {
-        this.logger.warn(`Skipping publication with empty title slug: ${url}`);
+        this.logger.warn("Skipping publication with empty title slug", { url });
         continue;
       }
 
@@ -416,9 +426,11 @@ export class PublicationPipeline {
 
       if (!needsHtml && !needsMarkdown) {
         skippedCount++;
-        this.logger.info(
-          `[${skippedCount + fetchedCount}/${publications.length}] Cached: ${url}`
-        );
+        this.logger.info("Publication cached", {
+          index: skippedCount + fetchedCount,
+          total: publications.length,
+          url,
+        });
         continue;
       }
 
@@ -442,20 +454,30 @@ export class PublicationPipeline {
           needsHtml ? "Fetched HTML" : "Cached HTML",
           needsMarkdown ? "Wrote Markdown" : "Cached Markdown",
         ];
-        this.logger.info(
-          `[${skippedCount + fetchedCount}/${publications.length}] ${statusParts.join(", ")}: ${url}`
-        );
+        this.logger.info("Publication processed", {
+          index: skippedCount + fetchedCount,
+          total: publications.length,
+          status: statusParts,
+          url,
+        });
       } catch (error) {
         this.logger.error(
-          `[${skippedCount + fetchedCount}/${publications.length}] Failed: ${url}`,
+          "Publication fetch failed",
+          {
+            index: skippedCount + fetchedCount,
+            total: publications.length,
+            url,
+          },
           error
         );
       }
     }
 
-    this.logger.info(
-      `Fetch complete: ${fetchedCount} new HTML, ${markdownCount} markdown written, ${skippedCount} cached`
-    );
+    this.logger.info("Fetch complete", {
+      fetchedCount,
+      markdownCount,
+      skippedCount,
+    });
 
     return { fetchedCount, skippedCount, markdownCount };
   }
@@ -493,13 +515,13 @@ export class PublicationPipeline {
     const sampleHtmlPath = path.join(publicationsDir, firstHtmlFile);
     const sampleHtml = await fs.readFile(sampleHtmlPath, "utf-8");
 
-    this.logger.info(`Analyzing sample HTML: ${firstHtmlFile}`);
+    this.logger.info("Analyzing sample HTML", { file: firstHtmlFile });
     const contentSelectors =
       await this.scraper.identifyContentSelector(sampleHtml);
 
-    this.logger.info(
-      `Identified content selector: ${contentSelectors.contentSelector}`
-    );
+    this.logger.info("Identified content selector", {
+      selector: contentSelectors.contentSelector,
+    });
 
     await fs.writeFile(
       path.join(this.outputDir, "content-selectors.json"),
@@ -542,7 +564,9 @@ export class PublicationPipeline {
           filename: firstPossibleFilename,
           error: "HTML file not found",
         });
-        this.logger.warn(`HTML file not found for: ${publication.title}`);
+        this.logger.warn("HTML file not found for publication", {
+          title: publication.title,
+        });
         continue;
       }
 
@@ -557,7 +581,9 @@ export class PublicationPipeline {
           filename: usedFilename,
           error: "No content found with selector",
         });
-        this.logger.warn(`No content found for: ${publication.title}`);
+        this.logger.warn("No content found for publication", {
+          title: publication.title,
+        });
         continue;
       }
 
@@ -574,9 +600,11 @@ export class PublicationPipeline {
         filename: usedFilename,
       });
 
-      this.logger.info(
-        `[${extractionResults.length}/${publications.length}] Extracted: ${publication.title}`
-      );
+      this.logger.info("Publication extracted", {
+        index: extractionResults.length,
+        total: publications.length,
+        title: publication.title,
+      });
     }
 
     await fs.writeFile(
@@ -596,9 +624,10 @@ export class PublicationPipeline {
       JSON.stringify(report, null, 2)
     );
 
-    this.logger.info(
-      `Content extraction complete: ${report.successful}/${report.total} publications processed`
-    );
+    this.logger.info("Content extraction complete", {
+      successful: report.successful,
+      total: report.total,
+    });
 
     return { publications: publicationsWithContent, report };
   }
@@ -621,7 +650,7 @@ export class PublicationPipeline {
     const reviewPath = path.join(this.outputDir, "review.html");
     await fs.writeFile(reviewPath, reviewHtml);
 
-    this.logger.info(`Review page saved to: ${reviewPath}`);
+    this.logger.info("Review page saved", { reviewPath });
 
     return reviewPath;
   }

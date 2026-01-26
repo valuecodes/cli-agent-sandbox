@@ -423,11 +423,14 @@ export const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
       etag?: string;
       lastModified?: string;
     }) => {
-      logger.tool(`Fetching URL: ${params.url}`);
+      logger.tool("Fetching URL", { url: params.url });
       const result = await executeFetch(params);
-      logger.tool(
-        `Fetch result: ok=${result.ok}, status=${result.status}, finalUrl=${result.finalUrl}${result.error ? `, error=${result.error}` : ""}`
-      );
+      logger.tool("Fetch result", {
+        ok: result.ok,
+        status: result.status,
+        finalUrl: result.finalUrl,
+        error: result.error,
+      });
       return JSON.stringify(result, null, 2);
     },
   });

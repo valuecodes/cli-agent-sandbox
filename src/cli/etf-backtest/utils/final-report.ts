@@ -1,4 +1,4 @@
-import { Logger } from "~clients/logger";
+import type { Logger } from "~clients/logger";
 
 import {
   CI_LEVEL_PERCENT,

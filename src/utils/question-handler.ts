@@ -100,12 +100,12 @@ export class QuestionHandler {
       const validationMessage =
         errorMessage ?? result.error.issues[0]?.message ?? "Invalid input";
 
-      this.logger.question(`Validation failed: ${validationMessage}`);
+      this.logger.question("Validation failed", { message: validationMessage });
 
       if (attempts < maxRetries) {
-        this.logger.question(
-          `Please try again (${maxRetries - attempts} attempts remaining)`
-        );
+        this.logger.question("Please try again", {
+          remainingAttempts: maxRetries - attempts,
+        });
       }
     }
 
