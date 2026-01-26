@@ -38,7 +38,7 @@ from shared import (
 )
 
 # === CONFIG ===
-DATA_PATH = Path(__file__).parent.parent.parent.parent.parent / "tmp" / "etf-backtest" / "data.json"
+DEFAULT_DATA_PATH = Path(__file__).parent.parent.parent.parent.parent / "tmp" / "etf-backtest" / "data.json"
 COST_BPS = 5  # transaction cost in basis points
 
 
@@ -250,15 +250,15 @@ def compute_uncertainty_adjusted(
     }
 
 
-def run_experiment(ticker: str, feature_ids: list[str], seed: int) -> dict:
+def run_experiment(ticker: str, feature_ids: list[str], seed: int, data_path: Path) -> dict:
     """Run a single experiment with given features."""
     set_seed(seed)
 
     # Load data
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Data file not found: {DATA_PATH}")
+    if not data_path.exists():
+        raise FileNotFoundError(f"Data file not found: {data_path}")
 
-    df_raw = load_data(DATA_PATH)
+    df_raw = load_data(data_path)
 
     # Build features and add forward target
     df = build_selected_features(df_raw, feature_ids)
@@ -353,6 +353,8 @@ def main():
     if feature_ids is None:
         feature_ids = input_data.get("feature_ids", [])
     seed = input_data.get("seed", 42)
+    data_path_str = input_data.get("dataPath")
+    data_path = Path(data_path_str) if data_path_str else DEFAULT_DATA_PATH
 
     # Validate featureIds
     if not feature_ids:
@@ -368,7 +370,7 @@ def main():
         sys.exit(1)
 
     try:
-        result = run_experiment(ticker, feature_ids, seed)
+        result = run_experiment(ticker, feature_ids, seed, data_path)
         print(json.dumps(result, indent=2), file=sys.stdout)
     except Exception as e:
         print(json.dumps({"error": str(e)}), file=sys.stdout)

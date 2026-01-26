@@ -10,6 +10,7 @@ import { Logger } from "~clients/logger";
 import { createRunPythonTool } from "~tools/run-python/run-python-tool";
 import { parseArgs } from "~utils/parse-args";
 
+import { EtfDataFetcher } from "./clients/etf-data-fetcher";
 import {
   DECIMAL_PLACES,
   FEATURE_MENU,
@@ -39,7 +40,7 @@ import { computeScore } from "./utils/scoring";
 const logger = new Logger();
 
 // --- Parse CLI arguments ---
-const { verbose, ticker, maxIterations, seed } = parseArgs({
+const { verbose, ticker, isin, refresh, maxIterations, seed } = parseArgs({
   logger,
   schema: CliArgsSchema,
 });
@@ -100,7 +101,7 @@ IMPORTANT: Run exactly ONE experiment per turn. Do not run multiple experiments.
 
 Call runPython with:
 - scriptName: "run_experiment.py"
-- input: { "ticker": "<ticker>", "featureIds": [...], "seed": <seed> }
+- input: { "ticker": "<ticker>", "featureIds": [...], "seed": <seed>, "dataPath": "<dataPath>" }
 
 After you receive results, respond with your analysis. Do not call runPython again in the same turn.
 
@@ -115,7 +116,7 @@ After each experiment, respond with JSON (do not call any more tools):
 `;
 
 // --- Run iterative optimization ---
-const runAgentOptimization = async () => {
+const runAgentOptimization = async (dataPath: string) => {
   const runPythonTool = createRunPythonTool({
     scriptsDir: SCRIPTS_DIR,
     logger,
@@ -129,6 +130,7 @@ const runAgentOptimization = async () => {
     instructions: buildInstructions(),
     logger,
     logToolResults: verbose,
+    stateless: true, // Required for reasoning models to avoid "reasoning item without following item" errors
   });
 
   // Track state
@@ -141,21 +143,21 @@ const runAgentOptimization = async () => {
 
   // Initial prompt
   let currentPrompt = `
-Start feature selection optimization for ${ticker}.
+Start feature selection optimization for ${ticker} (ISIN: ${isin}).
 
 Begin by selecting ${MIN_FEATURES}-${MAX_FEATURES} features that you think will best predict ${PREDICTION_HORIZON_MONTHS}-month returns.
 Consider using a mix from each category (momentum, trend, risk).
 
 Use runPython with:
 - scriptName: "run_experiment.py"
-- input: { "ticker": "${ticker}", "featureIds": [...your features...], "seed": ${seed} }
+- input: { "ticker": "${ticker}", "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
 
 After running the experiment, analyze the results and decide whether to continue or stop.
 `;
 
   while (iteration < maxIterations) {
     iteration++;
-    logger.info("\n--- Iteration ---", { iteration, maxIterations });
+    logger.info("--- Iteration ---", { iteration, maxIterations });
 
     let runResult;
     try {
@@ -289,11 +291,17 @@ Backtest metrics (Sharpe, drawdown) are informational only.
 };
 
 // --- Main ---
-logger.info("ETF Backtest Feature Optimization starting...");
+logger.info("ETF Backtest Feature Optimization starting...", { isin });
 if (verbose) {
   logger.debug("Verbose mode enabled");
 }
 
-await runAgentOptimization();
+const fetcher = new EtfDataFetcher({ logger });
+try {
+  const { dataPath } = await fetcher.fetch(isin, refresh);
+  await runAgentOptimization(dataPath);
+} finally {
+  await fetcher.close();
+}
 
 logger.info("\nETF Backtest completed.");

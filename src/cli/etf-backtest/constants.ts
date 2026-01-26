@@ -4,6 +4,26 @@ export const DEFAULT_VERBOSE = false;
 export const DEFAULT_TICKER = "SPY";
 export const DEFAULT_MAX_ITERATIONS = 5;
 export const DEFAULT_SEED = 42;
+export const DEFAULT_REFRESH = false;
+
+// Default ISIN: iShares Core S&P 500 UCITS ETF
+export const DEFAULT_ISIN = "IE00B5BMR087";
+
+// justetf.com configuration
+export const JUST_ETF_BASE_URL = "https://www.justetf.com";
+export const ETF_PROFILE_PATH = "/en/etf-profile.html";
+// Match performance-chart requests with full historical data (dateFrom before 2020)
+export const getEtfApiPattern = (isin: string): RegExp =>
+  new RegExp(`/api/etfs/${isin}/performance-chart.*dateFrom=(19|200|201)`);
+export const API_CAPTURE_TIMEOUT_MS = 15000;
+
+// localStorage key to set chart period to MAX for full historical data
+export const ETF_CHART_PERIOD_KEY = "etfProfileChart.defaultPeriod";
+export const ETF_CHART_PERIOD_VALUE = "MAX";
+
+// Data storage paths (relative to tmp/)
+export const ETF_DATA_DIR = "etf-backtest";
+export const ETF_DATA_FILENAME = "data.json";
 
 export const MAX_NO_IMPROVEMENT = 2;
 export const ZERO = 0;

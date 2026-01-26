@@ -1,15 +1,24 @@
 import { z } from "zod";
 
 import {
+  DEFAULT_ISIN,
   DEFAULT_MAX_ITERATIONS,
+  DEFAULT_REFRESH,
   DEFAULT_SEED,
   DEFAULT_TICKER,
   DEFAULT_VERBOSE,
 } from "./constants";
 
+// ISIN validation: 2 letter country code + 10 alphanumeric characters
+const IsinSchema = z
+  .string()
+  .regex(/^[A-Z]{2}[A-Z0-9]{10}$/, "Invalid ISIN format");
+
 export const CliArgsSchema = z.object({
   verbose: z.coerce.boolean().default(DEFAULT_VERBOSE),
   ticker: z.string().default(DEFAULT_TICKER),
+  isin: IsinSchema.default(DEFAULT_ISIN),
+  refresh: z.coerce.boolean().default(DEFAULT_REFRESH),
   maxIterations: z.coerce.number().default(DEFAULT_MAX_ITERATIONS),
   seed: z.coerce.number().default(DEFAULT_SEED),
 });
