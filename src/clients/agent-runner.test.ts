@@ -100,12 +100,12 @@ describe("AgentRunner", () => {
         logger,
       });
 
-      await agentRunner.run("test prompt");
+      await agentRunner.run({ prompt: "test prompt" });
 
       expect(mockRunnerInstance.run).toHaveBeenCalledWith(
         expect.anything(), // agent
         "test prompt",
-        { session: mockSessionInstance, maxTurns: undefined }
+        { session: mockSessionInstance }
       );
     });
 
@@ -119,7 +119,7 @@ describe("AgentRunner", () => {
         logger,
       });
 
-      await agentRunner.run("test prompt", { maxTurns: 3 });
+      await agentRunner.run({ prompt: "test prompt", maxTurns: 3 });
 
       expect(mockRunnerInstance.run).toHaveBeenCalledWith(
         expect.anything(),
@@ -141,7 +141,7 @@ describe("AgentRunner", () => {
         logger,
       });
 
-      const result = await agentRunner.run("test prompt");
+      const result = await agentRunner.run({ prompt: "test prompt" });
 
       expect(result).toBe(expectedResult);
     });
