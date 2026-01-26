@@ -8,7 +8,6 @@ export const DEFAULT_SEED = 42;
 export const MAX_NO_IMPROVEMENT = 2;
 export const ZERO = 0;
 export const MAX_TURNS_PER_ITERATION = 3;
-export const TOOL_RESULT_PREVIEW_LIMIT = 300;
 export const REASONING_PREVIEW_LIMIT = 100;
 
 export const MIN_FEATURES = 8;
@@ -70,12 +69,6 @@ export const SCRIPTS_DIR = path.join(
   "cli",
   "etf-backtest",
   "scripts"
-);
-export const PYTHON_BINARY = path.join(
-  process.cwd(),
-  ".venv",
-  "bin",
-  "python3"
 );
 
 export const FEATURE_MENU = {

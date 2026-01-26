@@ -20,7 +20,6 @@ import {
   NO_IMPROVEMENT_REASON,
   OVERLAP_PERCENT,
   PREDICTION_HORIZON_MONTHS,
-  PYTHON_BINARY,
   REASONING_PREVIEW_LIMIT,
   SAMPLES_PER_DECADE,
   SCRIPTS_DIR,
@@ -28,7 +27,6 @@ import {
   TARGET_CALIBRATION_MIN,
   TARGET_DIR_ACC_NON_OVERLAPPING,
   TARGET_R2_NON_OVERLAPPING,
-  TOOL_RESULT_PREVIEW_LIMIT,
   ZERO,
 } from "./constants";
 import { AgentOutputSchema, CliArgsSchema } from "./schemas";
@@ -121,7 +119,6 @@ const runAgentOptimization = async () => {
   const runPythonTool = createRunPythonTool({
     scriptsDir: SCRIPTS_DIR,
     logger,
-    pythonBinary: PYTHON_BINARY,
   });
 
   const agentRunner = new AgentRunner({
@@ -132,7 +129,6 @@ const runAgentOptimization = async () => {
     instructions: buildInstructions(),
     logger,
     logToolResults: verbose,
-    resultPreviewLimit: TOOL_RESULT_PREVIEW_LIMIT,
   });
 
   // Track state
