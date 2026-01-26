@@ -7,7 +7,8 @@ The agent selects price-only features, runs experiments, and optimizes for **pre
 ## Requirements
 
 - Python 3 with `numpy`, `pandas`, and `torch` installed (see repo README for setup)
-- ETF data at `tmp/etf-backtest/data.json`
+- Playwright system deps (Chromium) for data fetch (see repo README)
+- ETF data cached under `tmp/etf-backtest/<ISIN>/data.json` (auto-fetched; use `--refresh`)
 
 ## Run
 
@@ -16,17 +17,18 @@ The agent selects price-only features, runs experiments, and optimizes for **pre
 pnpm run:etf-backtest
 
 # With options
-pnpm run:etf-backtest --ticker=SPY --maxIterations=5 --seed=42 --verbose
+pnpm run:etf-backtest --isin=IE00B5BMR087 --maxIterations=5 --seed=42 --verbose --refresh
 ```
 
 ## Arguments
 
-| Argument          | Default | Description                     |
-| ----------------- | ------- | ------------------------------- |
-| `--ticker`        | `SPY`   | ETF ticker symbol               |
-| `--maxIterations` | `5`     | Maximum optimization iterations |
-| `--seed`          | `42`    | Random seed for reproducibility |
-| `--verbose`       | `false` | Enable verbose logging          |
+| Argument          | Default        | Description                               |
+| ----------------- | -------------- | ----------------------------------------- |
+| `--isin`          | `IE00B5BMR087` | ETF ISIN (used to fetch/cached data)      |
+| `--maxIterations` | `5`            | Maximum optimization iterations           |
+| `--seed`          | `42`           | Random seed for reproducibility           |
+| `--refresh`       | `false`        | Force refetch even if cache exists        |
+| `--verbose`       | `false`        | Enable verbose logging                    |
 
 ## Feature Menu
 
@@ -143,7 +145,7 @@ The 95% confidence interval uses adjusted uncertainty that accounts for:
 
 ## Data Format
 
-Expects `tmp/etf-backtest/data.json`:
+Expects `tmp/etf-backtest/<ISIN>/data.json` when run via the CLI:
 
 ```json
 {
@@ -152,3 +154,6 @@ Expects `tmp/etf-backtest/data.json`:
   ]
 }
 ```
+
+If you run `run_experiment.py` directly, it defaults to `tmp/etf-backtest/data.json`
+unless you pass `"dataPath"` in the JSON stdin payload.

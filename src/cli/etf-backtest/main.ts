@@ -268,14 +268,18 @@ After running the experiment, analyze the results and decide whether to continue
       break;
     }
 
-    // Build next prompt
+    // Build next prompt with dataPath (required since stateless mode loses context)
     currentPrompt = `
-Your previous experiment is complete. Results are in your conversation history.
+Continue feature selection optimization for ISIN ${isin}.
 You have ${maxIterations - iteration} iterations remaining.
 
-Based on the metrics, decide:
+Based on your previous experiment, decide:
 - If you want to try different features, select them and run another experiment
 - If you think you've found a good set, respond with status "final"
+
+Use runPython with:
+- scriptName: "run_experiment.py"
+- input: { "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
 
 Focus on: Higher r2NonOverlapping, higher directionAccuracyNonOverlapping, lower MAE.
 Backtest metrics (Sharpe, drawdown) are informational only.
