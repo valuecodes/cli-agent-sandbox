@@ -9,9 +9,10 @@
 1. Start at `src/cli/<cli>/main.ts` and the matching `src/cli/<cli>/README.md`.
 2. Follow the pipeline classes under `src/cli/<cli>/clients/*` and schemas under `src/cli/<cli>/types/*`.
 3. Reuse shared helpers: `src/utils/parse-args.ts`, `src/utils/question-handler.ts`, `src/clients/logger.ts`.
-4. Keep changes minimal; add/update **Vitest** tests (`*.test.ts`) when behavior changes.
-5. Run: `pnpm typecheck`, `pnpm lint`, `pnpm test` (and `pnpm format:check` if formatting changed).
-6. All runtime artifacts go under `tmp/` (never commit them).
+4. Keep `main.ts` focused on the basic agent flow; move non-trivial logic into `clients/` or `utils/`.
+5. Keep changes minimal; add/update **Vitest** tests (`*.test.ts`) when behavior changes.
+6. Run: `pnpm typecheck`, `pnpm lint`, `pnpm test` (and `pnpm format:check` if formatting changed).
+7. All runtime artifacts go under `tmp/` (never commit them).
 
 **Scratch space:** Use `tmp/` for generated HTML/markdown/JSON/reports.
 
@@ -31,6 +32,13 @@
 - Install deps: `pnpm install`
 - Set `OPENAI_API_KEY` via env or `.env` (humans do this; agents must not read secrets)
 - If a task requires Playwright, follow the repo README for system deps
+- If a task requires Python (e.g., `etf-backtest`), set up the venv:
+  ```bash
+  # On Debian/Ubuntu, install venv support first: sudo apt install python3-venv
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install numpy pandas torch
+  ```
 
 **Common scripts (see `package.json` for all):**
 
@@ -86,6 +94,9 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 - **`listFiles`** (`src/tools/list-files/list-files-tool.ts`)
   - Lists files/dirs under `tmp/`.
   - Params: `{ path?: string }` (defaults to `tmp/` root)
+- **`runPython`** (`src/tools/run-python/run-python-tool.ts`)
+  - Runs a Python script from a configured scripts directory.
+  - Params: `{ scriptName: string }`
 
 ### Safe web fetch tool
 
@@ -99,9 +110,15 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 ## 5) Coding conventions (how changes should look)
 
 - Initialize `Logger` in CLI entry points and pass it into clients/pipelines via constructor options.
+- Use `Logger` instead of `console.log`/`console.error` for output.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom logic.
+- `main.ts` should stay focused on the **basic agent flow**: argument parsing → agent setup → run loop → final output. Move helper logic into `clients/` or `utils/`
 - Prefer TypeScript path aliases over deep relative imports: `~tools/*`, `~clients/*`, `~utils/*`.
 - Use Zod schemas for CLI args and tool IO.
+- Keep object field names in `camelCase` (e.g., `trainSamples`), not `snake_case`.
+- Keep Zod schemas in a dedicated `schemas.ts` file for each CLI (avoid inline schemas in `main.ts`).
+- Keep constants in a dedicated `constants.ts` file for each CLI.
+- Move hardcoded numeric values into `constants.ts` (treat numbers as configuration).
 - For HTTP fetching in code, prefer `Fetch` (sanitized) or `PlaywrightScraper` for JS-heavy pages.
 - When adding tools that touch files, use `src/tools/utils/fs.ts` for path validation.
 - Comments should capture invariants or subtle behavior, not restate code.
@@ -127,3 +144,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 - [ ] Any generated artifacts are in `tmp/` only
 
 ---
+
+# ExecPlans
+
+When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.

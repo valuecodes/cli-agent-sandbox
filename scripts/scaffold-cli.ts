@@ -4,12 +4,14 @@
  * Scaffold a new CLI from the basic template.
  *
  * Usage:
- *   pnpm scaffold:cli -- --name=my-cli --description="My CLI description"
- *   pnpm scaffold:cli -- --name=my-cli  # description defaults to "TODO: Add description"
+ *   pnpm scaffold:cli --name=my-cli --description="My CLI description"
+ *   pnpm scaffold:cli --name=my-cli  # description defaults to "TODO: Add description"
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { argv } from "zx";
+import { Logger } from "~clients/logger";
+import { parseArgs } from "~utils/parse-args";
+import { z } from "zod";
 
 const TEMPLATE_DIR = path.join(process.cwd(), "templates", "cli-basic");
 const CLI_DIR = path.join(process.cwd(), "src", "cli");
@@ -80,17 +82,14 @@ const copyTemplateFile = async (
 };
 
 const main = async (): Promise<void> => {
-  const name = argv.name as string | undefined;
-  const description =
-    (argv.description as string | undefined) ?? "TODO: Add description";
+  const logger = new Logger();
 
-  if (!name) {
-    console.error("Error: --name is required");
-    console.error(
-      'Usage: pnpm scaffold:cli -- --name=my-cli --description="My description"'
-    );
-    process.exit(1);
-  }
+  const argsSchema = z.object({
+    name: z.string({ error: "Error: --name is required" }),
+    description: z.string().default("TODO: Add description"),
+  });
+
+  const { name, description } = parseArgs({ logger, schema: argsSchema });
 
   validateCliName(name);
 
