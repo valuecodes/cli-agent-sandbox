@@ -4,7 +4,7 @@
 import "dotenv/config";
 
 import { writeFile } from "fs/promises";
-import { Agent, MemorySession, Runner } from "@openai/agents";
+import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import { QuestionHandler } from "~utils/question-handler";
@@ -73,7 +73,7 @@ const runAiMode = async () => {
     tools.push(createAggregatedSqlQueryTool(aggregatedDb));
   }
 
-  const agent = new Agent({
+  const agentRunner = new AgentRunner({
     name: "NameExpertAgent",
     model: "gpt-5-mini",
     tools,
@@ -95,33 +95,11 @@ IMPORTANT: Respond with ONLY a valid JSON object:
 - Use status "final" when you have the answer. Put the answer in "content".
 - Use status "needs_clarification" only if you cannot answer without more input. Put a single, concise question in "content".
 When answering, do not include any questions. Do not include markdown or extra keys.`,
-  });
-
-  const runner = new Runner();
-
-  const toolsInProgress = new Set<string>();
-
-  runner.on("agent_tool_start", (_context, _agent, tool, details) => {
-    const toolCall = details.toolCall as Record<string, unknown>;
-    const callId = toolCall.id as string;
-    if (toolsInProgress.has(callId)) {
-      return;
-    }
-    toolsInProgress.add(callId);
-
-    const args = String(toolCall.arguments);
-    logger.tool(`Calling ${tool.name}: ${args || "no arguments"}`);
-  });
-
-  runner.on("agent_tool_end", (_context, _agent, tool, result) => {
-    logger.tool(`${tool.name} completed`);
-    const preview =
-      result.length > 200 ? result.substring(0, 200) + "..." : result;
-    logger.debug(`Result: ${preview}`);
+    logger,
+    logToolArgs: true,
   });
 
   const questionHandler = new QuestionHandler({ logger });
-  const session = new MemorySession();
 
   const userQuestion = await questionHandler.askString({
     prompt: "Ask about Finnish names: ",
@@ -133,7 +111,7 @@ When answering, do not include any questions. Do not include markdown or extra k
 
   let currentQuestion = userQuestion;
   while (true) {
-    const result = await runner.run(agent, currentQuestion, { session });
+    const result = await agentRunner.run(currentQuestion);
     const parseResult = NameSuggesterOutputSchema.safeParse(result.finalOutput);
 
     if (!parseResult.success) {

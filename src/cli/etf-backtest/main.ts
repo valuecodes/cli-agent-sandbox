@@ -5,35 +5,26 @@
 
 import "dotenv/config";
 
-import { Agent, MemorySession, Runner } from "@openai/agents";
+import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { createRunPythonTool } from "~tools/run-python/run-python-tool";
 import { parseArgs } from "~utils/parse-args";
 
 import {
   AGENT_NAME,
-  CI_LEVEL_PERCENT,
-  CONFIDENCE_THRESHOLDS,
   DECIMAL_PLACES,
   FEATURE_MENU,
-  INDEX_NOT_FOUND,
-  JSON_SLICE_END_OFFSET,
-  LINE_SEPARATOR,
   MAX_FEATURES,
   MAX_NO_IMPROVEMENT,
   MAX_TURNS_PER_ITERATION,
   MIN_FEATURES,
   MODEL_NAME,
-  NEGATIVE_SHARPE_PENALTY,
-  NEGATIVE_SHARPE_THRESHOLD,
   NO_IMPROVEMENT_REASON,
   OVERLAP_PERCENT,
-  PERCENT_MULTIPLIER,
   PREDICTION_HORIZON_MONTHS,
   PYTHON_BINARY,
   REASONING_PREVIEW_LIMIT,
   SAMPLES_PER_DECADE,
-  SCORE_WEIGHTS,
   SCRIPTS_DIR,
   TARGET_CALIBRATION_MAX,
   TARGET_CALIBRATION_MIN,
@@ -42,12 +33,12 @@ import {
   TOOL_RESULT_PREVIEW_LIMIT,
   ZERO,
 } from "./constants";
-import {
-  AgentOutputSchema,
-  CliArgsSchema,
-  ExperimentResultSchema,
-} from "./schemas";
+import { AgentOutputSchema, CliArgsSchema } from "./schemas";
 import type { ExperimentResult } from "./schemas";
+import { extractLastExperimentResult } from "./utils/experiment-extract";
+import { printFinalResults } from "./utils/final-report";
+import { formatFixed, formatPercent } from "./utils/formatters";
+import { computeScore } from "./utils/scoring";
 
 const logger = new Logger();
 
@@ -56,14 +47,6 @@ const { verbose, ticker, maxIterations, seed } = parseArgs({
   logger,
   schema: CliArgsSchema,
 });
-
-const formatPercent = (
-  value: number,
-  decimals = DECIMAL_PLACES.percent
-): string => `${(value * PERCENT_MULTIPLIER).toFixed(decimals)}%`;
-
-const formatFixed = (value: number, decimals: number): string =>
-  value.toFixed(decimals);
 
 // --- Build agent instructions ---
 const buildInstructions = () => `
@@ -135,165 +118,23 @@ After each experiment, respond with JSON (do not call any more tools):
 }
 `;
 
-// --- Compute improvement score ---
-const computeScore = (metrics: ExperimentResult["metrics"]): number => {
-  // Primary: prediction accuracy on non-overlapping samples (honest assessment)
-  // Secondary: Sharpe < 0 is a red flag (sanity check only)
-  return (
-    metrics.r2NonOverlapping * SCORE_WEIGHTS.r2NonOverlapping +
-    metrics.directionAccuracyNonOverlapping *
-      SCORE_WEIGHTS.directionAccuracyNonOverlapping +
-    metrics.mae * SCORE_WEIGHTS.mae +
-    (metrics.sharpe < NEGATIVE_SHARPE_THRESHOLD
-      ? NEGATIVE_SHARPE_PENALTY
-      : ZERO)
-  );
-};
-
-// --- Print final results ---
-const printFinalResults = (
-  bestResult: ExperimentResult,
-  bestIteration: number,
-  totalIterations: number,
-  stopReason: string
-) => {
-  // Confidence note based on non-overlapping metrics
-  const ciWidth =
-    bestResult.prediction.ci95High - bestResult.prediction.ci95Low;
-  let confidence = "LOW";
-  if (
-    bestResult.metrics.r2NonOverlapping >
-      CONFIDENCE_THRESHOLDS.moderate.r2NonOverlapping &&
-    bestResult.metrics.directionAccuracyNonOverlapping >
-      CONFIDENCE_THRESHOLDS.moderate.directionAccuracyNonOverlapping &&
-    ciWidth < CONFIDENCE_THRESHOLDS.moderate.maxCiWidth
-  ) {
-    confidence = "MODERATE";
-  }
-  if (
-    bestResult.metrics.r2NonOverlapping >
-      CONFIDENCE_THRESHOLDS.reasonable.r2NonOverlapping &&
-    bestResult.metrics.directionAccuracyNonOverlapping >
-      CONFIDENCE_THRESHOLDS.reasonable.directionAccuracyNonOverlapping &&
-    ciWidth < CONFIDENCE_THRESHOLDS.reasonable.maxCiWidth
-  ) {
-    confidence = "REASONABLE";
-  }
-
-  const lines = [
-    "",
-    LINE_SEPARATOR,
-    "OPTIMIZATION COMPLETE",
-    LINE_SEPARATOR,
-    `Iterations: ${totalIterations}`,
-    `Best iteration: ${bestIteration}`,
-    `Stop reason: ${stopReason}`,
-    "",
-    "Best Feature Set:",
-    ...bestResult.featureIds.map((feature) => `  - ${feature}`),
-    "",
-    "Prediction Accuracy (Non-Overlapping - Honest Assessment):",
-    `  R²:                ${formatFixed(
-      bestResult.metrics.r2NonOverlapping,
-      DECIMAL_PLACES.r2
-    )}`,
-    `  Direction Accuracy: ${formatPercent(
-      bestResult.metrics.directionAccuracyNonOverlapping
-    )}`,
-    `  Independent Samples: ${bestResult.dataInfo.nonOverlappingSamples}`,
-    "",
-    "Prediction Accuracy (Overlapping - Inflated):",
-    `  R²:                ${formatFixed(
-      bestResult.metrics.r2,
-      DECIMAL_PLACES.r2
-    )}`,
-    `  Direction Accuracy: ${formatPercent(
-      bestResult.metrics.directionAccuracy
-    )}`,
-    `  MAE:               ${formatPercent(bestResult.metrics.mae)}`,
-    `  Calibration:       ${formatFixed(
-      bestResult.metrics.calibrationRatio,
-      DECIMAL_PLACES.calibration
-    )}`,
-    "",
-    "Backtest Metrics (Informational):",
-    `  Sharpe Ratio:   ${formatFixed(
-      bestResult.metrics.sharpe,
-      DECIMAL_PLACES.sharpe
-    )}`,
-    `  Max Drawdown:   ${formatPercent(bestResult.metrics.maxDrawdown)}`,
-    `  CAGR:           ${formatPercent(
-      bestResult.metrics.cagr,
-      DECIMAL_PLACES.cagr
-    )}`,
-    "",
-    `${PREDICTION_HORIZON_MONTHS}-Month Prediction:`,
-    `  Expected Return: ${formatPercent(bestResult.prediction.pred12mReturn)}`,
-    `  ${CI_LEVEL_PERCENT}% CI:          [${formatPercent(
-      bestResult.prediction.ci95Low
-    )}, ${formatPercent(bestResult.prediction.ci95High)}]`,
-    "",
-    "Uncertainty Details:",
-    `  Base Std:        ${formatPercent(
-      bestResult.prediction.uncertainty.baseStd
-    )}`,
-    `  Adjusted Std:    ${formatPercent(
-      bestResult.prediction.uncertainty.adjustedStd
-    )}`,
-    `  Extrapolation:   ${
-      bestResult.prediction.uncertainty.isExtrapolating
-        ? "Yes (features outside training range)"
-        : "No"
-    }`,
-    "",
-    `Confidence: ${confidence}`,
-    `Note: Non-overlapping metrics use only ${bestResult.dataInfo.nonOverlappingSamples} independent periods.`,
-    "Past performance does not guarantee future results.",
-    LINE_SEPARATOR,
-  ];
-
-  logger.info(lines.join("\n"));
-};
-
 // --- Run iterative optimization ---
-const runOptimization = async () => {
+const runAgentOptimization = async () => {
   const runPythonTool = createRunPythonTool({
     scriptsDir: SCRIPTS_DIR,
     logger,
     pythonBinary: PYTHON_BINARY,
   });
 
-  const agent = new Agent({
+  const agentRunner = new AgentRunner({
     name: AGENT_NAME,
     model: MODEL_NAME,
     tools: [runPythonTool],
     outputType: AgentOutputSchema,
     instructions: buildInstructions(),
-  });
-
-  const runner = new Runner();
-  const session = new MemorySession();
-
-  // Tool logging
-  const toolsInProgress = new Set<string>();
-  runner.on("agent_tool_start", (_context, _agent, tool, details) => {
-    const toolCall = details.toolCall as Record<string, unknown>;
-    const callId = toolCall.id as string;
-    if (toolsInProgress.has(callId)) {
-      return;
-    }
-    toolsInProgress.add(callId);
-    logger.tool(`Calling ${tool.name}`);
-  });
-  runner.on("agent_tool_end", (_context, _agent, tool, result) => {
-    logger.tool(`${tool.name} completed`);
-    if (verbose) {
-      const preview =
-        result.length > TOOL_RESULT_PREVIEW_LIMIT
-          ? result.substring(ZERO, TOOL_RESULT_PREVIEW_LIMIT) + "..."
-          : result;
-      logger.debug(`Result: ${preview}`);
-    }
+    logger,
+    logToolResults: verbose,
+    resultPreviewLimit: TOOL_RESULT_PREVIEW_LIMIT,
   });
 
   // Track state
@@ -324,8 +165,7 @@ After running the experiment, analyze the results and decide whether to continue
 
     let runResult;
     try {
-      runResult = await runner.run(agent, currentPrompt, {
-        session,
+      runResult = await agentRunner.run(currentPrompt, {
         maxTurns: MAX_TURNS_PER_ITERATION, // Limit turns per iteration: 1 tool call + 1 result + 1 output
       });
     } catch (err) {
@@ -446,79 +286,10 @@ Backtest metrics (Sharpe, drawdown) are informational only.
 
   // Output final results
   if (bestResult) {
-    printFinalResults(bestResult, bestIteration, iteration, stopReason);
+    printFinalResults(logger, bestResult, bestIteration, iteration, stopReason);
   } else {
     logger.warn("No successful experiments completed.");
   }
-};
-
-// Extract JSON object from stdout which may contain other output before/after
-const extractJsonFromStdout = (stdout: string): unknown => {
-  // Find the first '{' and match to its closing '}'
-  const startIdx = stdout.indexOf("{");
-  if (startIdx === INDEX_NOT_FOUND) {
-    return null;
-  }
-
-  let braceCount = ZERO;
-  let endIdx = INDEX_NOT_FOUND;
-  for (let i = startIdx; i < stdout.length; i++) {
-    if (stdout[i] === "{") {
-      braceCount++;
-    }
-    if (stdout[i] === "}") {
-      braceCount--;
-    }
-    if (braceCount === ZERO) {
-      endIdx = i;
-      break;
-    }
-  }
-
-  if (endIdx === INDEX_NOT_FOUND) {
-    return null;
-  }
-
-  const jsonStr = stdout.slice(startIdx, endIdx + JSON_SLICE_END_OFFSET);
-  return JSON.parse(jsonStr);
-};
-
-// Helper to extract experiment result from runner result
-const extractLastExperimentResult = (runResult: {
-  newItems?: { type: string; output?: unknown }[];
-}): ExperimentResult | null => {
-  try {
-    // Look through the newItems for tool call outputs
-    const items = runResult.newItems ?? [];
-    for (const item of items) {
-      if (item.type === "tool_call_output_item" && item.output) {
-        const output = item.output;
-        // Output may be a string (JSON) or already parsed object
-        let parsed: unknown;
-        if (typeof output === "string") {
-          parsed = JSON.parse(output);
-        } else {
-          parsed = output;
-        }
-
-        // The Python tool returns { success, exitCode, stdout, stderr }
-        const toolResult = parsed as { stdout?: string };
-        if (toolResult.stdout) {
-          // Extract JSON from stdout which may contain training output before the result
-          const result = extractJsonFromStdout(toolResult.stdout);
-          if (result) {
-            const validated = ExperimentResultSchema.safeParse(result);
-            if (validated.success) {
-              return validated.data;
-            }
-          }
-        }
-      }
-    }
-  } catch {
-    // Parsing failed, return null
-  }
-  return null;
 };
 
 // --- Main ---
@@ -527,6 +298,6 @@ if (verbose) {
   logger.debug("Verbose mode enabled");
 }
 
-await runOptimization();
+await runAgentOptimization();
 
 logger.info("\nETF Backtest completed.");
