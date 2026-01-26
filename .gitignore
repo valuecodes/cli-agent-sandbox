@@ -1,3 +1,5 @@
 node_modules
 .env
 tmp
+.venv
+__pycache__

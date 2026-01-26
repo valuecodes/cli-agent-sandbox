@@ -11,6 +11,18 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 5. Run the demo: `pnpm run:guestbook`
 6. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
 7. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
+8. (Optional) Run ETF backtest: `pnpm run:etf-backtest` (requires Python setup below)
+
+### Python Setup (for ETF backtest)
+
+```bash
+# On Debian/Ubuntu, install venv support first:
+sudo apt install python3-venv
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install numpy pandas torch
+```
 
 ## Commands
 
@@ -19,6 +31,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 | `pnpm run:guestbook`           | Run the interactive guestbook CLI demo            |
 | `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats) |
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
+| `pnpm run:etf-backtest`        | Run neural network ETF backtest (requires Python) |
 | `pnpm typecheck`               | Run TypeScript type checking                      |
 | `pnpm lint`                    | Run ESLint for code quality                       |
 | `pnpm lint:fix`                | Run ESLint and auto-fix issues                    |
@@ -58,7 +71,7 @@ Outputs are written under `tmp/name-explorer/`, including `statistics.html` in s
 
 ## Tools
 
-File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization.
+File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
 
 | Tool        | Location                                  | Description                                             |
 | ----------- | ----------------------------------------- | ------------------------------------------------------- |
@@ -66,12 +79,17 @@ File tools are sandboxed to the `tmp/` directory with path validation to prevent
 | `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                 |
 | `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory              |
 | `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                 |
+| `runPython` | `src/tools/run-python/run-python-tool.ts` | Runs Python scripts from a configured scripts directory |
 
 ## Project Structure
 
 ```
 src/
 ├── cli/
+│   ├── etf-backtest/
+│   │   ├── main.ts            # ETF backtest CLI entry point
+│   │   ├── README.md          # ETF backtest docs
+│   │   └── scripts/           # Python backtest + prediction scripts
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point
 │   │   └── README.md          # Guestbook CLI docs
@@ -99,6 +117,7 @@ src/
 │   ├── fetch-url/             # Safe fetch tool
 │   ├── list-files/            # List files tool
 │   ├── read-file/             # Read file tool
+│   ├── run-python/            # Run Python scripts tool
 │   ├── write-file/            # Write file tool
 │   └── utils/
 │       ├── fs.ts              # Path safety utilities
