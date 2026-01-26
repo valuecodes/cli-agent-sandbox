@@ -11,14 +11,12 @@ import { createRunPythonTool } from "~tools/run-python/run-python-tool";
 import { parseArgs } from "~utils/parse-args";
 
 import {
-  AGENT_NAME,
   DECIMAL_PLACES,
   FEATURE_MENU,
   MAX_FEATURES,
   MAX_NO_IMPROVEMENT,
   MAX_TURNS_PER_ITERATION,
   MIN_FEATURES,
-  MODEL_NAME,
   NO_IMPROVEMENT_REASON,
   OVERLAP_PERCENT,
   PREDICTION_HORIZON_MONTHS,
@@ -127,8 +125,8 @@ const runAgentOptimization = async () => {
   });
 
   const agentRunner = new AgentRunner({
-    name: AGENT_NAME,
-    model: MODEL_NAME,
+    name: "EtfFeatureOptimizer",
+    model: "gpt-5-mini",
     tools: [runPythonTool],
     outputType: AgentOutputSchema,
     instructions: buildInstructions(),
