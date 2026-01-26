@@ -4,8 +4,8 @@ import "dotenv/config";
 
 import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
-import { readFileTool } from "~tools/read-file/read-file-tool";
-import { writeFileTool } from "~tools/write-file/write-file-tool";
+import { createReadFileTool } from "~tools/read-file/read-file-tool";
+import { createWriteFileTool } from "~tools/write-file/write-file-tool";
 import { z } from "zod";
 import { question } from "zx";
 
@@ -21,7 +21,7 @@ const OutputSchema = z.object({
 const agentRunner = new AgentRunner({
   name: "GuestbookAgent",
   model: "gpt-5-mini",
-  tools: [writeFileTool, readFileTool],
+  tools: [createWriteFileTool({ logger }), createReadFileTool({ logger })],
   outputType: OutputSchema,
   instructions: `
 You maintain a shared "greeting guestbook" at guestbook.md.

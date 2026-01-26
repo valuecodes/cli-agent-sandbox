@@ -4,11 +4,13 @@ import { TMP_ROOT } from "~tools/utils/fs";
 import { invokeTool, tryCreateSymlink } from "~tools/utils/test-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { readFileTool } from "./read-file-tool";
+import { createReadFileTool } from "./read-file-tool";
 
-describe("readFileTool tmp path safety", () => {
+describe("createReadFileTool tmp path safety", () => {
   let testDir = "";
   let relativeDir = "";
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const mockLogger = { tool: () => {} } as never;
 
   beforeEach(async () => {
     await fs.mkdir(TMP_ROOT, { recursive: true });
@@ -29,6 +31,7 @@ describe("readFileTool tmp path safety", () => {
     const content = "hello";
     await fs.writeFile(path.join(TMP_ROOT, relativePath), content, "utf8");
 
+    const readFileTool = createReadFileTool({ logger: mockLogger });
     const readResult = await invokeTool<string>(readFileTool, {
       path: relativePath,
     });
@@ -40,6 +43,7 @@ describe("readFileTool tmp path safety", () => {
     const content = "absolute";
     await fs.writeFile(absolutePath, content, "utf8");
 
+    const readFileTool = createReadFileTool({ logger: mockLogger });
     const readResult = await invokeTool<string>(readFileTool, {
       path: absolutePath,
     });
@@ -47,6 +51,7 @@ describe("readFileTool tmp path safety", () => {
   });
 
   it("rejects path traversal attempts", async () => {
+    const readFileTool = createReadFileTool({ logger: mockLogger });
     const readResult = await invokeTool<string>(readFileTool, {
       path: "../outside.txt",
     });
@@ -65,6 +70,7 @@ describe("readFileTool tmp path safety", () => {
 
     const symlinkPath = path.join(relativeDir, "link", "file.txt");
 
+    const readFileTool = createReadFileTool({ logger: mockLogger });
     const readResult = await invokeTool<string>(readFileTool, {
       path: symlinkPath,
     });

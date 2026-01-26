@@ -51,20 +51,20 @@ The agent selects 8-12 features from these categories:
 
 ### Prediction Accuracy (Primary - Optimization Target)
 
-| Metric                               | Description                                        |
-| ------------------------------------ | -------------------------------------------------- |
-| `r2NonOverlapping`                 | R² on non-overlapping 12-month windows (honest)    |
+| Metric                            | Description                                        |
+| --------------------------------- | -------------------------------------------------- |
+| `r2NonOverlapping`                | R² on non-overlapping 12-month windows (honest)    |
 | `directionAccuracyNonOverlapping` | Sign prediction accuracy on independent periods    |
-| `mae`                                | Mean absolute error of 12-month return predictions |
-| `calibrationRatio`                  | Predicted std / actual std (target: 0.8-1.2)       |
+| `mae`                             | Mean absolute error of 12-month return predictions |
+| `calibrationRatio`                | Predicted std / actual std (target: 0.8-1.2)       |
 
 ### Backtest Metrics (Informational Only)
 
-| Metric         | Description                            |
-| -------------- | -------------------------------------- |
-| `sharpe`       | Sharpe ratio of daily trading strategy |
+| Metric        | Description                            |
+| ------------- | -------------------------------------- |
+| `sharpe`      | Sharpe ratio of daily trading strategy |
 | `maxDrawdown` | Maximum peak-to-trough decline         |
-| `cagr`         | Compound annual growth rate            |
+| `cagr`        | Compound annual growth rate            |
 
 ### Why Non-Overlapping?
 

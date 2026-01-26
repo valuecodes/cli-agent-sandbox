@@ -3,7 +3,10 @@ import * as urlSafety from "~tools/utils/url-safety";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchResult } from "./fetch-url-tool";
-import { fetchUrlTool } from "./fetch-url-tool";
+import { createFetchUrlTool } from "./fetch-url-tool";
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const mockLogger = { tool: () => {} } as never;
 
 // Mock the url-safety module
 vi.mock("~tools/utils/url-safety", async (importOriginal) => {
@@ -59,7 +62,7 @@ const createMockResponse = (options: {
 const parseResult = (result: string): FetchResult =>
   JSON.parse(result) as FetchResult;
 
-describe("fetchUrlTool", () => {
+describe("createFetchUrlTool", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.stubGlobal("fetch", vi.fn());
@@ -83,7 +86,7 @@ describe("fetchUrlTool", () => {
       });
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "http://localhost/secret",
         })
       );
@@ -100,7 +103,7 @@ describe("fetchUrlTool", () => {
       });
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "http://192.168.1.1/admin",
         })
       );
@@ -116,7 +119,7 @@ describe("fetchUrlTool", () => {
       });
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "http://169.254.169.254/latest/meta-data/",
         })
       );
@@ -143,7 +146,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/redirect",
         })
       );
@@ -178,7 +181,7 @@ describe("fetchUrlTool", () => {
         );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page1",
         })
       );
@@ -203,7 +206,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/start",
           maxRedirects: 2,
         })
@@ -227,7 +230,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/bad-redirect",
         })
       );
@@ -257,7 +260,7 @@ describe("fetchUrlTool", () => {
         );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/start",
         })
       );
@@ -276,7 +279,7 @@ describe("fetchUrlTool", () => {
         })
       );
 
-      await invokeTool<string>(fetchUrlTool, {
+      await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
         url: "https://example.com/page",
         etag: '"abc123"',
       });
@@ -297,7 +300,7 @@ describe("fetchUrlTool", () => {
         })
       );
 
-      await invokeTool<string>(fetchUrlTool, {
+      await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
         url: "https://example.com/page",
         lastModified: "Wed, 21 Oct 2024 07:28:00 GMT",
       });
@@ -320,7 +323,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
           etag: '"abc123"',
         })
@@ -342,7 +345,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -361,7 +364,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -381,7 +384,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/large",
           maxBytes: 1024,
         })
@@ -403,7 +406,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/large",
           maxChars: 1000,
         })
@@ -423,7 +426,7 @@ describe("fetchUrlTool", () => {
       });
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/slow",
           timeoutMs: 1000,
         })
@@ -446,7 +449,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -466,7 +469,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -485,7 +488,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -502,7 +505,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -520,7 +523,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -539,7 +542,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );
@@ -560,7 +563,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/file.txt",
         })
       );
@@ -579,7 +582,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/api/data",
         })
       );
@@ -599,7 +602,7 @@ describe("fetchUrlTool", () => {
       );
 
       const result = parseResult(
-        await invokeTool<string>(fetchUrlTool, {
+        await invokeTool<string>(createFetchUrlTool({ logger: mockLogger }), {
           url: "https://example.com/page",
         })
       );

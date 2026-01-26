@@ -4,11 +4,13 @@ import { TMP_ROOT } from "~tools/utils/fs";
 import { invokeTool, tryCreateSymlink } from "~tools/utils/test-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { listFilesTool } from "./list-files-tool";
+import { createListFilesTool } from "./list-files-tool";
 
-describe("listFilesTool tmp path safety", () => {
+describe("createListFilesTool tmp path safety", () => {
   let testDir = "";
   let relativeDir = "";
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const mockLogger = { tool: () => {} } as never;
 
   beforeEach(async () => {
     await fs.mkdir(TMP_ROOT, { recursive: true });
@@ -29,6 +31,7 @@ describe("listFilesTool tmp path safety", () => {
     await fs.writeFile(path.join(testDir, "file2.txt"), "content2", "utf8");
     await fs.mkdir(path.join(testDir, "subdir"), { recursive: true });
 
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {
       path: relativeDir,
     });
@@ -41,6 +44,7 @@ describe("listFilesTool tmp path safety", () => {
   it("lists files with absolute paths under tmp", async () => {
     await fs.writeFile(path.join(testDir, "absolute.txt"), "content", "utf8");
 
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {
       path: testDir,
     });
@@ -49,6 +53,7 @@ describe("listFilesTool tmp path safety", () => {
   });
 
   it("lists root of tmp when no path provided", async () => {
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {});
 
     expect(result).toContain("Contents of tmp:");
@@ -56,6 +61,7 @@ describe("listFilesTool tmp path safety", () => {
   });
 
   it("rejects path traversal attempts", async () => {
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {
       path: "../",
     });
@@ -74,6 +80,7 @@ describe("listFilesTool tmp path safety", () => {
 
     const symlinkPath = path.join(relativeDir, "link");
 
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {
       path: symlinkPath,
     });
@@ -84,6 +91,7 @@ describe("listFilesTool tmp path safety", () => {
     const emptyDir = path.join(testDir, "empty");
     await fs.mkdir(emptyDir, { recursive: true });
 
+    const listFilesTool = createListFilesTool({ logger: mockLogger });
     const result = await invokeTool<string>(listFilesTool, {
       path: path.join(relativeDir, "empty"),
     });
