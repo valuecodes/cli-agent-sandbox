@@ -5,9 +5,6 @@ export const DEFAULT_TICKER = "SPY";
 export const DEFAULT_MAX_ITERATIONS = 5;
 export const DEFAULT_SEED = 42;
 
-export const AGENT_NAME = "EtfFeatureOptimizer";
-export const MODEL_NAME = "gpt-4o-mini";
-
 export const MAX_NO_IMPROVEMENT = 2;
 export const ZERO = 0;
 export const MAX_TURNS_PER_ITERATION = 3;
@@ -74,7 +71,12 @@ export const SCRIPTS_DIR = path.join(
   "etf-backtest",
   "scripts"
 );
-export const PYTHON_BINARY = path.join(process.cwd(), ".venv", "bin", "python3");
+export const PYTHON_BINARY = path.join(
+  process.cwd(),
+  ".venv",
+  "bin",
+  "python3"
+);
 
 export const FEATURE_MENU = {
   momentum: ["mom_1m", "mom_3m", "mom_6m", "mom_12m"],

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+// Import after mocking
+import { AgentRunner } from "./agent-runner";
 import { Logger } from "./logger";
 
 type EventHandler = (...args: unknown[]) => void;
@@ -27,9 +29,6 @@ vi.mock("@openai/agents", () => {
     }),
   };
 });
-
-// Import after mocking
-import { AgentRunner } from "./agent-runner";
 
 const getHandler = (
   handlers: Map<string, EventHandler>,
@@ -72,7 +71,7 @@ describe("AgentRunner", () => {
     it("registers event handlers", () => {
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -94,7 +93,7 @@ describe("AgentRunner", () => {
     it("calls runner.run with agent and session", async () => {
       const agentRunner = new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -113,7 +112,7 @@ describe("AgentRunner", () => {
     it("passes maxTurns option", async () => {
       const agentRunner = new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -135,7 +134,7 @@ describe("AgentRunner", () => {
 
       const agentRunner = new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -154,7 +153,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -186,7 +185,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -212,7 +211,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -237,7 +236,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -259,7 +258,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -282,7 +281,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -303,7 +302,7 @@ describe("AgentRunner", () => {
     it("returns the session instance", () => {
       const agentRunner = new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -320,7 +319,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -345,7 +344,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",
@@ -366,7 +365,7 @@ describe("AgentRunner", () => {
 
       new AgentRunner({
         name: "TestAgent",
-        model: "gpt-4",
+        model: "gpt-5-mini",
         tools: [],
         outputType: TestOutputSchema,
         instructions: "Test instructions",

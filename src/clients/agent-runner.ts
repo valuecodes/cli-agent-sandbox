@@ -9,7 +9,7 @@ const DEFAULT_RESULT_PREVIEW_LIMIT = 200;
 export type AgentRunnerConfig<TOutput> = {
   // Agent config
   name: string;
-  model: string;
+  model: "gpt-5-mini";
   tools: Tool[];
   outputType: ZodType<TOutput>;
   instructions: string;
@@ -46,7 +46,8 @@ export class AgentRunner<TOutput> {
     this.logger = config.logger;
     this.logToolArgs = config.logToolArgs ?? false;
     this.logToolResults = config.logToolResults ?? true;
-    this.resultPreviewLimit = config.resultPreviewLimit ?? DEFAULT_RESULT_PREVIEW_LIMIT;
+    this.resultPreviewLimit =
+      config.resultPreviewLimit ?? DEFAULT_RESULT_PREVIEW_LIMIT;
     this.toolsInProgress = new Set();
 
     this.agent = new Agent({
