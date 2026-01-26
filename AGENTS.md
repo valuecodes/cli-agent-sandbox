@@ -96,7 +96,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
   - Params: `{ path?: string }` (defaults to `tmp/` root)
 - **`runPython`** (`src/tools/run-python/run-python-tool.ts`)
   - Runs a Python script from a configured scripts directory.
-  - Params: `{ scriptName: string }`
+  - Params: `{ scriptName: string, input: string }` (input is JSON string; pass `""` for no input)
 
 ### Safe web fetch tool
 

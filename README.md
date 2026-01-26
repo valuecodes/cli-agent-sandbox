@@ -11,7 +11,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 5. Run the demo: `pnpm run:guestbook`
 6. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
 7. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
-8. (Optional) Run ETF backtest: `pnpm run:etf-backtest` (requires Python setup below)
+8. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
 
 ### Python Setup (for ETF backtest)
 
@@ -31,7 +31,7 @@ pip install numpy pandas torch
 | `pnpm run:guestbook`           | Run the interactive guestbook CLI demo            |
 | `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats) |
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
-| `pnpm run:etf-backtest`        | Run neural network ETF backtest (requires Python) |
+| `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python) |
 | `pnpm typecheck`               | Run TypeScript type checking                      |
 | `pnpm lint`                    | Run ESLint for code quality                       |
 | `pnpm lint:fix`                | Run ESLint and auto-fix issues                    |
@@ -69,6 +69,21 @@ pnpm run:name-explorer -- [--mode ai|stats] [--refetch]
 
 Outputs are written under `tmp/name-explorer/`, including `statistics.html` in stats mode.
 
+## ETF backtest
+
+The `run:etf-backtest` CLI fetches ETF history from justetf.com (via Playwright), caches it under
+`tmp/etf-backtest/<ISIN>/data.json`, and runs the Python experiment loop via the `runPython` tool.
+
+Usage:
+
+```
+pnpm run:etf-backtest -- --isin=IE00B5BMR087 [--maxIterations=5] [--seed=42] [--refresh] [--verbose]
+```
+
+Notes:
+- `--refresh` forces a refetch; otherwise cached data is reused.
+- Python scripts live in `src/cli/etf-backtest/scripts/`.
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
@@ -79,7 +94,11 @@ File tools are sandboxed to the `tmp/` directory with path validation to prevent
 | `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                 |
 | `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory              |
 | `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                 |
-| `runPython` | `src/tools/run-python/run-python-tool.ts` | Runs Python scripts from a configured scripts directory |
+| `runPython` | `src/tools/run-python/run-python-tool.ts` | Runs Python scripts from a configured scripts directory (JSON stdin supported) |
+
+`runPython` details:
+- `scriptName` must be a `.py` file name in the configured scripts directory (no subpaths).
+- `input` is a JSON string passed to stdin (use `""` for no input).
 
 ## Project Structure
 
@@ -89,6 +108,11 @@ src/
 │   ├── etf-backtest/
 │   │   ├── main.ts            # ETF backtest CLI entry point
 │   │   ├── README.md          # ETF backtest docs
+│   │   ├── constants.ts       # CLI constants
+│   │   ├── schemas.ts         # CLI args + agent output schemas
+│   │   ├── clients/           # Data fetcher + Playwright capture
+│   │   ├── utils/             # Scoring + formatting helpers
+│   │   ├── types/             # ETF data types
 │   │   └── scripts/           # Python backtest + prediction scripts
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point

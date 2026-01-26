@@ -111,5 +111,5 @@ export const printFinalResults = (
     LINE_SEPARATOR,
   ];
 
-  logger.info(lines.join("\n"));
+  logger.answer(lines.join("\n"));
 };
