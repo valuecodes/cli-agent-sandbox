@@ -1,5 +1,5 @@
 import { DECIMAL_PLACES, LEARNINGS_SUMMARY_TOP_N } from "../constants";
-import type { Learnings } from "../schemas";
+import type { Learnings } from "../types/schemas";
 import { formatFixed, formatPercent } from "./formatters";
 
 const FEATURE_PREVIEW_COUNT = 4;

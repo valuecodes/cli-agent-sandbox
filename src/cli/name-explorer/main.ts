@@ -8,7 +8,6 @@ import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import { QuestionHandler } from "~utils/question-handler";
-import { z } from "zod";
 
 import { NameSuggesterPipeline } from "./clients/pipeline";
 import { StatsGenerator } from "./clients/stats-generator";
@@ -22,16 +21,14 @@ import {
   NameSuggesterOutputSchema,
   NameSuggesterOutputTypeSchema,
 } from "./types";
+import { CliArgsSchema } from "./types/schemas";
 
 const logger = new Logger();
 
 // --- Parse CLI arguments ---
 const { refetch: shouldRefetch, mode } = parseArgs({
   logger,
-  schema: z.object({
-    refetch: z.coerce.boolean().default(false),
-    mode: z.enum(["stats", "ai"]).default("ai"),
-  }),
+  schema: CliArgsSchema,
 });
 
 // --- Initialize pipeline and database ---

@@ -4,7 +4,7 @@ import {
   DEFAULT_OUT_PATH,
   DEFAULT_REPORT_FORMAT,
   DEFAULT_VERBOSE,
-} from "./constants";
+} from "../constants";
 
 // ============================================
 // CLI Arguments

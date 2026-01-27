@@ -30,8 +30,8 @@ import {
   TARGET_R2_NON_OVERLAPPING,
   ZERO,
 } from "./constants";
-import { AgentOutputSchema, CliArgsSchema } from "./schemas";
-import type { ExperimentResult, Learnings } from "./schemas";
+import { AgentOutputSchema, CliArgsSchema } from "./types/schemas";
+import type { ExperimentResult, Learnings } from "./types/schemas";
 import { extractLastExperimentResult } from "./utils/experiment-extract";
 import { printFinalResults } from "./utils/final-report";
 import { formatFixed, formatPercent } from "./utils/formatters";

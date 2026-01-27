@@ -6,7 +6,7 @@ import {
   DEFAULT_REFRESH,
   DEFAULT_SEED,
   DEFAULT_VERBOSE,
-} from "./constants";
+} from "../constants";
 
 // ISIN validation: 2 letter country code + 10 alphanumeric characters
 const IsinSchema = z

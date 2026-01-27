@@ -1,6 +1,6 @@
 import { INDEX_NOT_FOUND, JSON_SLICE_END_OFFSET, ZERO } from "../constants";
-import { ExperimentResultSchema } from "../schemas";
-import type { ExperimentResult } from "../schemas";
+import { ExperimentResultSchema } from "../types/schemas";
+import type { ExperimentResult } from "../types/schemas";
 
 const extractJsonFromStdout = (stdout: string): unknown => {
   const startIdx = stdout.indexOf("{");
