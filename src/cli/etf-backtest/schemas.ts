@@ -73,3 +73,37 @@ export const ExperimentResultSchema = z.object({
 });
 
 export type ExperimentResult = z.infer<typeof ExperimentResultSchema>;
+
+// Single iteration record - captures what was tried and what happened
+export const IterationRecordSchema = z.object({
+  iteration: z.number(),
+  timestamp: z.string(),
+  featureIds: z.array(z.string()),
+  score: z.number(),
+  metrics: z.object({
+    r2NonOverlapping: z.number(),
+    directionAccuracyNonOverlapping: z.number(),
+    mae: z.number(),
+    sharpe: z.number(),
+  }),
+  wasBest: z.boolean(),
+});
+
+export type IterationRecord = z.infer<typeof IterationRecordSchema>;
+
+const BestResultSchema = IterationRecordSchema.omit({
+  timestamp: true,
+  wasBest: true,
+});
+
+// Complete learnings file structure
+export const LearningsSchema = z.object({
+  isin: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  totalIterations: z.number(),
+  bestResult: BestResultSchema.nullable(),
+  history: z.array(IterationRecordSchema),
+});
+
+export type Learnings = z.infer<typeof LearningsSchema>;

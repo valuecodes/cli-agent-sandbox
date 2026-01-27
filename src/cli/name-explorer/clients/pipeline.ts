@@ -140,14 +140,11 @@ export class NameSuggesterPipeline {
     decades?: string[];
     pages?: number[];
   } = {}): Promise<ProcessAllDecadesResult> {
-    this.logger.info(
-      "Processing plan",
-      {
-        decades: decades.length,
-        pages: pages.length,
-        combinations: decades.length * pages.length,
-      }
-    );
+    this.logger.info("Processing plan", {
+      decades: decades.length,
+      pages: pages.length,
+      combinations: decades.length * pages.length,
+    });
 
     let cachedPages = 0;
     let fetchedPages = 0;

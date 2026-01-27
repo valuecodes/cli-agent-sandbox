@@ -26,18 +26,18 @@ pip install numpy pandas torch
 
 ## Commands
 
-| Command                        | Description                                       |
-| ------------------------------ | ------------------------------------------------- |
-| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo            |
-| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats) |
-| `pnpm run:scrape-publications` | Scrape publication links and build a review page  |
+| Command                        | Description                                            |
+| ------------------------------ | ------------------------------------------------------ |
+| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo                 |
+| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats)      |
+| `pnpm run:scrape-publications` | Scrape publication links and build a review page       |
 | `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python) |
-| `pnpm typecheck`               | Run TypeScript type checking                      |
-| `pnpm lint`                    | Run ESLint for code quality                       |
-| `pnpm lint:fix`                | Run ESLint and auto-fix issues                    |
-| `pnpm format`                  | Format code with Prettier                         |
-| `pnpm format:check`            | Check code formatting                             |
-| `pnpm test`                    | Run Vitest test suite                             |
+| `pnpm typecheck`               | Run TypeScript type checking                           |
+| `pnpm lint`                    | Run ESLint for code quality                            |
+| `pnpm lint:fix`                | Run ESLint and auto-fix issues                         |
+| `pnpm format`                  | Format code with Prettier                              |
+| `pnpm format:check`            | Check code formatting                                  |
+| `pnpm test`                    | Run Vitest test suite                                  |
 
 ## Publication scraping
 
@@ -81,6 +81,7 @@ pnpm run:etf-backtest -- --isin=IE00B5BMR087 [--maxIterations=5] [--seed=42] [--
 ```
 
 Notes:
+
 - `--refresh` forces a refetch; otherwise cached data is reused.
 - Python scripts live in `src/cli/etf-backtest/scripts/`.
 
@@ -88,15 +89,16 @@ Notes:
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
 
-| Tool        | Location                                  | Description                                             |
-| ----------- | ----------------------------------------- | ------------------------------------------------------- |
-| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | Fetches URLs safely and returns sanitized Markdown/text |
-| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                 |
-| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory              |
-| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                 |
+| Tool        | Location                                  | Description                                                                    |
+| ----------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | Fetches URLs safely and returns sanitized Markdown/text                        |
+| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                                        |
+| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory                                     |
+| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                                        |
 | `runPython` | `src/tools/run-python/run-python-tool.ts` | Runs Python scripts from a configured scripts directory (JSON stdin supported) |
 
 `runPython` details:
+
 - `scriptName` must be a `.py` file name in the configured scripts directory (no subpaths).
 - `input` is a JSON string passed to stdin (use `""` for no input).
 
