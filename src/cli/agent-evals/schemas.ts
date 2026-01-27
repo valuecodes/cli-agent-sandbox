@@ -55,11 +55,40 @@ export const JsonPathAssertionSchema = z.object({
   description: z.string().optional(),
 });
 
+// ============================================
+// File Assertion Types (for verifying tool side effects)
+// ============================================
+
+export const FileExistsAssertionSchema = z.object({
+  type: z.literal("fileExists"),
+  path: z.string(),
+  description: z.string().optional(),
+});
+
+export const FileContainsAssertionSchema = z.object({
+  type: z.literal("fileContains"),
+  path: z.string(),
+  value: z.string(),
+  caseSensitive: z.boolean().optional(),
+  description: z.string().optional(),
+});
+
+export const FileJsonPathAssertionSchema = z.object({
+  type: z.literal("fileJsonPath"),
+  path: z.string(),
+  jsonPath: z.string(),
+  expected: z.unknown(),
+  description: z.string().optional(),
+});
+
 export const AssertionSchema = z.discriminatedUnion("type", [
   ContainsAssertionSchema,
   MatchesRegexAssertionSchema,
   EqualsAssertionSchema,
   JsonPathAssertionSchema,
+  FileExistsAssertionSchema,
+  FileContainsAssertionSchema,
+  FileJsonPathAssertionSchema,
 ]);
 
 export type Assertion = z.infer<typeof AssertionSchema>;
@@ -67,6 +96,9 @@ export type ContainsAssertion = z.infer<typeof ContainsAssertionSchema>;
 export type MatchesRegexAssertion = z.infer<typeof MatchesRegexAssertionSchema>;
 export type EqualsAssertion = z.infer<typeof EqualsAssertionSchema>;
 export type JsonPathAssertion = z.infer<typeof JsonPathAssertionSchema>;
+export type FileExistsAssertion = z.infer<typeof FileExistsAssertionSchema>;
+export type FileContainsAssertion = z.infer<typeof FileContainsAssertionSchema>;
+export type FileJsonPathAssertion = z.infer<typeof FileJsonPathAssertionSchema>;
 
 // ============================================
 // Eval Case

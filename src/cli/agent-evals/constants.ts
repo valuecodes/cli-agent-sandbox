@@ -4,6 +4,7 @@ import path from "node:path";
 export const DEFAULT_VERBOSE = false;
 export const DEFAULT_REPORT_FORMAT = "json" as const;
 export const DEFAULT_OUT_PATH = "agent-evals";
+export const REPORTS_SUBDIR = "reports";
 
 // Paths
 export const SUITES_DIR = path.join(

@@ -20,14 +20,15 @@ pnpm run:agent-evals -- --suite=example --verbose --report=both
 - `--suite <name>`: Run a specific suite by name (without `.json` extension)
 - `--all`: Run all suites in the `suites/` directory
 - `--report <format>`: Report format: `json`, `md`, or `both` (default: `json`)
-- `--out <path>`: Output directory under `tmp/` (default: `agent-evals`)
+- `--out <path>`: Output base directory under `tmp/` (default: `agent-evals`)
 - `--verbose`: Enable verbose logging with assertion details
 
 Either `--suite` or `--all` is required.
 
 ## Output
 
-Reports are written to `tmp/agent-evals/`:
+Reports are written to `tmp/<out>/reports/` (default: `tmp/agent-evals/reports/`):
+
 - `report-{timestamp}.json`: Machine-readable results
 - `report-{timestamp}.md`: Human-readable markdown report
 
@@ -57,9 +58,7 @@ Add JSON files to `suites/` directory. Example structure:
       "id": "case-1",
       "name": "Test case name",
       "prompt": "User prompt to test",
-      "assertions": [
-        { "type": "contains", "value": "expected text" }
-      ]
+      "assertions": [{ "type": "contains", "value": "expected text" }]
     }
   ]
 }
@@ -68,16 +67,19 @@ Add JSON files to `suites/` directory. Example structure:
 ## Assertion Types
 
 - **contains**: Check if output contains a string
+
   ```json
   { "type": "contains", "value": "text", "caseSensitive": false }
   ```
 
 - **matchesRegex**: Check if output matches a regex pattern
+
   ```json
   { "type": "matchesRegex", "pattern": "\\d+", "flags": "i" }
   ```
 
 - **equals**: Deep equality check
+
   ```json
   { "type": "equals", "expected": { "key": "value" } }
   ```

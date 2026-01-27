@@ -6,14 +6,20 @@ import type {
   JsonPathAssertion,
   MatchesRegexAssertion,
 } from "../schemas";
+import {
+  evaluateFileContainsAssertion,
+  evaluateFileExistsAssertion,
+  evaluateFileJsonPathAssertion,
+} from "./file-assertions";
 
 /**
  * Evaluate a single assertion against the agent output.
+ * File assertions are async (require filesystem access).
  */
-export const evaluateAssertion = (
+export const evaluateAssertion = async (
   assertion: Assertion,
   output: unknown
-): AssertionResult => {
+): Promise<AssertionResult> => {
   switch (assertion.type) {
     case "contains":
       return evaluateContainsAssertion(assertion, output);
@@ -23,6 +29,12 @@ export const evaluateAssertion = (
       return evaluateEqualsAssertion(assertion, output);
     case "jsonPath":
       return evaluateJsonPathAssertion(assertion, output);
+    case "fileExists":
+      return evaluateFileExistsAssertion(assertion);
+    case "fileContains":
+      return evaluateFileContainsAssertion(assertion);
+    case "fileJsonPath":
+      return evaluateFileJsonPathAssertion(assertion);
   }
 };
 

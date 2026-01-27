@@ -19,15 +19,16 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
         path: {
           type: "string",
           description:
-            "Relative path within the repo tmp directory (optional, defaults to tmp root)",
+            'Relative path within the repo tmp directory. Use empty string "" to list tmp root.',
         },
       },
-      required: [],
+      required: ["path"],
       additionalProperties: false,
     },
-    execute: async ({ path: dirPath }: { path?: string }) => {
-      logger.tool("Listing files", { path: dirPath ?? "tmp root" });
-      const targetPath = await resolveTmpPathForList(dirPath);
+    execute: async ({ path: dirPath }: { path: string }) => {
+      const effectivePath = dirPath || undefined;
+      logger.tool("Listing files", { path: effectivePath ?? "tmp root" });
+      const targetPath = await resolveTmpPathForList(effectivePath);
 
       const entries = await fs.readdir(targetPath, { withFileTypes: true });
       const lines = entries.map((entry) => {

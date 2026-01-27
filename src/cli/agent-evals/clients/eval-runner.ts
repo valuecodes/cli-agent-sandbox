@@ -17,6 +17,7 @@ import type {
   SuiteSummary,
 } from "../schemas";
 import { evaluateAssertion } from "../utils/assertions";
+import { createToolsFromNames } from "./tool-registry";
 
 export type EvalRunnerConfig = {
   logger: Logger;
@@ -151,7 +152,10 @@ export class EvalRunner {
       const output: unknown = result.finalOutput;
       const durationMs = Date.now() - startTime;
 
-      const assertionResults = this.runAssertions(evalCase.assertions, output);
+      const assertionResults = await this.runAssertions(
+        evalCase.assertions,
+        output
+      );
 
       const allAssertionsPassed = assertionResults.every((r) => r.passed);
       const status: CaseStatus = allAssertionsPassed ? "pass" : "fail";
@@ -183,13 +187,17 @@ export class EvalRunner {
 
   /**
    * Create an AgentRunner from suite's agent config.
-   * Omits outputType to get plain text responses (no structured output).
+   * Instantiates tools from the tool registry based on suite.agent.tools.
    */
   private createAgentRunner(suite: EvalSuite): AgentRunner<unknown> {
+    const tools = createToolsFromNames(suite.agent.tools, {
+      logger: this.logger,
+    });
+
     return new AgentRunner({
       name: suite.agent.name,
       model: suite.agent.model,
-      tools: [],
+      tools,
       instructions: suite.agent.instructions,
       logger: this.logger,
       logToolResults: this.verbose,
@@ -200,10 +208,12 @@ export class EvalRunner {
   /**
    * Run all assertions on the output.
    */
-  private runAssertions(
+  private async runAssertions(
     assertions: EvalCase["assertions"],
     output: unknown
-  ): AssertionResult[] {
-    return assertions.map((assertion) => evaluateAssertion(assertion, output));
+  ): Promise<AssertionResult[]> {
+    return Promise.all(
+      assertions.map((assertion) => evaluateAssertion(assertion, output))
+    );
   }
 }
