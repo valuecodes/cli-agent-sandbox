@@ -1,5 +1,6 @@
 import type { Tool } from "@openai/agents";
 import type { Logger } from "~clients/logger";
+import { createDeleteFileTool } from "~tools/delete-file/delete-file-tool";
 import { createListFilesTool } from "~tools/list-files/list-files-tool";
 import { createReadFileTool } from "~tools/read-file/read-file-tool";
 import { createWriteFileTool } from "~tools/write-file/write-file-tool";
@@ -14,6 +15,7 @@ const toolFactories: Record<string, ToolFactory> = {
   readFile: ({ logger }) => createReadFileTool({ logger }),
   writeFile: ({ logger }) => createWriteFileTool({ logger }),
   listFiles: ({ logger }) => createListFilesTool({ logger }),
+  deleteFile: ({ logger }) => createDeleteFileTool({ logger }),
 };
 
 /**

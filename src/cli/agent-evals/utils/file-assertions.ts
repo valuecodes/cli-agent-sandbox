@@ -7,6 +7,7 @@ import type {
   FileContainsAssertion,
   FileExistsAssertion,
   FileJsonPathAssertion,
+  FileNotExistsAssertion,
 } from "../schemas";
 
 /**
@@ -104,6 +105,34 @@ export const evaluateFileJsonPathAssertion = async (
       message: `Failed to evaluate: ${err instanceof Error ? err.message : String(err)}`,
       actual: "evaluation error",
       expected: assertion.expected,
+    };
+  }
+};
+
+/**
+ * Evaluate a fileNotExists assertion by checking if the file does not exist in tmp/.
+ */
+export const evaluateFileNotExistsAssertion = async (
+  assertion: FileNotExistsAssertion
+): Promise<AssertionResult> => {
+  const fullPath = path.join(TMP_ROOT, assertion.path);
+
+  try {
+    await fs.access(fullPath);
+    return {
+      assertion,
+      passed: false,
+      message: `File still exists: ${assertion.path}`,
+      actual: "file exists",
+      expected: "file to not exist",
+    };
+  } catch {
+    return {
+      assertion,
+      passed: true,
+      message: `File does not exist: ${assertion.path}`,
+      actual: "file not found",
+      expected: "file to not exist",
     };
   }
 };

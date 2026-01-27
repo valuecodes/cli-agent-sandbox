@@ -10,6 +10,7 @@ import {
   evaluateFileContainsAssertion,
   evaluateFileExistsAssertion,
   evaluateFileJsonPathAssertion,
+  evaluateFileNotExistsAssertion,
 } from "./file-assertions";
 
 /**
@@ -35,6 +36,8 @@ export const evaluateAssertion = async (
       return evaluateFileContainsAssertion(assertion);
     case "fileJsonPath":
       return evaluateFileJsonPathAssertion(assertion);
+    case "fileNotExists":
+      return evaluateFileNotExistsAssertion(assertion);
   }
 };
 
