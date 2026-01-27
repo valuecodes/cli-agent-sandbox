@@ -67,7 +67,7 @@ Add JSON files to `suites/` directory. Example structure:
 ### Suite Field Notes
 
 - `agent.model` is currently fixed to `gpt-5-mini`.
-- `agent.tools` accepts tool names from the registry: `readFile`, `writeFile`, `listFiles`.
+- `agent.tools` accepts tool names from the registry: `readFile`, `writeFile`, `listFiles`, `deleteFile`.
 - `agent.maxTurns` defaults to `5` if omitted.
 - `defaults.timeout` applies per-case when the case does not provide `timeout`.
 - `cases[].timeout` defaults to `defaults.timeout`, then `30000` (ms).
