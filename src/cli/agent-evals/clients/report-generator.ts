@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Logger } from "~clients/logger";
-import { resolveTmpPathForWrite } from "~tools/utils/fs";
+import { resolveTmpPathForWrite, TMP_ROOT } from "~tools/utils/fs";
 
 import {
   DECIMAL_PLACES,
@@ -92,8 +92,9 @@ export class ReportGenerator {
     const fullPath = await resolveTmpPathForWrite(relativePath);
 
     await fs.writeFile(fullPath, JSON.stringify(report, null, 2), "utf8");
-    this.logger.info("JSON report saved", { path: fullPath });
-    return fullPath;
+    const displayPath = this.toDisplayPath(fullPath);
+    this.logger.info("JSON report saved", { path: displayPath });
+    return displayPath;
   }
 
   private async writeMarkdown(report: EvalReport): Promise<string> {
@@ -104,8 +105,14 @@ export class ReportGenerator {
 
     const markdown = this.formatMarkdown(report);
     await fs.writeFile(fullPath, markdown, "utf8");
-    this.logger.info("Markdown report saved", { path: fullPath });
-    return fullPath;
+    const displayPath = this.toDisplayPath(fullPath);
+    this.logger.info("Markdown report saved", { path: displayPath });
+    return displayPath;
+  }
+
+  private toDisplayPath(fullPath: string): string {
+    const relativePath = path.relative(TMP_ROOT, fullPath);
+    return path.join("tmp", relativePath);
   }
 
   private formatMarkdown(report: EvalReport): string {
