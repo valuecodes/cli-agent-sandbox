@@ -1,5 +1,8 @@
 import fs from "node:fs/promises";
-import { resolveTmpPathForAccess, resolveTmpPathForRead } from "~tools/utils/fs";
+import {
+  resolveTmpPathForAccess,
+  resolveTmpPathForRead,
+} from "~tools/utils/fs";
 
 import type {
   AssertionResult,

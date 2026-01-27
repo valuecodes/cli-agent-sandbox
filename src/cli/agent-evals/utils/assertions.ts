@@ -1,3 +1,5 @@
+import { isEqual } from "lodash-es";
+
 import type {
   Assertion,
   AssertionResult,
@@ -98,7 +100,7 @@ const evaluateEqualsAssertion = (
   assertion: EqualsAssertion,
   output: unknown
 ): AssertionResult => {
-  const passed = deepEquals(output, assertion.expected);
+  const passed = isEqual(output, assertion.expected);
 
   return {
     assertion,
@@ -117,7 +119,7 @@ const evaluateJsonPathAssertion = (
 ): AssertionResult => {
   try {
     const value = getJsonPath(output, assertion.path);
-    const passed = deepEquals(value, assertion.expected);
+    const passed = isEqual(value, assertion.expected);
 
     return {
       assertion,
@@ -147,13 +149,6 @@ const stringifyOutput = (output: unknown): string => {
     return output;
   }
   return JSON.stringify(output, null, 2);
-};
-
-/**
- * Deep equality check using JSON serialization.
- */
-const deepEquals = (a: unknown, b: unknown): boolean => {
-  return JSON.stringify(a) === JSON.stringify(b);
 };
 
 /**

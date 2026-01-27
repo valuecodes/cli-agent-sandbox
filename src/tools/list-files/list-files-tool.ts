@@ -18,8 +18,7 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
       properties: {
         path: {
           type: "string",
-          description:
-            "Relative path within the repo tmp directory.",
+          description: "Relative path within the repo tmp directory.",
         },
       },
       required: ["path"],
