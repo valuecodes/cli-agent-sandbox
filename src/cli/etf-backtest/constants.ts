@@ -27,7 +27,6 @@ export const ETF_DATA_FILENAME = "data.json";
 export const MAX_NO_IMPROVEMENT = 2;
 export const ZERO = 0;
 export const MAX_TURNS_PER_ITERATION = 3;
-export const REASONING_PREVIEW_LIMIT = 100;
 
 export const MIN_FEATURES = 8;
 export const MAX_FEATURES = 12;
