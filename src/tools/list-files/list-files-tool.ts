@@ -12,14 +12,14 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
   tool({
     name: "listFiles",
     description:
-      "Lists files and directories under the repo tmp directory (path is relative to tmp). If no path provided, lists root of tmp.",
+      "Lists files and directories under the repo tmp directory (path is relative to tmp). Use an empty path to list the tmp root.",
     parameters: {
       type: "object",
       properties: {
         path: {
           type: "string",
           description:
-            'Relative path within the repo tmp directory. Use empty string "" to list tmp root.',
+            "Relative path within the repo tmp directory.",
         },
       },
       required: ["path"],

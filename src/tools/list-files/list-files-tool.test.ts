@@ -52,9 +52,9 @@ describe("createListFilesTool tmp path safety", () => {
     expect(result).toContain("[file] absolute.txt");
   });
 
-  it("lists root of tmp when no path provided", async () => {
+  it("lists root of tmp when empty path provided", async () => {
     const listFilesTool = createListFilesTool({ logger: mockLogger });
-    const result = await invokeTool<string>(listFilesTool, {});
+    const result = await invokeTool<string>(listFilesTool, { path: "" });
 
     expect(result).toContain("Contents of tmp:");
     expect(result).toContain(path.basename(testDir));
