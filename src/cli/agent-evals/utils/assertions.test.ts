@@ -132,6 +132,15 @@ describe("evaluateAssertion", () => {
       expect(result.passed).toBe(true);
     });
 
+    it("passes for objects with different key ordering", async () => {
+      const assertion: Assertion = {
+        type: "equals",
+        expected: { a: 1, b: 2 },
+      };
+      const result = await evaluateAssertion(assertion, { b: 2, a: 1 });
+      expect(result.passed).toBe(true);
+    });
+
     it("fails for different objects", async () => {
       const assertion: Assertion = {
         type: "equals",
