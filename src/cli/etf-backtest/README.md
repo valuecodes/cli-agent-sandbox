@@ -22,13 +22,13 @@ pnpm run:etf-backtest --isin=IE00B5BMR087 --maxIterations=5 --seed=42 --verbose 
 
 ## Arguments
 
-| Argument          | Default        | Description                               |
-| ----------------- | -------------- | ----------------------------------------- |
-| `--isin`          | `IE00B5BMR087` | ETF ISIN (used to fetch/cached data)      |
-| `--maxIterations` | `5`            | Maximum optimization iterations           |
-| `--seed`          | `42`           | Random seed for reproducibility           |
-| `--refresh`       | `false`        | Force refetch even if cache exists        |
-| `--verbose`       | `false`        | Enable verbose logging                    |
+| Argument          | Default        | Description                          |
+| ----------------- | -------------- | ------------------------------------ |
+| `--isin`          | `IE00B5BMR087` | ETF ISIN (used to fetch/cached data) |
+| `--maxIterations` | `5`            | Maximum optimization iterations      |
+| `--seed`          | `42`           | Random seed for reproducibility      |
+| `--refresh`       | `false`        | Force refetch even if cache exists   |
+| `--verbose`       | `false`        | Enable verbose logging               |
 
 ## Feature Menu
 

@@ -11,6 +11,7 @@ import { createRunPythonTool } from "~tools/run-python/run-python-tool";
 import { parseArgs } from "~utils/parse-args";
 
 import { EtfDataFetcher } from "./clients/etf-data-fetcher";
+import { LearningsManager } from "./clients/learnings-manager";
 import {
   DECIMAL_PLACES,
   FEATURE_MENU,
@@ -31,10 +32,11 @@ import {
   ZERO,
 } from "./constants";
 import { AgentOutputSchema, CliArgsSchema } from "./schemas";
-import type { ExperimentResult } from "./schemas";
+import type { ExperimentResult, Learnings } from "./schemas";
 import { extractLastExperimentResult } from "./utils/experiment-extract";
 import { printFinalResults } from "./utils/final-report";
 import { formatFixed, formatPercent } from "./utils/formatters";
+import { formatLearningsForPrompt } from "./utils/learnings-formatter";
 import { computeScore } from "./utils/scoring";
 
 const logger = new Logger();
@@ -116,7 +118,11 @@ After each experiment, respond with JSON (do not call any more tools):
 `;
 
 // --- Run iterative optimization ---
-const runAgentOptimization = async (dataPath: string) => {
+const runAgentOptimization = async (
+  dataPath: string,
+  initialLearnings: Learnings,
+  learningsManager: LearningsManager
+) => {
   const runPythonTool = createRunPythonTool({
     scriptsDir: SCRIPTS_DIR,
     logger,
@@ -140,11 +146,13 @@ const runAgentOptimization = async (dataPath: string) => {
   let noImprovementCount = ZERO;
   let iteration = ZERO;
   let stopReason = "Max iterations reached";
+  let learnings = initialLearnings;
 
-  // Initial prompt
+  // Initial prompt with learnings context
+  const learningsSummary = formatLearningsForPrompt(learnings);
   let currentPrompt = `
 Start feature selection optimization for ISIN ${isin}.
-
+${learningsSummary}
 Begin by selecting ${MIN_FEATURES}-${MAX_FEATURES} features that you think will best predict ${PREDICTION_HORIZON_MONTHS}-month returns.
 Consider using a mix from each category (momentum, trend, risk).
 
@@ -253,6 +261,14 @@ After running the experiment, analyze the results and decide whether to continue
           maxNoImprovement: MAX_NO_IMPROVEMENT,
         });
       }
+
+      // Record iteration in learnings and save progress
+      learnings = learningsManager.addIteration(
+        learnings,
+        iteration,
+        lastToolResult
+      );
+      await learningsManager.save(isin, learnings);
     }
 
     // Check stop conditions
@@ -268,11 +284,12 @@ After running the experiment, analyze the results and decide whether to continue
       break;
     }
 
-    // Build next prompt with dataPath (required since stateless mode loses context)
+    // Build next prompt with learnings context (required since stateless mode loses context)
+    const updatedLearningsSummary = formatLearningsForPrompt(learnings);
     currentPrompt = `
 Continue feature selection optimization for ISIN ${isin}.
 You have ${maxIterations - iteration} iterations remaining.
-
+${updatedLearningsSummary}
 Based on your previous experiment, decide:
 - If you want to try different features, select them and run another experiment
 - If you think you've found a good set, respond with status "final"
@@ -285,6 +302,14 @@ Focus on: Higher r2NonOverlapping, higher directionAccuracyNonOverlapping, lower
 Backtest metrics (Sharpe, drawdown) are informational only.
 `;
   }
+
+  // Finalize learnings and save
+  learnings = learningsManager.finishRun(learnings, iteration);
+  await learningsManager.save(isin, learnings);
+  logger.info("Learnings saved", {
+    totalIterations: learnings.totalIterations,
+    historyCount: learnings.history.length,
+  });
 
   // Output final results
   if (bestResult) {
@@ -301,9 +326,16 @@ if (verbose) {
 }
 
 const fetcher = new EtfDataFetcher({ logger });
+const learningsManager = new LearningsManager({ logger });
+
 try {
   const { dataPath } = await fetcher.fetch(isin, refresh);
-  await runAgentOptimization(dataPath);
+
+  // Load or create learnings
+  let learnings = await learningsManager.load(isin);
+  learnings ??= learningsManager.createInitial(isin);
+
+  await runAgentOptimization(dataPath, learnings, learningsManager);
 } finally {
   await fetcher.close();
 }

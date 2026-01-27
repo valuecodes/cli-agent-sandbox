@@ -281,7 +281,9 @@ export class PlaywrightScraper {
 
             // If validator provided, check if response matches expected shape
             if (validateResponse && !validateResponse(data)) {
-              this.logger.debug("Response did not pass validation, skipping", { url });
+              this.logger.debug("Response did not pass validation, skipping", {
+                url,
+              });
               await route.fulfill({ response });
               return;
             }
@@ -300,7 +302,10 @@ export class PlaywrightScraper {
           } catch (err) {
             // Only continue if not already handled and page is still open
             if (!page.isClosed()) {
-              this.logger.warn("Failed to capture response", { url, error: err });
+              this.logger.warn("Failed to capture response", {
+                url,
+                error: err,
+              });
               try {
                 await route.continue();
               } catch {

@@ -96,3 +96,8 @@ export const FEATURE_MENU = {
   risk: ["vol_1m", "vol_3m", "vol_6m", "dd_current", "mdd_12m"],
   oscillators: ["rsi_14", "bb_width"],
 } as const;
+
+// Learnings configuration
+export const LEARNINGS_FILENAME = "learnings.json";
+export const MAX_HISTORY_ITEMS = 20;
+export const LEARNINGS_SUMMARY_TOP_N = 5;

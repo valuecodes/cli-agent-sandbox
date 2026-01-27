@@ -1,12 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-
 import type { Logger } from "~clients/logger";
 import { PlaywrightScraper } from "~clients/playwright-scraper";
-import {
-  resolveTmpPathForRead,
-  resolveTmpPathForWrite,
-} from "~tools/utils/fs";
+import { resolveTmpPathForRead, resolveTmpPathForWrite } from "~tools/utils/fs";
 
 import {
   API_CAPTURE_TIMEOUT_MS,
@@ -105,15 +101,17 @@ export class EtfDataFetcher {
       url: profileUrl,
     });
 
-    const result = await this.scraper.scrapeWithNetworkCapture<EtfDataResponse>({
-      targetUrl: profileUrl,
-      captureUrlPattern: getEtfApiPattern(isin),
-      captureTimeoutMs: API_CAPTURE_TIMEOUT_MS,
-      validateResponse: isEtfDataResponse,
-      localStorage: {
-        [ETF_CHART_PERIOD_KEY]: ETF_CHART_PERIOD_VALUE,
-      },
-    });
+    const result = await this.scraper.scrapeWithNetworkCapture<EtfDataResponse>(
+      {
+        targetUrl: profileUrl,
+        captureUrlPattern: getEtfApiPattern(isin),
+        captureTimeoutMs: API_CAPTURE_TIMEOUT_MS,
+        validateResponse: isEtfDataResponse,
+        localStorage: {
+          [ETF_CHART_PERIOD_KEY]: ETF_CHART_PERIOD_VALUE,
+        },
+      }
+    );
 
     const validated = EtfDataResponseSchema.parse(result.data);
 
