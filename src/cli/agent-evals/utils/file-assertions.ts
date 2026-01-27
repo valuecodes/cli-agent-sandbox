@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
-import path from "node:path";
-import { TMP_ROOT } from "~tools/utils/fs";
+import { resolveTmpPathForAccess, resolveTmpPathForRead } from "~tools/utils/fs";
 
 import type {
   AssertionResult,
@@ -16,9 +15,8 @@ import type {
 export const evaluateFileExistsAssertion = async (
   assertion: FileExistsAssertion
 ): Promise<AssertionResult> => {
-  const fullPath = path.join(TMP_ROOT, assertion.path);
-
   try {
+    const fullPath = await resolveTmpPathForAccess(assertion.path);
     await fs.access(fullPath);
     return {
       assertion,
@@ -27,12 +25,12 @@ export const evaluateFileExistsAssertion = async (
       actual: assertion.path,
       expected: "file to exist",
     };
-  } catch {
+  } catch (err) {
     return {
       assertion,
       passed: false,
       message: `File does not exist: ${assertion.path}`,
-      actual: "file not found",
+      actual: err instanceof Error ? err.message : String(err),
       expected: "file to exist",
     };
   }
@@ -44,9 +42,8 @@ export const evaluateFileExistsAssertion = async (
 export const evaluateFileContainsAssertion = async (
   assertion: FileContainsAssertion
 ): Promise<AssertionResult> => {
-  const fullPath = path.join(TMP_ROOT, assertion.path);
-
   try {
+    const fullPath = await resolveTmpPathForRead(assertion.path);
     const content = await fs.readFile(fullPath, "utf8");
     const caseSensitive = assertion.caseSensitive ?? true;
     const searchValue = caseSensitive
@@ -81,9 +78,8 @@ export const evaluateFileContainsAssertion = async (
 export const evaluateFileJsonPathAssertion = async (
   assertion: FileJsonPathAssertion
 ): Promise<AssertionResult> => {
-  const fullPath = path.join(TMP_ROOT, assertion.path);
-
   try {
+    const fullPath = await resolveTmpPathForRead(assertion.path);
     const content = await fs.readFile(fullPath, "utf8");
     const json = JSON.parse(content) as unknown;
     const value = getJsonPath(json, assertion.jsonPath);
@@ -115,9 +111,8 @@ export const evaluateFileJsonPathAssertion = async (
 export const evaluateFileNotExistsAssertion = async (
   assertion: FileNotExistsAssertion
 ): Promise<AssertionResult> => {
-  const fullPath = path.join(TMP_ROOT, assertion.path);
-
   try {
+    const fullPath = await resolveTmpPathForAccess(assertion.path);
     await fs.access(fullPath);
     return {
       assertion,
@@ -126,16 +121,34 @@ export const evaluateFileNotExistsAssertion = async (
       actual: "file exists",
       expected: "file to not exist",
     };
-  } catch {
+  } catch (err) {
+    if (isErrno(err, "ENOENT")) {
+      return {
+        assertion,
+        passed: true,
+        message: `File does not exist: ${assertion.path}`,
+        actual: "file not found",
+        expected: "file to not exist",
+      };
+    }
     return {
       assertion,
-      passed: true,
-      message: `File does not exist: ${assertion.path}`,
-      actual: "file not found",
+      passed: false,
+      message: `Failed to check file: ${err instanceof Error ? err.message : String(err)}`,
+      actual: err instanceof Error ? err.message : String(err),
       expected: "file to not exist",
     };
   }
 };
+
+const isErrno = (
+  error: unknown,
+  code: string
+): error is NodeJS.ErrnoException =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as NodeJS.ErrnoException).code === code;
 
 /**
  * Deep equality check using JSON serialization.
