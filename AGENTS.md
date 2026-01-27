@@ -111,6 +111,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 
 - Initialize `Logger` in CLI entry points and pass it into clients/pipelines via constructor options.
 - Use `Logger` instead of `console.log`/`console.error` for output.
+- Use `AgentRunner` (`src/clients/agent-runner.ts`) as the default wrapper when running agents.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom logic.
 - `main.ts` should stay focused on the **basic agent flow**: argument parsing → agent setup → run loop → final output. Move helper logic into `clients/` or `utils/`
 - Prefer TypeScript path aliases over deep relative imports: `~tools/*`, `~clients/*`, `~utils/*`.
@@ -147,4 +148,4 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 
 # ExecPlans
 
-When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.
+When writing complex features or significant refactors, use an ExecPlan (as described in `agent/PLANS.md`) from design to implementation.

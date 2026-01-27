@@ -4,6 +4,8 @@ Iterative feature selection optimization agent for realistic 12-month ETF return
 
 The agent selects price-only features, runs experiments, and optimizes for **prediction accuracy** (not trading performance). It uses non-overlapping evaluation windows for honest assessment.
 
+![ETF Backtest demo](./demo-1.png)
+
 ## Requirements
 
 - Python 3 with `numpy`, `pandas`, and `torch` installed (see repo README for setup)
@@ -46,8 +48,40 @@ The agent selects 8-12 features from these categories:
 1. **Agent selects features** from the menu (starts with 8-12)
 2. **Runs experiment** via `run_experiment.py` (backtest + prediction)
 3. **Analyzes results**: R² (non-overlapping), direction accuracy, MAE
-4. **Decides**: continue with tweaked features or stop
-5. **Stops early** if no improvement for 2 iterations
+4. **Persists learnings** after each iteration (per-ISIN history + best score)
+5. **Decides**: continue with tweaked features or stop
+6. **Stops early** if no improvement for 2 iterations
+
+## Flowchart
+
+```mermaid
+flowchart TD
+  A["Start CLI"] --> B["Parse args (zod)"]
+  B --> C["Init Logger, Fetcher, LearningsManager"]
+  C --> D["Fetch ETF data (cache or refresh)"]
+  D --> E["Load or create learnings"]
+  E --> F["Build agent + runPython tool"]
+  F --> G{"Iteration < maxIterations?"}
+
+  G -->|yes| H["Run AgentRunner (1 experiment)"]
+  H --> I["Parse agent JSON output"]
+  I --> J{"Valid output?"}
+  J -->|no| K["Prompt agent to fix format"]
+  K --> H
+  J -->|yes| L["Extract experiment results"]
+  L --> M["Compute score & update best"]
+  M --> N["Save learnings"]
+  N --> O{"Stop conditions?"}
+  O -->|agent final| P["Set stop reason"]
+  O -->|no improvement| P
+  O -->|continue| G
+
+  G -->|no| P
+  P --> Q["Finalize learnings"]
+  Q --> R["Print final report"]
+  R --> S["Close fetcher"]
+  S --> T["Done"]
+```
 
 ## Metrics
 
@@ -119,6 +153,11 @@ Note: Non-overlapping metrics use only 10 independent periods.
 Past performance does not guarantee future results.
 ============================================================
 ```
+
+Writes under `tmp/etf-backtest/<ISIN>/`:
+
+- `data.json`: cached price series used for experiments
+- `learnings.json`: per-iteration history and best-result tracking
 
 ## Scripts
 

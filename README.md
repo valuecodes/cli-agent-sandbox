@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -59,7 +59,7 @@ The publication pipeline uses `PlaywrightScraper` to render JavaScript-heavy pag
 
 The `run:name-explorer` script explores Finnish name statistics. It supports an AI Q&A mode (default) backed by SQL tools, plus a `stats` mode that generates an HTML report.
 
-![Name Explorer demo](src/cli/name-explorer/demo-1.png)
+<img src="src/cli/name-explorer/demo-1.png" alt="Name Explorer demo" width="820" />
 
 Usage:
 
@@ -73,6 +73,8 @@ Outputs are written under `tmp/name-explorer/`, including `statistics.html` in s
 
 The `run:etf-backtest` CLI fetches ETF history from justetf.com (via Playwright), caches it under
 `tmp/etf-backtest/<ISIN>/data.json`, and runs the Python experiment loop via the `runPython` tool.
+
+<img src="src/cli/etf-backtest/demo-1.png" alt="ETF Backtest demo" width="820" />
 
 Usage:
 
@@ -134,12 +136,12 @@ src/
 ├── clients/
 │   ├── fetch.ts               # Shared HTTP fetch + sanitization
 │   ├── logger.ts              # Shared console logger
+│   ├── agent-runner.ts        # Default agent runner wrapper
 │   └── playwright-scraper.ts  # Playwright-based web scraper
 ├── utils/
 │   ├── parse-args.ts          # Shared CLI arg parsing helper
 │   └── question-handler.ts    # Shared CLI prompt + validation helper
 ├── tools/
-│   ├── index.ts               # Tool exports
 │   ├── fetch-url/             # Safe fetch tool
 │   ├── list-files/            # List files tool
 │   ├── read-file/             # Read file tool
@@ -156,6 +158,7 @@ tmp/                           # Runtime scratch space (tool I/O)
 ## CLI conventions
 
 - When using `Logger`, initialize it in the CLI entry point and pass it into clients/pipelines via constructor options.
+- Use `AgentRunner` (`src/clients/agent-runner.ts`) as the default wrapper when running agents.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom argument parsing or prompt logic.
 - Use the TypeScript path aliases for shared modules: `~tools/*`, `~clients/*`, `~utils/*`.
   Example: `import { readFileTool } from "~tools/read-file/read-file-tool";`
