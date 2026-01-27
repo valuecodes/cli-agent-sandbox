@@ -36,6 +36,10 @@ import { extractLastExperimentResult } from "./utils/experiment-extract";
 import { printFinalResults } from "./utils/final-report";
 import { formatFixed, formatPercent } from "./utils/formatters";
 import { formatLearningsForPrompt } from "./utils/learnings-formatter";
+import {
+  buildRecoveryPrompt,
+  buildRunPythonUsage,
+} from "./utils/prompt-builders";
 import { computeScore } from "./utils/scoring";
 
 const logger = new Logger();
@@ -149,15 +153,14 @@ const runAgentOptimization = async (
 
   // Initial prompt with learnings context
   const learningsSummary = formatLearningsForPrompt(learnings);
+  const runPythonUsage = buildRunPythonUsage({ seed, dataPath });
   let currentPrompt = `
 Start feature selection optimization for ISIN ${isin}.
 ${learningsSummary}
 Begin by selecting ${MIN_FEATURES}-${MAX_FEATURES} features that you think will best predict ${PREDICTION_HORIZON_MONTHS}-month returns.
 Consider using a mix from each category (momentum, trend, risk).
 
-Use runPython with:
-- scriptName: "run_experiment.py"
-- input: { "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
+${runPythonUsage}
 
 After running the experiment, analyze the results and decide whether to continue or stop.
 `;
@@ -197,8 +200,10 @@ After running the experiment, analyze the results and decide whether to continue
             bestIteration = iteration;
           }
         }
-        currentPrompt =
-          "You ran too many experiments in one turn. Please run exactly ONE experiment, then respond with your JSON analysis.";
+        currentPrompt = buildRecoveryPrompt(
+          "You ran too many experiments in one turn. Please run exactly ONE experiment, then respond with your JSON analysis.",
+          { seed, dataPath }
+        );
         continue;
       }
       throw err;
@@ -210,8 +215,10 @@ After running the experiment, analyze the results and decide whether to continue
       if (verbose) {
         logger.debug("Parse error", { error: parseResult.error });
       }
-      currentPrompt =
-        "Your response was not valid JSON. Please respond with the correct format.";
+      currentPrompt = buildRecoveryPrompt(
+        "Your response was not valid JSON. Please respond with the correct format.",
+        { seed, dataPath }
+      );
       continue;
     }
 
@@ -288,14 +295,12 @@ After running the experiment, analyze the results and decide whether to continue
     currentPrompt = `
 Continue feature selection optimization for ISIN ${isin}.
 You have ${maxIterations - iteration} iterations remaining.
-${updatedLearningsSummary}
-Based on your previous experiment, decide:
-- If you want to try different features, select them and run another experiment
-- If you think you've found a good set, respond with status "final"
+    ${updatedLearningsSummary}
+    Based on your previous experiment, decide:
+    - If you want to try different features, select them and run another experiment
+    - If you think you've found a good set, respond with status "final"
 
-Use runPython with:
-- scriptName: "run_experiment.py"
-- input: { "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }
+${runPythonUsage}
 
 Focus on: Higher r2NonOverlapping, higher directionAccuracyNonOverlapping, lower MAE.
 Backtest metrics (Sharpe, drawdown) are informational only.
