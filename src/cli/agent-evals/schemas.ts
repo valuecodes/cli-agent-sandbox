@@ -81,6 +81,12 @@ export const FileJsonPathAssertionSchema = z.object({
   description: z.string().optional(),
 });
 
+export const FileNotExistsAssertionSchema = z.object({
+  type: z.literal("fileNotExists"),
+  path: z.string(),
+  description: z.string().optional(),
+});
+
 export const AssertionSchema = z.discriminatedUnion("type", [
   ContainsAssertionSchema,
   MatchesRegexAssertionSchema,
@@ -89,6 +95,7 @@ export const AssertionSchema = z.discriminatedUnion("type", [
   FileExistsAssertionSchema,
   FileContainsAssertionSchema,
   FileJsonPathAssertionSchema,
+  FileNotExistsAssertionSchema,
 ]);
 
 export type Assertion = z.infer<typeof AssertionSchema>;
@@ -99,6 +106,9 @@ export type JsonPathAssertion = z.infer<typeof JsonPathAssertionSchema>;
 export type FileExistsAssertion = z.infer<typeof FileExistsAssertionSchema>;
 export type FileContainsAssertion = z.infer<typeof FileContainsAssertionSchema>;
 export type FileJsonPathAssertion = z.infer<typeof FileJsonPathAssertionSchema>;
+export type FileNotExistsAssertion = z.infer<
+  typeof FileNotExistsAssertionSchema
+>;
 
 // ============================================
 // Eval Case

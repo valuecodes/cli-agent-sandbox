@@ -6,7 +6,7 @@
     "name": "ToolTestAgent",
     "model": "gpt-5-mini",
     "instructions": "You are an assistant that tests file tools. Use the tools provided to complete tasks. After using a tool, report results concisely.",
-    "tools": ["readFile", "writeFile", "listFiles"],
+    "tools": ["readFile", "writeFile", "listFiles", "deleteFile"],
     "maxTurns": 3
   },
   "defaults": {
@@ -84,6 +84,24 @@
         }
       ],
       "tags": ["writeFile", "json"]
+    },
+    {
+      "id": "delete-file",
+      "name": "deleteFile removes a file",
+      "prompt": "Delete the file 'agent-evals/tool-test-data.json'",
+      "assertions": [
+        {
+          "type": "fileNotExists",
+          "path": "agent-evals/tool-test-data.json",
+          "description": "File should be deleted"
+        },
+        {
+          "type": "contains",
+          "value": "Deleted",
+          "description": "Agent should confirm deletion"
+        }
+      ],
+      "tags": ["deleteFile"]
     }
   ]
 }
