@@ -22,7 +22,6 @@ import {
   NO_IMPROVEMENT_REASON,
   OVERLAP_PERCENT,
   PREDICTION_HORIZON_MONTHS,
-  REASONING_PREVIEW_LIMIT,
   SAMPLES_PER_DECADE,
   SCRIPTS_DIR,
   TARGET_CALIBRATION_MAX,
@@ -219,7 +218,7 @@ After running the experiment, analyze the results and decide whether to continue
     const output = parseResult.data;
     logger.info("Features selected", { features: output.selectedFeatures });
     logger.info("Reasoning preview", {
-      preview: output.reasoning.substring(ZERO, REASONING_PREVIEW_LIMIT),
+      preview: output.reasoning,
     });
 
     // Try to extract experiment result from the tool call outputs
