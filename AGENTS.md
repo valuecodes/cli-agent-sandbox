@@ -7,7 +7,7 @@
 **Repo:** `cli-agent-sandbox` — minimal TypeScript CLI sandbox built with `@openai/agents` and tool sandboxing under `tmp/`.
 
 1. Start at `src/cli/<cli>/main.ts` and the matching `src/cli/<cli>/README.md`.
-2. Follow the pipeline classes under `src/cli/<cli>/clients/*` and schemas under `src/cli/<cli>/types/*`.
+2. Follow the pipeline classes under `src/cli/<cli>/clients/*` and schemas under `src/cli/<cli>/types/schemas.ts`.
 3. Reuse shared helpers: `src/utils/parse-args.ts`, `src/utils/question-handler.ts`, `src/clients/logger.ts`.
 4. Keep `main.ts` focused on the basic agent flow; move non-trivial logic into `clients/` or `utils/`.
 5. Keep changes minimal; add/update **Vitest** tests (`*.test.ts`) when behavior changes.
@@ -117,7 +117,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 - Prefer TypeScript path aliases over deep relative imports: `~tools/*`, `~clients/*`, `~utils/*`.
 - Use Zod schemas for CLI args and tool IO.
 - Keep object field names in `camelCase` (e.g., `trainSamples`), not `snake_case`.
-- Keep Zod schemas in a dedicated `schemas.ts` file for each CLI (avoid inline schemas in `main.ts`).
+- Keep Zod schemas in a dedicated `types/schemas.ts` file for each CLI (avoid inline schemas in `main.ts`).
 - Keep constants in a dedicated `constants.ts` file for each CLI.
 - Move hardcoded numeric values into `constants.ts` (treat numbers as configuration).
 - For HTTP fetching in code, prefer `Fetch` (sanitized) or `PlaywrightScraper` for JS-heavy pages.
