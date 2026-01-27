@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -9,9 +9,10 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
 5. Run the demo: `pnpm run:guestbook`
-6. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
-7. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
-8. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
+6. (Optional) Run agent evals: `pnpm run:agent-evals -- --suite=example`
+7. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
+8. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
+9. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
 
 ### Python Setup (for ETF backtest)
 
@@ -29,6 +30,7 @@ pip install numpy pandas torch
 | Command                        | Description                                            |
 | ------------------------------ | ------------------------------------------------------ |
 | `pnpm run:guestbook`           | Run the interactive guestbook CLI demo                 |
+| `pnpm run:agent-evals`         | Run agent evaluation suites and generate reports       |
 | `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats)      |
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page       |
 | `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python) |
@@ -87,17 +89,29 @@ Notes:
 - `--refresh` forces a refetch; otherwise cached data is reused.
 - Python scripts live in `src/cli/etf-backtest/scripts/`.
 
+## Agent evals
+
+The `run:agent-evals` CLI executes evaluation suites for agents and writes reports under `tmp/agent-evals/` by default.
+
+Usage:
+
+```
+pnpm run:agent-evals -- --suite=example
+pnpm run:agent-evals -- --all
+```
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
 
-| Tool        | Location                                  | Description                                                                    |
-| ----------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
-| `fetchUrl`  | `src/tools/fetch-url/fetch-url-tool.ts`   | Fetches URLs safely and returns sanitized Markdown/text                        |
-| `readFile`  | `src/tools/read-file/read-file-tool.ts`   | Reads file content from `tmp` directory                                        |
-| `writeFile` | `src/tools/write-file/write-file-tool.ts` | Writes content to files in `tmp` directory                                     |
-| `listFiles` | `src/tools/list-files/list-files-tool.ts` | Lists files and directories under `tmp`                                        |
-| `runPython` | `src/tools/run-python/run-python-tool.ts` | Runs Python scripts from a configured scripts directory (JSON stdin supported) |
+| Tool         | Location                                    | Description                                                                    |
+| ------------ | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `fetchUrl`   | `src/tools/fetch-url/fetch-url-tool.ts`     | Fetches URLs safely and returns sanitized Markdown/text                        |
+| `readFile`   | `src/tools/read-file/read-file-tool.ts`     | Reads file content from `tmp` directory                                        |
+| `writeFile`  | `src/tools/write-file/write-file-tool.ts`   | Writes content to files in `tmp` directory                                     |
+| `listFiles`  | `src/tools/list-files/list-files-tool.ts`   | Lists files and directories under `tmp`                                        |
+| `deleteFile` | `src/tools/delete-file/delete-file-tool.ts` | Deletes files under the `tmp` directory                                        |
+| `runPython`  | `src/tools/run-python/run-python-tool.ts`   | Runs Python scripts from a configured scripts directory (JSON stdin supported) |
 
 `runPython` details:
 
@@ -109,6 +123,14 @@ File tools are sandboxed to the `tmp/` directory with path validation to prevent
 ```
 src/
 ├── cli/
+│   ├── agent-evals/
+│   │   ├── main.ts            # Agent evals CLI entry point
+│   │   ├── README.md          # Agent evals CLI docs
+│   │   ├── constants.ts       # CLI constants
+│   │   ├── schemas.ts         # CLI args + suite schemas
+│   │   ├── clients/           # Suite runner + report generator
+│   │   ├── utils/             # Assertion + formatting helpers
+│   │   └── suites/            # Example evaluation suites
 │   ├── etf-backtest/
 │   │   ├── main.ts            # ETF backtest CLI entry point
 │   │   ├── README.md          # ETF backtest docs
@@ -142,6 +164,7 @@ src/
 │   ├── parse-args.ts          # Shared CLI arg parsing helper
 │   └── question-handler.ts    # Shared CLI prompt + validation helper
 ├── tools/
+│   ├── delete-file/           # Delete file tool
 │   ├── fetch-url/             # Safe fetch tool
 │   ├── list-files/            # List files tool
 │   ├── read-file/             # Read file tool
