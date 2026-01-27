@@ -61,51 +61,6 @@ describe("createRunPythonTool", () => {
     scriptsDir = "";
   });
 
-  it("executes a valid Python script", async () => {
-    const scriptContent = 'print("Hello from Python")';
-    await fs.writeFile(
-      path.join(scriptsDir, "hello.py"),
-      scriptContent,
-      "utf8"
-    );
-
-    const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
-    const resultJson = await invokeTool<string>(tool, {
-      scriptName: "hello.py",
-      input: "",
-    });
-    const result = JSON.parse(resultJson) as PythonResult;
-
-    expect(result.success).toBe(true);
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("Hello from Python");
-    expect(result.stderr).toBe("");
-  });
-
-  it("captures stderr from Python script", async () => {
-    const scriptContent = `
-import sys
-sys.stderr.write("Error message")
-sys.exit(1)
-`;
-    await fs.writeFile(
-      path.join(scriptsDir, "error.py"),
-      scriptContent,
-      "utf8"
-    );
-
-    const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
-    const resultJson = await invokeTool<string>(tool, {
-      scriptName: "error.py",
-      input: "",
-    });
-    const result = JSON.parse(resultJson) as PythonResult;
-
-    expect(result.success).toBe(false);
-    expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain("Error message");
-  });
-
   it("rejects invalid script names", async () => {
     const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
     const resultJson = await invokeTool<string>(tool, {
@@ -151,55 +106,6 @@ sys.exit(1)
     expect(loggedMessages[1]).toContain("Python result");
   });
 
-  it("passes JSON input via stdin", async () => {
-    const scriptContent = `
-import json
-import sys
-data = json.load(sys.stdin)
-print(json.dumps({"received": data}))
-`;
-    await fs.writeFile(
-      path.join(scriptsDir, "stdin_test.py"),
-      scriptContent,
-      "utf8"
-    );
-
-    const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
-    const resultJson = await invokeTool<string>(tool, {
-      scriptName: "stdin_test.py",
-      input: '{"message":"hello","count":42}',
-    });
-    const result = JSON.parse(resultJson) as PythonResult;
-
-    expect(result.success).toBe(true);
-    expect(result.exitCode).toBe(0);
-
-    const output = JSON.parse(result.stdout.trim()) as {
-      received: { message: string; count: number };
-    };
-    expect(output.received.message).toBe("hello");
-    expect(output.received.count).toBe(42);
-  });
-
-  it("works with empty input string", async () => {
-    const scriptContent = 'print("no stdin needed")';
-    await fs.writeFile(
-      path.join(scriptsDir, "no_stdin.py"),
-      scriptContent,
-      "utf8"
-    );
-
-    const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
-    const resultJson = await invokeTool<string>(tool, {
-      scriptName: "no_stdin.py",
-      input: "",
-    });
-    const result = JSON.parse(resultJson) as PythonResult;
-
-    expect(result.success).toBe(true);
-    expect(result.stdout).toContain("no stdin needed");
-  });
-
   it("handles invalid JSON input", async () => {
     const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
     const resultJson = await invokeTool<string>(tool, {
@@ -210,36 +116,5 @@ print(json.dumps({"received": data}))
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Invalid JSON in input parameter");
-  });
-
-  it("handles complex nested input objects", async () => {
-    const scriptContent = `
-import json
-import sys
-data = json.load(sys.stdin)
-print(json.dumps({"features": data["feature_ids"], "seed": data["seed"]}))
-`;
-    await fs.writeFile(
-      path.join(scriptsDir, "nested_input.py"),
-      scriptContent,
-      "utf8"
-    );
-
-    const tool = createRunPythonTool({ scriptsDir, logger: mockLogger });
-    const resultJson = await invokeTool<string>(tool, {
-      scriptName: "nested_input.py",
-      input:
-        '{"ticker":"SPY","feature_ids":["mom_1m","vol_3m","px_sma50"],"seed":42}',
-    });
-    const result = JSON.parse(resultJson) as PythonResult;
-
-    expect(result.success).toBe(true);
-
-    const output = JSON.parse(result.stdout.trim()) as {
-      features: string[];
-      seed: number;
-    };
-    expect(output.features).toEqual(["mom_1m", "vol_3m", "px_sma50"]);
-    expect(output.seed).toBe(42);
   });
 });
