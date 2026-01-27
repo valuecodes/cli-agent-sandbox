@@ -8,6 +8,7 @@ export type ParseArgsOptions<T extends z.ZodType> = {
   rawArgs?: string[];
 };
 
+// Strip standalone "--" so parseArgv doesn't treat it as a literal arg after end-of-options.
 const sanitizeArgs = (rawArgs: string[]): string[] =>
   rawArgs.filter((arg) => arg !== "--");
 
