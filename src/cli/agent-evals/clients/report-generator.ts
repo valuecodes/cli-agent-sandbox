@@ -6,6 +6,7 @@ import { resolveTmpPathForWrite } from "~tools/utils/fs";
 import {
   DECIMAL_PLACES,
   PERCENT_MULTIPLIER,
+  REPORTS_SUBDIR,
   STATUS_SYMBOLS,
 } from "../constants";
 import type { EvalReport, ReportSummary, SuiteResult } from "../schemas";
@@ -20,7 +21,8 @@ export type ReportGeneratorConfig = {
 
 /**
  * Generates evaluation reports in JSON and/or Markdown format.
- * Reports are written to the configured output directory under tmp/.
+ * Reports are written to the configured output directory under tmp/,
+ * inside a dedicated reports/ subfolder.
  */
 export class ReportGenerator {
   private logger: Logger;
@@ -86,7 +88,7 @@ export class ReportGenerator {
   private async writeJson(report: EvalReport): Promise<string> {
     const timestamp = this.getTimestamp();
     const filename = `report-${timestamp}.json`;
-    const relativePath = path.join(this.outputDir, filename);
+    const relativePath = path.join(this.outputDir, REPORTS_SUBDIR, filename);
     const fullPath = await resolveTmpPathForWrite(relativePath);
 
     await fs.writeFile(fullPath, JSON.stringify(report, null, 2), "utf8");
@@ -97,7 +99,7 @@ export class ReportGenerator {
   private async writeMarkdown(report: EvalReport): Promise<string> {
     const timestamp = this.getTimestamp();
     const filename = `report-${timestamp}.md`;
-    const relativePath = path.join(this.outputDir, filename);
+    const relativePath = path.join(this.outputDir, REPORTS_SUBDIR, filename);
     const fullPath = await resolveTmpPathForWrite(relativePath);
 
     const markdown = this.formatMarkdown(report);

@@ -1,0 +1,89 @@
+{
+  "name": "tools-suite",
+  "description": "Tests shared agent tools (readFile, writeFile, listFiles)",
+  "version": "1.0.0",
+  "agent": {
+    "name": "ToolTestAgent",
+    "model": "gpt-5-mini",
+    "instructions": "You are an assistant that tests file tools. Use the tools provided to complete tasks. After using a tool, report results concisely.",
+    "tools": ["readFile", "writeFile", "listFiles"],
+    "maxTurns": 3
+  },
+  "defaults": {
+    "timeout": 20000
+  },
+  "cases": [
+    {
+      "id": "write-file",
+      "name": "writeFile creates a file",
+      "prompt": "Write the text 'Hello World' to a file called 'agent-evals/tool-test-output.txt'",
+      "assertions": [
+        {
+          "type": "fileExists",
+          "path": "agent-evals/tool-test-output.txt",
+          "description": "File should be created"
+        },
+        {
+          "type": "fileContains",
+          "path": "agent-evals/tool-test-output.txt",
+          "value": "Hello World",
+          "description": "File should contain the written text"
+        }
+      ],
+      "tags": ["writeFile"]
+    },
+    {
+      "id": "read-file",
+      "name": "readFile reads file content",
+      "prompt": "Read the file 'agent-evals/tool-test-output.txt' and tell me its contents",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "Hello World",
+          "description": "Agent response should include the file contents"
+        }
+      ],
+      "tags": ["readFile"]
+    },
+    {
+      "id": "list-files",
+      "name": "listFiles shows directory contents",
+      "prompt": "List the files in the tmp/agent-evals directory",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "tool-test-output.txt",
+          "description": "Agent response should include the previously created file"
+        }
+      ],
+      "tags": ["listFiles"]
+    },
+    {
+      "id": "write-json",
+      "name": "writeFile with JSON content",
+      "prompt": "Write a JSON file called 'agent-evals/tool-test-data.json' with this exact content: {\"name\": \"test\", \"value\": 42}",
+      "assertions": [
+        {
+          "type": "fileExists",
+          "path": "agent-evals/tool-test-data.json",
+          "description": "JSON file should be created"
+        },
+        {
+          "type": "fileJsonPath",
+          "path": "agent-evals/tool-test-data.json",
+          "jsonPath": "$.name",
+          "expected": "test",
+          "description": "JSON name field should match"
+        },
+        {
+          "type": "fileJsonPath",
+          "path": "agent-evals/tool-test-data.json",
+          "jsonPath": "$.value",
+          "expected": 42,
+          "description": "JSON value field should match"
+        }
+      ],
+      "tags": ["writeFile", "json"]
+    }
+  ]
+}
