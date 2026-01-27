@@ -226,6 +226,7 @@ describe("evaluateAssertion", () => {
     const TEST_DIR = path.join(TMP_ROOT, "assertion-tests");
     const TEST_FILE = path.join(TEST_DIR, "test-file.txt");
     const TEST_JSON_FILE = path.join(TEST_DIR, "test-data.json");
+    const TRAVERSAL_PATH = "../package.json";
 
     beforeAll(async () => {
       await fs.mkdir(TEST_DIR, { recursive: true });
@@ -259,6 +260,16 @@ describe("evaluateAssertion", () => {
         const result = await evaluateAssertion(assertion, null);
         expect(result.passed).toBe(false);
         expect(result.message).toContain("does not exist");
+      });
+
+      it("rejects traversal paths", async () => {
+        const assertion: Assertion = {
+          type: "fileExists",
+          path: TRAVERSAL_PATH,
+        };
+        const result = await evaluateAssertion(assertion, null);
+        expect(result.passed).toBe(false);
+        expect(result.actual).toContain("Path traversal is not allowed");
       });
     });
 
@@ -385,6 +396,38 @@ describe("evaluateAssertion", () => {
         const result = await evaluateAssertion(assertion, null);
         expect(result.passed).toBe(false);
         expect(result.message).toContain("Failed to evaluate");
+      });
+    });
+
+    describe("fileNotExists", () => {
+      it("passes when file does not exist", async () => {
+        const assertion: Assertion = {
+          type: "fileNotExists",
+          path: "assertion-tests/missing.txt",
+        };
+        const result = await evaluateAssertion(assertion, null);
+        expect(result.passed).toBe(true);
+        expect(result.message).toContain("does not exist");
+      });
+
+      it("fails when file exists", async () => {
+        const assertion: Assertion = {
+          type: "fileNotExists",
+          path: "assertion-tests/test-file.txt",
+        };
+        const result = await evaluateAssertion(assertion, null);
+        expect(result.passed).toBe(false);
+        expect(result.message).toContain("still exists");
+      });
+
+      it("rejects traversal paths", async () => {
+        const assertion: Assertion = {
+          type: "fileNotExists",
+          path: TRAVERSAL_PATH,
+        };
+        const result = await evaluateAssertion(assertion, null);
+        expect(result.passed).toBe(false);
+        expect(result.message).toContain("Failed to check file");
       });
     });
   });

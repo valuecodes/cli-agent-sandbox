@@ -149,6 +149,38 @@ export const resolveTmpPathForRead = async (userPath: string) => {
   return candidatePath;
 };
 
+export const resolveTmpPathForAccess = async (userPath: string) => {
+  const trimmed = userPath.trim();
+  if (!trimmed) {
+    throw new Error("Path cannot be empty.");
+  }
+  if (PATH_TRAVERSAL.test(trimmed)) {
+    throw new Error("Path traversal is not allowed.");
+  }
+
+  await ensureTmpRoot({ create: false });
+  const candidatePath = resolveCandidatePath(trimmed);
+
+  await assertNoSymlinkComponents(TMP_ROOT, candidatePath, {
+    allowMissing: true,
+  });
+
+  const tmpRootReal = await fs.realpath(TMP_ROOT);
+  const parentDir = path.dirname(candidatePath);
+  try {
+    const parentReal = await fs.realpath(parentDir);
+    if (!isPathInside(tmpRootReal, parentReal)) {
+      throw new Error("Resolved path escapes tmp directory.");
+    }
+  } catch (error) {
+    if (!isErrno(error, "ENOENT")) {
+      throw error;
+    }
+  }
+
+  return candidatePath;
+};
+
 export const resolveTmpPathForDelete = async (userPath: string) => {
   const trimmed = userPath.trim();
   if (!trimmed) {
