@@ -14,8 +14,8 @@ import {
   getEtfApiPattern,
   JUST_ETF_BASE_URL,
 } from "../constants";
-import type { EtfDataResponse } from "../types/etf-data";
-import { EtfDataResponseSchema, isEtfDataResponse } from "../types/etf-data";
+import type { EtfDataResponse } from "../schemas";
+import { EtfDataResponseSchema, isEtfDataResponse } from "../schemas";
 
 export type EtfDataFetcherConfig = {
   logger: Logger;
