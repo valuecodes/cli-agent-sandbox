@@ -1,8 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "description": "Settings for Claude code agents",
   "permissions": {
-    "defaultMode": "default",
     "allow": [
       "Bash(pnpm lint:*)",
       "Bash(pnpm lint:fix:*)",
@@ -10,13 +8,8 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",
-      "Bash(pnpm test:*)"
-    ],
-    "ask": [
-      "Bash(pnpm install:*)",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm remove:*)",
-      "Bash(git commit:*)"
+      "Bash(pnpm test:*)",
+      "Bash(tsx scripts/scaffold-cli.ts:*)"
     ],
     "deny": [
       "Bash(curl:*)",
@@ -29,6 +22,14 @@
       "Read(**/secrets/**)",
       "Bash(git push:*)",
       "Bash(gh pr create:*)"
-    ]
-  }
+    ],
+    "ask": [
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(git commit:*)"
+    ],
+    "defaultMode": "default"
+  },
+  "description": "Settings for Claude code agents"
 }

@@ -11,7 +11,8 @@ export type AgentRunnerConfig<TOutput> = {
   name: string;
   model: "gpt-5-mini";
   tools: Tool[];
-  outputType: ZodType<TOutput>;
+  /** Zod schema for structured output. Omit for plain text responses. */
+  outputType?: ZodType<TOutput>;
   instructions: string;
 
   // Logging config
@@ -65,7 +66,7 @@ export class AgentRunner<TOutput> {
       name: config.name,
       model: config.model,
       tools: config.tools,
-      outputType: config.outputType,
+      ...(config.outputType ? { outputType: config.outputType } : {}),
       instructions: config.instructions,
     });
 

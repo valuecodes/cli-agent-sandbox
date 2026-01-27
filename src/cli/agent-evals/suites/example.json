@@ -1,0 +1,79 @@
+{
+  "name": "example-suite",
+  "description": "Example evaluation suite demonstrating the eval case pattern",
+  "version": "1.0.0",
+  "agent": {
+    "name": "SimpleTestAgent",
+    "model": "gpt-5-mini",
+    "instructions": "You are a helpful assistant. Always respond with valid JSON in the format: {\"answer\": \"your answer here\", \"confidence\": 0.0-1.0}. Be concise and accurate.",
+    "tools": [],
+    "maxTurns": 3
+  },
+  "defaults": {
+    "timeout": 15000
+  },
+  "cases": [
+    {
+      "id": "simple-math",
+      "name": "Simple arithmetic",
+      "description": "Tests basic math reasoning - 2 + 2",
+      "prompt": "What is 2 + 2? Respond with your answer and confidence level.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "4",
+          "description": "Response should contain the number 4"
+        }
+      ],
+      "tags": ["math", "basic"]
+    },
+    {
+      "id": "json-format",
+      "name": "JSON format validation",
+      "description": "Tests that agent follows JSON format instructions",
+      "prompt": "Say hello. Respond with your greeting and confidence level.",
+      "assertions": [
+        {
+          "type": "matchesRegex",
+          "pattern": "\"answer\"\\s*:",
+          "description": "Response should have answer field"
+        },
+        {
+          "type": "matchesRegex",
+          "pattern": "\"confidence\"\\s*:",
+          "description": "Response should have confidence field"
+        }
+      ],
+      "tags": ["format", "basic"]
+    },
+    {
+      "id": "capital-france",
+      "name": "Basic knowledge - capital of France",
+      "description": "Tests knowledge retrieval",
+      "prompt": "What is the capital of France? Respond with your answer and confidence level.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "Paris",
+          "caseSensitive": false,
+          "description": "Answer should mention Paris"
+        }
+      ],
+      "tags": ["knowledge", "geography"]
+    },
+    {
+      "id": "larger-number",
+      "name": "Comparison task",
+      "description": "Tests basic comparison reasoning",
+      "prompt": "Which is larger: 100 or 50? Respond with your answer and confidence level.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "100",
+          "description": "Response should identify 100 as larger"
+        }
+      ],
+      "tags": ["math", "comparison"]
+    }
+  ]
+}
