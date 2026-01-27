@@ -127,7 +127,8 @@ src/
 │   │   ├── main.ts            # Agent evals CLI entry point
 │   │   ├── README.md          # Agent evals CLI docs
 │   │   ├── constants.ts       # CLI constants
-│   │   ├── schemas.ts         # CLI args + suite schemas
+│   │   ├── types/             # CLI schemas
+│   │   │   └── schemas.ts     # CLI args + suite schemas
 │   │   ├── clients/           # Suite runner + report generator
 │   │   ├── utils/             # Assertion + formatting helpers
 │   │   └── suites/            # Example evaluation suites
@@ -135,17 +136,24 @@ src/
 │   │   ├── main.ts            # ETF backtest CLI entry point
 │   │   ├── README.md          # ETF backtest docs
 │   │   ├── constants.ts       # CLI constants
-│   │   ├── schemas.ts         # CLI args + agent output schemas
+│   │   ├── types/             # CLI schemas
+│   │   │   └── schemas.ts     # CLI args + agent output schemas
 │   │   ├── clients/           # Data fetcher + Playwright capture
 │   │   ├── utils/             # Scoring + formatting helpers
-│   │   ├── types/             # ETF data types
 │   │   └── scripts/           # Python backtest + prediction scripts
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point
-│   │   └── README.md          # Guestbook CLI docs
+│   │   ├── README.md          # Guestbook CLI docs
+│   │   └── types/             # CLI schemas
+│   │       └── schemas.ts     # Guestbook output schema
 │   ├── name-explorer/
 │   │   ├── main.ts            # Name Explorer CLI entry point
-│   │   └── README.md          # Name Explorer CLI docs
+│   │   ├── README.md          # Name Explorer CLI docs
+│   │   └── types/             # CLI schemas + data types
+│   │       ├── ai-output.ts   # Agent output schema
+│   │       ├── index.ts       # Type exports
+│   │       ├── schemas.ts     # CLI args schema
+│   │       └── stats.ts       # Statistics types
 │   └── scrape-publications/
 │       ├── main.ts            # Publication scraping CLI entry point
 │       ├── README.md          # Publication scraping docs
@@ -154,7 +162,8 @@ src/
 │       │   ├── publication-scraper.ts  # Link discovery + selector inference
 │       │   └── review-page-generator.ts # Review HTML generator
 │       └── types/
-│           └── index.ts       # Publication Zod schemas
+│           ├── index.ts       # Publication Zod schemas
+│           └── schemas.ts     # CLI args schema
 ├── clients/
 │   ├── fetch.ts               # Shared HTTP fetch + sanitization
 │   ├── logger.ts              # Shared console logger

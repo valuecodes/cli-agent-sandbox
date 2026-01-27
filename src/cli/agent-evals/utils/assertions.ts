@@ -7,7 +7,7 @@ import type {
   EqualsAssertion,
   JsonPathAssertion,
   MatchesRegexAssertion,
-} from "../schemas";
+} from "../types/schemas";
 import {
   evaluateFileContainsAssertion,
   evaluateFileExistsAssertion,

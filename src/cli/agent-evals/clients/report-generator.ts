@@ -9,7 +9,7 @@ import {
   REPORTS_SUBDIR,
   STATUS_SYMBOLS,
 } from "../constants";
-import type { EvalReport, ReportSummary, SuiteResult } from "../schemas";
+import type { EvalReport, ReportSummary, SuiteResult } from "../types/schemas";
 
 export type ReportFormat = "json" | "md" | "both";
 

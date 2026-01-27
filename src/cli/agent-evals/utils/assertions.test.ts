@@ -3,7 +3,7 @@ import path from "node:path";
 import { TMP_ROOT } from "~tools/utils/fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import type { Assertion } from "../schemas";
+import type { Assertion } from "../types/schemas";
 import { evaluateAssertion } from "./assertions";
 
 describe("evaluateAssertion", () => {

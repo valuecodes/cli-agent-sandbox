@@ -8,10 +8,10 @@ import path from "node:path";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import slug from "slug";
-import { z } from "zod";
 import { question } from "zx";
 
 import { PublicationPipeline } from "./clients/publication-pipeline";
+import { CliArgsSchema } from "./types/schemas";
 
 const logger = new Logger({ level: "info", useColors: true });
 
@@ -24,11 +24,7 @@ const {
   filterUrl,
 } = parseArgs({
   logger,
-  schema: z.object({
-    url: z.url(),
-    refetch: z.coerce.boolean().default(false),
-    filterUrl: z.string().optional(),
-  }),
+  schema: CliArgsSchema,
 });
 
 // 2. Create slugified directory path

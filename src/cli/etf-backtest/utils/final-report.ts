@@ -7,7 +7,7 @@ import {
   LINE_SEPARATOR,
   PREDICTION_HORIZON_MONTHS,
 } from "../constants";
-import type { ExperimentResult } from "../schemas";
+import type { ExperimentResult } from "../types/schemas";
 import { formatFixed, formatPercent } from "./formatters";
 
 export const printFinalResults = (

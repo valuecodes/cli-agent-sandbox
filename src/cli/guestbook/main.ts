@@ -6,17 +6,13 @@ import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { createReadFileTool } from "~tools/read-file/read-file-tool";
 import { createWriteFileTool } from "~tools/write-file/write-file-tool";
-import { z } from "zod";
 import { question } from "zx";
+
+import { OutputSchema } from "./types/schemas";
 
 const logger = new Logger();
 
 logger.info("Guestbook running...");
-
-const OutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
 
 const agentRunner = new AgentRunner({
   name: "GuestbookAgent",

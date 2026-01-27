@@ -3,8 +3,8 @@ import path from "node:path";
 import type { Logger } from "~clients/logger";
 
 import { SUITE_FILE_EXTENSION, SUITES_DIR } from "../constants";
-import type { EvalSuite } from "../schemas";
-import { EvalSuiteSchema } from "../schemas";
+import type { EvalSuite } from "../types/schemas";
+import { EvalSuiteSchema } from "../types/schemas";
 
 export type SuiteLoaderConfig = {
   logger: Logger;

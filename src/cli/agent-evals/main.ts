@@ -11,8 +11,8 @@ import { EvalRunner } from "./clients/eval-runner";
 import { ReportGenerator } from "./clients/report-generator";
 import { SuiteLoader } from "./clients/suite-loader";
 import { LINE_WIDTH, PERCENT_MULTIPLIER, ZERO } from "./constants";
-import type { SuiteResult } from "./schemas";
-import { CliArgsSchema } from "./schemas";
+import type { SuiteResult } from "./types/schemas";
+import { CliArgsSchema } from "./types/schemas";
 
 const logger = new Logger();
 

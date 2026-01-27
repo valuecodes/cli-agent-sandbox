@@ -15,7 +15,7 @@ import type {
   EvalSuite,
   SuiteResult,
   SuiteSummary,
-} from "../schemas";
+} from "../types/schemas";
 import { evaluateAssertion } from "../utils/assertions";
 import { createToolsFromNames } from "./tool-registry";
 

@@ -8,8 +8,12 @@ import {
   LEARNINGS_FILENAME,
   MAX_HISTORY_ITEMS,
 } from "../constants";
-import type { ExperimentResult, IterationRecord, Learnings } from "../schemas";
-import { LearningsSchema } from "../schemas";
+import type {
+  ExperimentResult,
+  IterationRecord,
+  Learnings,
+} from "../types/schemas";
+import { LearningsSchema } from "../types/schemas";
 import { computeScore } from "../utils/scoring";
 
 export type LearningsManagerConfig = {

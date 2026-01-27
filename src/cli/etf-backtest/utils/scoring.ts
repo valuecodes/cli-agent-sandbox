@@ -4,7 +4,7 @@ import {
   SCORE_WEIGHTS,
   ZERO,
 } from "../constants";
-import type { ExperimentResult } from "../schemas";
+import type { ExperimentResult } from "../types/schemas";
 
 export const computeScore = (metrics: ExperimentResult["metrics"]): number => {
   // Primary: prediction accuracy on non-overlapping samples (honest assessment)

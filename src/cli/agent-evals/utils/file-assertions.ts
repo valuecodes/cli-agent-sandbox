@@ -10,7 +10,7 @@ import type {
   FileExistsAssertion,
   FileJsonPathAssertion,
   FileNotExistsAssertion,
-} from "../schemas";
+} from "../types/schemas";
 
 /**
  * Evaluate a fileExists assertion by checking if the file exists in tmp/.
