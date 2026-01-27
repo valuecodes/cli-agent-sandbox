@@ -201,9 +201,10 @@ describe("AgentRunner", () => {
 
       handler(null, null, mockTool, mockDetails);
 
-      expect(toolLogSpy).toHaveBeenCalledWith(
-        'Calling testTool: {"key":"value"}'
-      );
+      expect(toolLogSpy).toHaveBeenCalledWith("Calling tool", {
+        name: "testTool",
+        args: '{"key":"value"}',
+      });
     });
 
     it("does not log tool arguments when logToolArgs is false", () => {
@@ -227,7 +228,9 @@ describe("AgentRunner", () => {
 
       handler(null, null, mockTool, mockDetails);
 
-      expect(toolLogSpy).toHaveBeenCalledWith("Calling testTool");
+      expect(toolLogSpy).toHaveBeenCalledWith("Calling tool", {
+        name: "testTool",
+      });
     });
 
     it("logs result preview when logToolResults is true", () => {
@@ -249,7 +252,9 @@ describe("AgentRunner", () => {
 
       handler(null, null, mockTool, "short result");
 
-      expect(debugLogSpy).toHaveBeenCalledWith("Result: short result");
+      expect(debugLogSpy).toHaveBeenCalledWith("Tool result preview", {
+        preview: "short result",
+      });
     });
 
     it("truncates long results based on resultPreviewLimit", () => {
@@ -272,7 +277,9 @@ describe("AgentRunner", () => {
 
       handler(null, null, mockTool, "this is a very long result string");
 
-      expect(debugLogSpy).toHaveBeenCalledWith("Result: this is a ...");
+      expect(debugLogSpy).toHaveBeenCalledWith("Tool result preview", {
+        preview: "this is a ...",
+      });
     });
 
     it("does not log result when logToolResults is false", () => {
@@ -335,7 +342,9 @@ describe("AgentRunner", () => {
       handler(null, null, mockTool, mockDetails);
 
       // Should not include arguments
-      expect(toolLogSpy).toHaveBeenCalledWith("Calling testTool");
+      expect(toolLogSpy).toHaveBeenCalledWith("Calling tool", {
+        name: "testTool",
+      });
     });
 
     it("defaults logToolResults to true", () => {
@@ -379,9 +388,9 @@ describe("AgentRunner", () => {
       handler(null, null, mockTool, longResult);
 
       // Should truncate at 200 chars
-      expect(debugLogSpy).toHaveBeenCalledWith(
-        "Result: " + "x".repeat(200) + "..."
-      );
+      expect(debugLogSpy).toHaveBeenCalledWith("Tool result preview", {
+        preview: "x".repeat(200) + "...",
+      });
     });
   });
 });
