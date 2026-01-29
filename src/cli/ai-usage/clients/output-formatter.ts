@@ -4,6 +4,17 @@ type OutputFormatterOptions = {
   sinceLabel: string;
 };
 
+type ColumnWidths = {
+  provider: number;
+  model: number;
+  input: number;
+  output: number;
+  cacheR: number;
+  cacheW: number;
+  total: number;
+  cost: number;
+};
+
 /**
  * Formats aggregated usage data for console output.
  */
@@ -37,6 +48,43 @@ export class OutputFormatter {
 
   private padLeft(s: string, width: number): string {
     return s.padStart(width);
+  }
+
+  /**
+   * Calculate column widths based on actual data values.
+   */
+  private calculateColumnWidths(usage: AggregatedUsage): ColumnWidths {
+    const widths = {
+      provider: "Provider".length,
+      model: "Model".length,
+      input: "Input".length,
+      output: "Output".length,
+      cacheR: "Cache R".length,
+      cacheW: "Cache W".length,
+      total: "Total".length,
+      cost: "Est. Cost".length,
+    };
+
+    for (const row of usage.rows) {
+      widths.provider = Math.max(widths.provider, row.provider.length);
+      widths.model = Math.max(widths.model, row.model.length);
+      widths.input = Math.max(widths.input, this.formatNumber(row.inputTokens).length);
+      widths.output = Math.max(widths.output, this.formatNumber(row.outputTokens).length);
+      widths.cacheR = Math.max(widths.cacheR, this.formatNumber(row.cacheReadTokens).length);
+      widths.cacheW = Math.max(widths.cacheW, this.formatNumber(row.cacheWriteTokens).length);
+      widths.total = Math.max(widths.total, this.formatNumber(row.totalTokens).length);
+      widths.cost = Math.max(widths.cost, this.formatCost(row.cost).length);
+    }
+
+    widths.provider = Math.max(widths.provider, "TOTAL".length);
+    widths.input = Math.max(widths.input, this.formatNumber(usage.totals.inputTokens).length);
+    widths.output = Math.max(widths.output, this.formatNumber(usage.totals.outputTokens).length);
+    widths.cacheR = Math.max(widths.cacheR, this.formatNumber(usage.totals.cacheReadTokens).length);
+    widths.cacheW = Math.max(widths.cacheW, this.formatNumber(usage.totals.cacheWriteTokens).length);
+    widths.total = Math.max(widths.total, this.formatNumber(usage.totals.totalTokens).length);
+    widths.cost = Math.max(widths.cost, this.formatCost(usage.totals.cost).length);
+
+    return widths;
   }
 
   /**
@@ -86,17 +134,7 @@ export class OutputFormatter {
    * Print the markdown table.
    */
   printTable(usage: AggregatedUsage): void {
-    // Column widths
-    const cols = {
-      provider: 8,
-      model: 28,
-      input: 12,
-      output: 12,
-      cacheR: 12,
-      cacheW: 12,
-      total: 12,
-      cost: 12,
-    };
+    const cols = this.calculateColumnWidths(usage);
 
     // Header
     const header = [
