@@ -24,7 +24,8 @@ type GetUsageOptions = {
  * /home/juha/code/foo -> -home-juha-code-foo
  */
 const encodeRepoPath = (repoPath: string): string => {
-  return repoPath.replace(/\//g, "-");
+  const normalizedPath = repoPath.replace(/\\/g, "/");
+  return normalizedPath.replace(/\//g, "-");
 };
 
 export class ClaudeLogReader {
@@ -128,8 +129,14 @@ export class ClaudeLogReader {
           continue;
         }
 
-        // Match repo path if cwd is present
-        if (entry.cwd && !entry.cwd.startsWith(repoPath)) {
+        // Skip if cwd is missing or doesn't match repo
+        if (!entry.cwd) {
+          if (this.debug) {
+            this.logger.debug("Skipping entry: cwd missing", { repoPath });
+          }
+          continue;
+        }
+        if (!entry.cwd.startsWith(repoPath)) {
           if (this.debug) {
             this.logger.debug("Skipping entry: cwd mismatch", {
               cwd: entry.cwd,
