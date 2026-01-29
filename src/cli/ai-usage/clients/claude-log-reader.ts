@@ -119,6 +119,10 @@ export class ClaudeLogReader {
         if (!entry.message.model) {
           continue;
         }
+        // Skip synthetic entries (client-side error messages, not real API calls)
+        if (entry.message.model === "<synthetic>") {
+          continue;
+        }
 
         const timestamp = new Date(entry.timestamp);
         if (timestamp < since) {
