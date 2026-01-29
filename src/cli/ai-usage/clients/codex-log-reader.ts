@@ -87,7 +87,30 @@ export class CodexLogReader {
           }
 
           // Check if this date is within range
-          const dirDate = new Date(`${year}-${month}-${day}`);
+          const yearNum = Number(year);
+          const monthNum = Number(month);
+          const dayNum = Number(day);
+
+          if (
+            !Number.isInteger(yearNum) ||
+            !Number.isInteger(monthNum) ||
+            !Number.isInteger(dayNum) ||
+            monthNum < 1 ||
+            monthNum > 12 ||
+            dayNum < 1 ||
+            dayNum > 31
+          ) {
+            continue;
+          }
+
+          const dirDate = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+          if (
+            dirDate.getUTCFullYear() !== yearNum ||
+            dirDate.getUTCMonth() !== monthNum - 1 ||
+            dirDate.getUTCDate() !== dayNum
+          ) {
+            continue;
+          }
           if (dirDate < since) {
             continue;
           }
@@ -129,7 +152,9 @@ export class CodexLogReader {
   /**
    * Parse a session file and extract usage records.
    * Need to track session metadata and model across entries.
-   * Codex emits duplicate token_count events - we dedupe by tracking last seen values.
+   * Codex can emit duplicate token_count events; dedupe using cumulative usage when
+   * available (or exact line matches) to avoid dropping distinct calls with the same
+   * per-request token counts.
    */
   async parseSession(
     filePath: string,
@@ -147,12 +172,13 @@ export class CodexLogReader {
     });
 
     for await (const line of rl) {
-      if (!line.trim()) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) {
         continue;
       }
 
       try {
-        const parsed: unknown = JSON.parse(line);
+        const parsed: unknown = JSON.parse(trimmedLine);
         const baseResult = CodexLogEntrySchema.safeParse(parsed);
         if (!baseResult.success) {
           continue;
@@ -204,8 +230,16 @@ export class CodexLogReader {
             continue;
           }
 
-          // Skip if cwd doesn't match repo
-          if (sessionData.cwd && !sessionData.cwd.startsWith(repoPath)) {
+          // Skip if cwd is missing or doesn't match repo
+          if (!sessionData.cwd) {
+            if (this.debug) {
+              this.logger.debug("Skipping Codex entry: cwd missing", {
+                repoPath,
+              });
+            }
+            continue;
+          }
+          if (!sessionData.cwd.startsWith(repoPath)) {
             if (this.debug) {
               this.logger.debug("Skipping Codex entry: cwd mismatch", {
                 cwd: sessionData.cwd,
@@ -216,9 +250,12 @@ export class CodexLogReader {
           }
 
           const usage = payload.info.last_token_usage;
+          const totalUsage = payload.info.total_token_usage;
 
-          // Dedupe: Codex emits duplicate token_count events with identical values
-          const usageKey = `${usage.input_tokens}:${usage.output_tokens}:${usage.cached_input_tokens}`;
+          // Dedupe only when we have a strong signal (cumulative totals or exact line).
+          const usageKey = totalUsage
+            ? `total:${totalUsage.input_tokens}:${totalUsage.output_tokens}:${totalUsage.cached_input_tokens}|last:${usage.input_tokens}:${usage.output_tokens}:${usage.cached_input_tokens}`
+            : `line:${trimmedLine}`;
           if (usageKey === lastUsageKey) {
             continue;
           }
