@@ -101,7 +101,8 @@ export class UsageAggregator {
       outputTokens: g.outputTokens,
       cacheReadTokens: g.cacheReadTokens,
       cacheWriteTokens: g.cacheWriteTokens,
-      totalTokens: g.inputTokens + g.outputTokens,
+      totalTokens:
+        g.inputTokens + g.outputTokens + g.cacheReadTokens + g.cacheWriteTokens,
       cost: g.cost,
     }));
 
