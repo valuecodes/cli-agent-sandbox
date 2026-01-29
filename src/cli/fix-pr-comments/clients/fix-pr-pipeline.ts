@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
-
 import type { Logger } from "~clients/logger";
 
 import {
   CODEX_PROMPT_TEMPLATE,
+  getConversationCommentsPath,
   getOutputDir,
   getOutputPath,
+  getReviewCommentsPath,
 } from "../constants";
 import { CommentFormatter } from "./comment-formatter";
 import { GhClient } from "./gh-client";
@@ -75,6 +76,18 @@ export class FixPrPipeline {
 
     const outputPath = getOutputPath(pr);
     await fs.writeFile(outputPath, markdown, "utf-8");
+
+    // Write JSON files
+    await fs.writeFile(
+      getReviewCommentsPath(pr),
+      JSON.stringify(reviewComments, null, 2),
+      "utf-8"
+    );
+    await fs.writeFile(
+      getConversationCommentsPath(pr),
+      JSON.stringify(conversationComments, null, 2),
+      "utf-8"
+    );
 
     this.logger.info("Comments written", { path: outputPath });
 
