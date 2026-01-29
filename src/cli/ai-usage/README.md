@@ -36,6 +36,11 @@ Only entries whose `cwd` matches the repo path are counted.
 - Markdown table with input/output/cache tokens, totals, and estimated cost.
 - If a model is missing from `ai-usage.pricing.json`, cost is `0` and a warning is printed.
 
+## Internals
+
+- `UsagePipeline` owns repo resolution, log collection, aggregation, and formatting.
+- `OutputFormatter` returns strings (summary/table/JSON); `main.ts` prints the report.
+
 ## Flow
 
 ```mermaid

@@ -150,7 +150,7 @@ src/
 │   │   ├── constants.ts       # CLI constants
 │   │   ├── types/             # CLI schemas
 │   │   │   └── schemas.ts     # CLI args + pricing schemas
-│   │   └── clients/           # Log readers + aggregation + formatting
+│   │   └── clients/           # Pipeline + log readers + aggregation + formatting
 │   ├── agent-evals/
 │   │   ├── main.ts            # Agent evals CLI entry point
 │   │   ├── README.md          # Agent evals CLI docs

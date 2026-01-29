@@ -16,7 +16,8 @@ type ColumnWidths = {
 };
 
 /**
- * Formats aggregated usage data for console output.
+ * Formats aggregated usage data for output.
+ * All format methods return strings; printing is the caller's responsibility.
  */
 export class OutputFormatter {
   private sinceLabel: string;
@@ -121,54 +122,60 @@ export class OutputFormatter {
   }
 
   /**
-   * Print warning about models missing from pricing config.
+   * Format warning about models missing from pricing config.
    */
-  printUnknownModelsWarning(models: string[]): void {
+  formatUnknownModelsWarning(models: string[]): string {
     if (models.length === 0) {
-      return;
+      return "";
     }
 
-    console.log("\nWarning: The following models have no pricing data:");
-    for (const model of models) {
-      console.log(`  - ${model}`);
-    }
-    console.log(
-      "Add pricing info to ai-usage.pricing.json for accurate cost estimates."
-    );
+    const lines = [
+      "\nWarning: The following models have no pricing data:",
+      ...models.map((model) => `  - ${model}`),
+      "Add pricing info to ai-usage.pricing.json for accurate cost estimates.",
+    ];
+    return lines.join("\n");
   }
 
   /**
-   * Print the summary section (totals per provider and model).
+   * Format the summary section (totals per provider and model).
    */
-  printSummary(usage: AggregatedUsage): void {
-    console.log(`\nAI Usage Summary (Last ${this.sinceLabel})`);
-    console.log(`Repo: ${usage.repo}`);
-    this.printUnknownModelsWarning(usage.unknownModels);
-    console.log("");
+  formatSummary(usage: AggregatedUsage): string {
+    const lines: string[] = [];
+
+    lines.push(`\nAI Usage Summary (Last ${this.sinceLabel})`);
+
+    const warning = this.formatUnknownModelsWarning(usage.unknownModels);
+    if (warning) {
+      lines.push(warning);
+    }
+    lines.push("");
 
     // By provider
-    console.log("By Provider:");
+    lines.push("By Provider:");
     for (const [provider, summary] of Object.entries(usage.byProvider)) {
       const tokens = this.formatNumber(summary.tokens);
       const cost = this.formatCost(summary.cost);
-      console.log(`  ${provider}: ${tokens} tokens (${cost})`);
+      lines.push(`  ${provider}: ${tokens} tokens (${cost})`);
     }
 
     // By model
-    console.log("\nBy Model:");
+    lines.push("\nBy Model:");
     for (const summary of usage.byModel) {
       const tokens = this.formatNumber(summary.tokens);
       const cost = this.formatCost(summary.cost);
-      console.log(`  ${summary.model}: ${tokens} tokens (${cost})`);
+      lines.push(`  ${summary.model}: ${tokens} tokens (${cost})`);
     }
 
-    console.log("");
+    lines.push("");
+    return lines.join("\n");
   }
 
   /**
-   * Print the markdown table.
+   * Format the markdown table.
    */
-  printTable(usage: AggregatedUsage): void {
+  formatTable(usage: AggregatedUsage): string {
+    const lines: string[] = [];
     const cols = this.calculateColumnWidths(usage);
 
     // Header
@@ -194,8 +201,8 @@ export class OutputFormatter {
       "-".repeat(cols.cost),
     ].join("-|-");
 
-    console.log(`| ${header} |`);
-    console.log(`|-${separator}-|`);
+    lines.push(`| ${header} |`);
+    lines.push(`|-${separator}-|`);
 
     // Rows
     for (const row of usage.rows) {
@@ -209,11 +216,11 @@ export class OutputFormatter {
         this.padLeft(this.formatNumber(row.totalTokens), cols.total),
         this.padLeft(this.formatCost(row.cost), cols.cost),
       ].join(" | ");
-      console.log(`| ${line} |`);
+      lines.push(`| ${line} |`);
     }
 
     // Separator before totals
-    console.log(`|-${separator}-|`);
+    lines.push(`|-${separator}-|`);
 
     // Totals row
     const totalsLine = [
@@ -232,13 +239,15 @@ export class OutputFormatter {
       this.padLeft(this.formatNumber(usage.totals.totalTokens), cols.total),
       this.padLeft(this.formatCost(usage.totals.cost), cols.cost),
     ].join(" | ");
-    console.log(`| ${totalsLine} |`);
+    lines.push(`| ${totalsLine} |`);
+
+    return lines.join("\n");
   }
 
   /**
-   * Print JSON output.
+   * Format JSON output.
    */
-  printJson(usage: AggregatedUsage): void {
+  formatJson(usage: AggregatedUsage): string {
     const output = {
       period: {
         since: usage.period.since.toISOString(),
@@ -251,14 +260,38 @@ export class OutputFormatter {
       totals: usage.totals,
       unknownModels: usage.unknownModels,
     };
-    console.log(JSON.stringify(output, null, 2));
+    return JSON.stringify(output, null, 2);
   }
 
   /**
-   * Print a message when no data is found.
+   * Format empty JSON output when no data is found.
    */
-  printNoData(repo: string): void {
-    console.log(`\nNo usage data found for repo: ${repo}`);
-    console.log(`Time period: Last ${this.sinceLabel}\n`);
+  formatEmptyJson(repo: string, since: Date, until: Date): string {
+    return JSON.stringify({
+      period: {
+        since: since.toISOString(),
+        until: until.toISOString(),
+      },
+      repo,
+      byProvider: {},
+      byModel: [],
+      rows: [],
+      totals: {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        totalTokens: 0,
+        cost: 0,
+      },
+      unknownModels: [],
+    });
+  }
+
+  /**
+   * Format a message when no data is found.
+   */
+  formatNoData(repo: string): string {
+    return `\nNo usage data found for repo: ${repo}\nTime period: Last ${this.sinceLabel}\n`;
   }
 }
