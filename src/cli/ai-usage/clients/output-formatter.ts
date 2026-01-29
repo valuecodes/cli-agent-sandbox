@@ -68,21 +68,54 @@ export class OutputFormatter {
     for (const row of usage.rows) {
       widths.provider = Math.max(widths.provider, row.provider.length);
       widths.model = Math.max(widths.model, row.model.length);
-      widths.input = Math.max(widths.input, this.formatNumber(row.inputTokens).length);
-      widths.output = Math.max(widths.output, this.formatNumber(row.outputTokens).length);
-      widths.cacheR = Math.max(widths.cacheR, this.formatNumber(row.cacheReadTokens).length);
-      widths.cacheW = Math.max(widths.cacheW, this.formatNumber(row.cacheWriteTokens).length);
-      widths.total = Math.max(widths.total, this.formatNumber(row.totalTokens).length);
+      widths.input = Math.max(
+        widths.input,
+        this.formatNumber(row.inputTokens).length
+      );
+      widths.output = Math.max(
+        widths.output,
+        this.formatNumber(row.outputTokens).length
+      );
+      widths.cacheR = Math.max(
+        widths.cacheR,
+        this.formatNumber(row.cacheReadTokens).length
+      );
+      widths.cacheW = Math.max(
+        widths.cacheW,
+        this.formatNumber(row.cacheWriteTokens).length
+      );
+      widths.total = Math.max(
+        widths.total,
+        this.formatNumber(row.totalTokens).length
+      );
       widths.cost = Math.max(widths.cost, this.formatCost(row.cost).length);
     }
 
     widths.provider = Math.max(widths.provider, "TOTAL".length);
-    widths.input = Math.max(widths.input, this.formatNumber(usage.totals.inputTokens).length);
-    widths.output = Math.max(widths.output, this.formatNumber(usage.totals.outputTokens).length);
-    widths.cacheR = Math.max(widths.cacheR, this.formatNumber(usage.totals.cacheReadTokens).length);
-    widths.cacheW = Math.max(widths.cacheW, this.formatNumber(usage.totals.cacheWriteTokens).length);
-    widths.total = Math.max(widths.total, this.formatNumber(usage.totals.totalTokens).length);
-    widths.cost = Math.max(widths.cost, this.formatCost(usage.totals.cost).length);
+    widths.input = Math.max(
+      widths.input,
+      this.formatNumber(usage.totals.inputTokens).length
+    );
+    widths.output = Math.max(
+      widths.output,
+      this.formatNumber(usage.totals.outputTokens).length
+    );
+    widths.cacheR = Math.max(
+      widths.cacheR,
+      this.formatNumber(usage.totals.cacheReadTokens).length
+    );
+    widths.cacheW = Math.max(
+      widths.cacheW,
+      this.formatNumber(usage.totals.cacheWriteTokens).length
+    );
+    widths.total = Math.max(
+      widths.total,
+      this.formatNumber(usage.totals.totalTokens).length
+    );
+    widths.cost = Math.max(
+      widths.cost,
+      this.formatCost(usage.totals.cost).length
+    );
 
     return widths;
   }
@@ -99,7 +132,9 @@ export class OutputFormatter {
     for (const model of models) {
       console.log(`  - ${model}`);
     }
-    console.log("Add pricing info to ai-usage.pricing.json for accurate cost estimates.");
+    console.log(
+      "Add pricing info to ai-usage.pricing.json for accurate cost estimates."
+    );
   }
 
   /**
@@ -186,7 +221,10 @@ export class OutputFormatter {
       this.padRight("", cols.model),
       this.padLeft(this.formatNumber(usage.totals.inputTokens), cols.input),
       this.padLeft(this.formatNumber(usage.totals.outputTokens), cols.output),
-      this.padLeft(this.formatNumber(usage.totals.cacheReadTokens), cols.cacheR),
+      this.padLeft(
+        this.formatNumber(usage.totals.cacheReadTokens),
+        cols.cacheR
+      ),
       this.padLeft(
         this.formatNumber(usage.totals.cacheWriteTokens),
         cols.cacheW
