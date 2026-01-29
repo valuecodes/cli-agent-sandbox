@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, an AI usage summary CLI, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -13,6 +13,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 7. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
 8. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 9. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
+10. (Optional) Summarize AI usage: `pnpm ai:usage --since 7d`
 
 ### Python Setup (for ETF backtest)
 
@@ -34,6 +35,7 @@ pip install numpy pandas torch
 | `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats)      |
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page       |
 | `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python) |
+| `pnpm ai:usage`                | Summarize Claude/Codex token usage for a repo          |
 | `pnpm typecheck`               | Run TypeScript type checking                           |
 | `pnpm lint`                    | Run ESLint for code quality                            |
 | `pnpm lint:fix`                | Run ESLint and auto-fix issues                         |
@@ -100,6 +102,24 @@ pnpm run:agent-evals -- --suite=example
 pnpm run:agent-evals -- --all
 ```
 
+## AI usage
+
+The `ai:usage` CLI summarizes Claude and Codex token usage for a repo based on local logs and `ai-usage.pricing.json`.
+
+Usage:
+
+```
+pnpm ai:usage
+pnpm ai:usage --since 24h
+pnpm ai:usage --since 30d --repo /path/to/repo
+pnpm ai:usage --json
+```
+
+Notes:
+
+- Defaults to the last 7 days for the current git repo (or `cwd` when not in a git repo).
+- Log sources: `~/.claude/projects/<encoded-repo>/` and `$CODEX_HOME/sessions` or `~/.codex/sessions`.
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
@@ -123,6 +143,14 @@ File tools are sandboxed to the `tmp/` directory with path validation to prevent
 ```
 src/
 ├── cli/
+│   ├── ai-usage/
+│   │   ├── main.ts            # AI usage CLI entry point
+│   │   ├── README.md          # AI usage CLI docs
+│   │   ├── ai-usage.pricing.json # Model pricing lookup
+│   │   ├── constants.ts       # CLI constants
+│   │   ├── types/             # CLI schemas
+│   │   │   └── schemas.ts     # CLI args + pricing schemas
+│   │   └── clients/           # Log readers + aggregation + formatting
 │   ├── agent-evals/
 │   │   ├── main.ts            # Agent evals CLI entry point
 │   │   ├── README.md          # Agent evals CLI docs

@@ -43,6 +43,7 @@
 **Common scripts (see `package.json` for all):**
 
 - `pnpm run:[cli-name-here]`
+- `pnpm ai:usage` (summarize Claude/Codex usage logs for a repo)
 - `pnpm typecheck`
 - `pnpm lint` (use `pnpm lint:fix` if errors are auto-fixable)
 - `pnpm format` / `pnpm format:check`
