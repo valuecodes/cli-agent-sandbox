@@ -9,7 +9,6 @@ import { execSync } from "child_process";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

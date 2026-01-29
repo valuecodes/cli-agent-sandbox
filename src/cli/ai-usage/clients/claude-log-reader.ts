@@ -2,7 +2,6 @@ import { createReadStream } from "fs";
 import { readdir, stat } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
-
 import type { Logger } from "~clients/logger";
 
 import { CLAUDE_PROJECTS_PATH, PROVIDER_CLAUDE } from "../constants";
@@ -154,7 +153,9 @@ export class ClaudeLogReader {
     }
 
     if (this.debug) {
-      this.logger.debug("Found Claude usage records", { count: records.length });
+      this.logger.debug("Found Claude usage records", {
+        count: records.length,
+      });
     }
 
     return records;
