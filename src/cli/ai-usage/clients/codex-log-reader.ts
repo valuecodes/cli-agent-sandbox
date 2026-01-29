@@ -130,6 +130,7 @@ export class CodexLogReader {
   /**
    * Parse a session file and extract usage records.
    * Need to track session metadata and model across entries.
+   * Codex emits duplicate token_count events - we dedupe by tracking last seen values.
    */
   async parseSession(
     filePath: string,
@@ -138,6 +139,7 @@ export class CodexLogReader {
   ): Promise<UsageRecord[]> {
     const records: UsageRecord[] = [];
     const sessionData: SessionData = {};
+    let lastUsageKey = "";
 
     const fileStream = createReadStream(filePath);
     const rl = createInterface({
@@ -193,7 +195,8 @@ export class CodexLogReader {
           if (payload.type !== "token_count") {
             continue;
           }
-          if (!payload.info?.total_token_usage) {
+          // Use last_token_usage (incremental per-request) not total_token_usage (cumulative)
+          if (!payload.info?.last_token_usage) {
             continue;
           }
 
@@ -213,7 +216,15 @@ export class CodexLogReader {
             continue;
           }
 
-          const usage = payload.info.total_token_usage;
+          const usage = payload.info.last_token_usage;
+
+          // Dedupe: Codex emits duplicate token_count events with identical values
+          const usageKey = `${usage.input_tokens}:${usage.output_tokens}:${usage.cached_input_tokens}`;
+          if (usageKey === lastUsageKey) {
+            continue;
+          }
+          lastUsageKey = usageKey;
+
           records.push({
             provider: PROVIDER_CODEX,
             model: sessionData.model ?? "unknown",

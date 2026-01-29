@@ -87,6 +87,7 @@ export const CodexEventMsgPayloadSchema = z.object({
   info: z
     .object({
       total_token_usage: CodexTokenUsageSchema.optional(),
+      last_token_usage: CodexTokenUsageSchema.optional(),
     })
     .optional(),
 });
