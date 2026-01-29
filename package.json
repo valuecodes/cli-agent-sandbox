@@ -9,6 +9,7 @@
     "run:scrape-publications": "tsx src/cli/scrape-publications/main.ts",
     "run:etf-backtest": "tsx src/cli/etf-backtest/main.ts",
     "run:agent-evals": "tsx src/cli/agent-evals/main.ts",
+    "ai:usage": "tsx src/cli/ai-usage/main.ts",
     "scaffold:cli": "tsx scripts/scaffold-cli.ts",
     "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
