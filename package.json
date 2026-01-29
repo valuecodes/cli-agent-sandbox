@@ -11,6 +11,7 @@
     "run:agent-evals": "tsx src/cli/agent-evals/main.ts",
     "ai:usage": "tsx src/cli/ai-usage/main.ts",
     "scaffold:cli": "tsx scripts/scaffold-cli.ts",
+    "run:fix-pr-comments": "tsx src/cli/fix-pr-comments/main.ts",
     "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
