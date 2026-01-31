@@ -63,6 +63,6 @@ If the current branch has no PR and `--pr` is not provided, the CLI exits with a
 ## Internals
 
 - `FixPrPipeline` orchestrates gh auth checks, comment fetching, output writing, Codex launch, and code quality checks
-- `GhClient` wraps `gh` calls (`gh pr view`, `gh repo view`, and `gh api` endpoints)
+- `GitHubClient` wraps `gh` calls (`gh pr view`, `gh repo view`, and `gh api` endpoints)
 - `CommentFormatter` builds the markdown output
 - `constants.ts` defines output paths and the Codex prompt template

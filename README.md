@@ -249,9 +249,12 @@ src/
 │           ├── index.ts       # Publication Zod schemas
 │           └── schemas.ts     # CLI args schema
 ├── clients/
-│   ├── fetch.ts               # Shared HTTP fetch + sanitization
-│   ├── logger.ts              # Shared console logger
 │   ├── agent-runner.ts        # Default agent runner wrapper
+│   ├── codex-client.ts        # Codex CLI launcher
+│   ├── fetch.ts               # Shared HTTP fetch + sanitization
+│   ├── github-client.ts       # GitHub CLI API client (PR metadata/comments)
+│   ├── git-client.ts          # Git CLI wrapper (branch, diff, changed files)
+│   ├── logger.ts              # Shared console logger
 │   └── playwright-scraper.ts  # Playwright-based web scraper
 ├── utils/
 │   ├── parse-args.ts          # Shared CLI arg parsing helper

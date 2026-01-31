@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Re-export shared types from github-client
+export type { Comment, PrContext, ReviewComment } from "~clients/github-client";
+
 // CLI arguments schema
 export const CliArgsSchema = z.object({
   pr: z.coerce.number().optional(),
@@ -8,36 +11,6 @@ export const CliArgsSchema = z.object({
 });
 
 export type CliArgs = z.infer<typeof CliArgsSchema>;
-
-// GitHub API response schemas
-const CommentUserSchema = z.object({
-  login: z.string(),
-});
-
-export const CommentSchema = z.object({
-  created_at: z.string(),
-  user: CommentUserSchema,
-  body: z.string(),
-  html_url: z.string(),
-});
-
-export type Comment = z.infer<typeof CommentSchema>;
-
-export const ReviewCommentSchema = CommentSchema.extend({
-  id: z.number(),
-  path: z.string(),
-  line: z.number().nullable().optional(),
-  original_line: z.number().nullable().optional(),
-  position: z.number().nullable().optional(),
-});
-
-export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
-
-// PR context type for passing between components
-export type PrContext = {
-  repo: string;
-  pr: number;
-};
 
 // Schema for Codex answer output
 export const CommentAnswerSchema = z.object({

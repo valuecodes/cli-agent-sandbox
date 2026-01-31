@@ -2,22 +2,56 @@ import type { Logger } from "~clients/logger";
 import { z } from "zod";
 import { $ } from "zx";
 
-import type { Comment, PrContext, ReviewComment } from "../types/schemas";
-import { CommentSchema, ReviewCommentSchema } from "../types/schemas";
-
 $.verbose = false;
 
-type GhClientOptions = {
+// GitHub API response schemas
+const CommentUserSchema = z.object({
+  login: z.string(),
+});
+
+export const CommentSchema = z.object({
+  created_at: z.string(),
+  user: CommentUserSchema,
+  body: z.string(),
+  html_url: z.string(),
+});
+
+export type Comment = z.infer<typeof CommentSchema>;
+
+export const ReviewCommentSchema = CommentSchema.extend({
+  id: z.number(),
+  path: z.string(),
+  line: z.number().nullable().optional(),
+  original_line: z.number().nullable().optional(),
+  position: z.number().nullable().optional(),
+});
+
+export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
+
+export type PrContext = {
+  repo: string;
+  pr: number;
+};
+
+type GitHubClientOptions = {
   logger: Logger;
 };
 
+type GetRepoOptions = {
+  repo?: string;
+};
+
+type GetPrNumberOptions = {
+  pr?: number;
+};
+
 /**
- * Client for GitHub API operations via the gh CLI.
+ * Client for GitHub API operations via the GitHub CLI.
  */
-export class GhClient {
+export class GitHubClient {
   private logger: Logger;
 
-  constructor(options: GhClientOptions) {
+  constructor(options: GitHubClientOptions) {
     this.logger = options.logger;
   }
 
@@ -25,6 +59,7 @@ export class GhClient {
    * Verify gh CLI is authenticated.
    */
   async checkAuth(): Promise<void> {
+    this.logger.debug("Checking gh auth status");
     try {
       await $`gh auth status`.quiet();
     } catch (error: unknown) {
@@ -51,22 +86,26 @@ export class GhClient {
    * Get the repository name (owner/repo format).
    * Uses provided override or detects from current directory.
    */
-  async getRepo(repoOverride?: string): Promise<string> {
-    if (repoOverride) {
-      return repoOverride;
+  async getRepo({ repo }: GetRepoOptions = {}): Promise<string> {
+    if (repo) {
+      this.logger.debug("Using repo override", { repo });
+      return repo;
     }
     const result =
       await $`gh repo view --json nameWithOwner --jq .nameWithOwner`.quiet();
-    return result.stdout.trim();
+    const detectedRepo = result.stdout.trim();
+    this.logger.debug("Detected repo", { repo: detectedRepo });
+    return detectedRepo;
   }
 
   /**
    * Get the PR number for the current branch.
    * Uses provided override or detects from current branch.
    */
-  async getPrNumber(prOverride?: number): Promise<number> {
-    if (prOverride !== undefined) {
-      return prOverride;
+  async getPrNumber({ pr }: GetPrNumberOptions = {}): Promise<number> {
+    if (pr !== undefined) {
+      this.logger.debug("Using PR override", { pr });
+      return pr;
     }
 
     // Get current branch name for better error messages
@@ -81,7 +120,12 @@ export class GhClient {
     try {
       // Don't pass --repo flag - it breaks branch-based PR detection
       const result = await $`gh pr view --json number --jq .number`.quiet();
-      return parseInt(result.stdout.trim(), 10);
+      const detectedPr = parseInt(result.stdout.trim(), 10);
+      this.logger.debug("Detected PR number", {
+        pr: detectedPr,
+        branch: branchName,
+      });
+      return detectedPr;
     } catch {
       throw new Error(
         `No PR found for branch '${branchName}'. ` +
@@ -94,46 +138,27 @@ export class GhClient {
    * Fetch top-level conversation comments from the PR (issue comments API).
    */
   async fetchConversationComments(ctx: PrContext): Promise<Comment[]> {
+    this.logger.debug("Fetching conversation comments", ctx);
     const result =
       await $`gh api repos/${ctx.repo}/issues/${ctx.pr}/comments --paginate`.quiet();
     const data: unknown = JSON.parse(result.stdout || "[]");
-    return z.array(CommentSchema).parse(data);
+    const comments = z.array(CommentSchema).parse(data);
+    this.logger.debug("Fetched conversation comments", {
+      count: comments.length,
+    });
+    return comments;
   }
 
   /**
    * Fetch inline review comments from the PR (pull request comments API).
    */
   async fetchReviewComments(ctx: PrContext): Promise<ReviewComment[]> {
+    this.logger.debug("Fetching review comments", ctx);
     const result =
       await $`gh api repos/${ctx.repo}/pulls/${ctx.pr}/comments --paginate`.quiet();
     const data: unknown = JSON.parse(result.stdout || "[]");
-    return z.array(ReviewCommentSchema).parse(data);
-  }
-
-  /**
-   * Check if codex CLI is available.
-   */
-  async isCodexAvailable(): Promise<boolean> {
-    try {
-      await $`which codex`.quiet();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Launch codex CLI with the given prompt.
-   * Returns false if codex is not available.
-   */
-  async launchCodex(prompt: string): Promise<boolean> {
-    if (!(await this.isCodexAvailable())) {
-      this.logger.warn("codex CLI not found. Skipping auto-fix step.");
-      return false;
-    }
-
-    this.logger.info("Launching codex to fix issues...");
-    await $({ stdio: "inherit" })`codex exec --full-auto ${prompt}`;
-    return true;
+    const comments = z.array(ReviewCommentSchema).parse(data);
+    this.logger.debug("Fetched review comments", { count: comments.length });
+    return comments;
   }
 }
