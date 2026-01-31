@@ -82,3 +82,30 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  resolve-pr-comments:
+    name: resolve-pr-comments
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [typecheck, lint, format-check, test]
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Resolve PR comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          pnpm run:resolve-pr-comments -- \
+            --pr=${{ github.event.pull_request.number }} \
+            --repo=${{ github.repository }} \
+            --base=${{ github.event.pull_request.base.ref }}
