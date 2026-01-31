@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, an AI usage summary CLI, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, an AI usage summary CLI, a PR comment fixer CLI, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -14,6 +14,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 8. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 9. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
 10. (Optional) Summarize AI usage: `pnpm ai:usage --since 7d`
+11. (Optional) Fetch PR comments: `pnpm run:fix-pr-comments -- --pr=10`
 
 ### Python Setup (for ETF backtest)
 
@@ -28,20 +29,21 @@ pip install numpy pandas torch
 
 ## Commands
 
-| Command                        | Description                                            |
-| ------------------------------ | ------------------------------------------------------ |
-| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo                 |
-| `pnpm run:agent-evals`         | Run agent evaluation suites and generate reports       |
-| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats)      |
-| `pnpm run:scrape-publications` | Scrape publication links and build a review page       |
-| `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python) |
-| `pnpm ai:usage`                | Summarize Claude/Codex token usage for a repo          |
-| `pnpm typecheck`               | Run TypeScript type checking                           |
-| `pnpm lint`                    | Run ESLint for code quality                            |
-| `pnpm lint:fix`                | Run ESLint and auto-fix issues                         |
-| `pnpm format`                  | Format code with Prettier                              |
-| `pnpm format:check`            | Check code formatting                                  |
-| `pnpm test`                    | Run Vitest test suite                                  |
+| Command                        | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| `pnpm run:guestbook`           | Run the interactive guestbook CLI demo                       |
+| `pnpm run:agent-evals`         | Run agent evaluation suites and generate reports             |
+| `pnpm run:name-explorer`       | Explore Finnish name statistics (AI Q&A or stats)            |
+| `pnpm run:scrape-publications` | Scrape publication links and build a review page             |
+| `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python)       |
+| `pnpm run:fix-pr-comments`     | Fetch PR comments, write markdown/JSON, optionally run Codex |
+| `pnpm ai:usage`                | Summarize Claude/Codex token usage for a repo                |
+| `pnpm typecheck`               | Run TypeScript type checking                                 |
+| `pnpm lint`                    | Run ESLint for code quality                                  |
+| `pnpm lint:fix`                | Run ESLint and auto-fix issues                               |
+| `pnpm format`                  | Format code with Prettier                                    |
+| `pnpm format:check`            | Check code formatting                                        |
+| `pnpm test`                    | Run Vitest test suite                                        |
 
 ## Publication scraping
 
@@ -120,6 +122,25 @@ Notes:
 - Defaults to the last 7 days for the current git repo (or `cwd` when not in a git repo).
 - Log sources: `~/.claude/projects/<encoded-repo>/` and `$CODEX_HOME/sessions` or `~/.codex/sessions`.
 
+## Fix PR comments
+
+The `run:fix-pr-comments` CLI fetches conversation + inline review comments for a GitHub PR, writes markdown/JSON artifacts under `tmp/pr-comments/pr-<number>/`, and optionally launches Codex to implement fixes.
+
+Usage:
+
+```
+pnpm run:fix-pr-comments -- --pr=10
+pnpm run:fix-pr-comments -- --repo=owner/repo
+pnpm run:fix-pr-comments -- --no-codex
+```
+
+Notes:
+
+- Requires the `gh` CLI and authentication (`gh auth login`).
+- If Codex is unavailable or all review comments are already marked `fixed` in `answers.json`, the auto-fix step is skipped.
+- Review comments marked `fixed` in `answers.json` are skipped in later runs (and `review-comments.json` only includes unfixed entries).
+- Runs `pnpm typecheck`, `pnpm lint`, and `pnpm format` at the end.
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
@@ -169,6 +190,13 @@ src/
 │   │   ├── clients/           # Data fetcher + Playwright capture
 │   │   ├── utils/             # Scoring + formatting helpers
 │   │   └── scripts/           # Python backtest + prediction scripts
+│   ├── fix-pr-comments/
+│   │   ├── main.ts            # PR comments CLI entry point
+│   │   ├── README.md          # PR comments CLI docs
+│   │   ├── constants.ts       # CLI constants
+│   │   ├── types/             # CLI schemas
+│   │   │   └── schemas.ts     # CLI args + comment schemas
+│   │   └── clients/           # GitHub + formatting pipeline
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point
 │   │   ├── README.md          # Guestbook CLI docs

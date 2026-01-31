@@ -4,11 +4,10 @@
  * Fetch all PR comments and optionally launch codex to fix issues.
  *
  * Usage:
- *   pnpm run:fix-pr-comments                # Auto-detect PR from current branch
- *   pnpm run:fix-pr-comments -- --pr=10     # Explicit PR number
- *   pnpm run:fix-pr-comments -- --no-codex  # Skip launching codex
+ *   pnpm run:fix-pr-comments                  # Auto-detect PR from current branch
+ *   pnpm run:fix-pr-comments -- --pr=10       # Explicit PR number
+ *   pnpm run:fix-pr-comments -- --no-codex    # Skip launching codex
  */
-
 import "dotenv/config";
 
 import { Logger } from "~clients/logger";
