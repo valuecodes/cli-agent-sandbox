@@ -115,6 +115,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 
 - Initialize `Logger` in CLI entry points and pass it into clients/pipelines via constructor options.
 - Use `Logger` instead of `console.log`/`console.error` for output.
+- Prefer top-level `await` with `try/catch` over `.then()/.catch()` chains in CLI entry points.
 - Use `AgentRunner` (`src/clients/agent-runner.ts`) as the default wrapper when running agents.
 - Prefer shared helpers in `src/utils` (`parse-args`, `question-handler`) over custom logic.
 - `main.ts` should stay focused on the **basic agent flow**: argument parsing → agent setup → run loop → final output. Move helper logic into `clients/` or `utils/`
