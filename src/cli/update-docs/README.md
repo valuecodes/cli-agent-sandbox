@@ -4,7 +4,7 @@ Update documentation based on branch changes. Compares the current branch agains
 
 ## Run
 
-```
+```bash
 pnpm run:update-docs
 ```
 
@@ -26,9 +26,27 @@ pnpm run:update-docs --base=develop
 pnpm run:update-docs --no-codex
 ```
 
+## Prerequisites
+
+- Git must be available (used for branch/diff commands).
+- The `codex` CLI is optional; if it is missing, the auto-update step is skipped.
+
+## Workflow
+
+1. Resolve the current branch and diff against the base branch
+2. Write `changes.md` with the changed file list + full diff
+3. Launch Codex when enabled and available
+4. Run `pnpm format`
+
 ## Output
 
-Writes changes summary to `tmp/update-docs/changes.md`.
+Writes a changes summary to:
+
+```
+tmp/update-docs/<branch>/changes.md
+```
+
+If there are no changes, no output is written.
 
 ## Flowchart
 
