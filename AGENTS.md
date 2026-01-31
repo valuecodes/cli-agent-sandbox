@@ -130,6 +130,7 @@ All file tools are sandboxed to `tmp/` using path validation (`src/tools/utils/f
 - Comments should capture invariants or subtle behavior, not restate code.
 - Prefer a class over a function when state/lifecycle or shared dependencies make it appropriate.
 - Avoid `index.ts` barrel exports; use explicit module paths.
+- Use object destructuring for all public method parameters: `method({ param }: MethodOptions)`.
 
 ### Comment guidance (short)
 

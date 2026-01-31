@@ -1,4 +1,6 @@
 import fs from "node:fs/promises";
+import { CodexClient } from "~clients/codex-client";
+import { GitClient } from "~clients/git-client";
 import type { Logger } from "~clients/logger";
 import { $ } from "zx";
 
@@ -8,7 +10,6 @@ import {
   getOutputDir,
 } from "../constants";
 import { DiffFormatter } from "./diff-formatter";
-import { GitClient } from "./git-client";
 
 type UpdateDocsPipelineOptions = {
   logger: Logger;
@@ -34,6 +35,7 @@ export class UpdateDocsPipeline {
 
   async run(options: RunOptions): Promise<RunResult> {
     const gitClient = new GitClient({ logger: this.logger });
+    const codexClient = new CodexClient({ logger: this.logger });
     const formatter = new DiffFormatter();
 
     const branch = await gitClient.getCurrentBranch();
@@ -41,8 +43,8 @@ export class UpdateDocsPipeline {
     this.logger.info("Comparing against base branch", { base: options.base });
 
     const [changedFiles, diff] = await Promise.all([
-      gitClient.getChangedFiles(options.base),
-      gitClient.getDiff(options.base),
+      gitClient.getChangedFiles({ base: options.base }),
+      gitClient.getDiff({ base: options.base }),
     ]);
 
     this.logger.info("Found changed files", { count: changedFiles.length });
@@ -75,7 +77,10 @@ export class UpdateDocsPipeline {
 
     if (options.codex) {
       const prompt = CODEX_PROMPT_TEMPLATE(changesPath);
-      codexLaunched = await gitClient.launchCodex(prompt);
+      codexLaunched = await codexClient.launch({
+        prompt,
+        context: "update docs",
+      });
     }
 
     await this.runFormat();

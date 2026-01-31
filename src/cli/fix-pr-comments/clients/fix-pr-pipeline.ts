@@ -1,4 +1,6 @@
 import fs from "node:fs/promises";
+import { CodexClient } from "~clients/codex-client";
+import { GitHubClient } from "~clients/github-client";
 import type { Logger } from "~clients/logger";
 import { $ } from "zx";
 
@@ -13,7 +15,6 @@ import {
 import type { CommentAnswer } from "../types/schemas";
 import { AnswersFileSchema } from "../types/schemas";
 import { CommentFormatter } from "./comment-formatter";
-import { GhClient } from "./gh-client";
 
 /**
  * Load existing answers from answers.json, returning empty array if not found or invalid.
@@ -71,23 +72,24 @@ export class FixPrPipeline {
   }
 
   async run(options: RunOptions): Promise<RunResult> {
-    const ghClient = new GhClient({ logger: this.logger });
+    const githubClient = new GitHubClient({ logger: this.logger });
+    const codexClient = new CodexClient({ logger: this.logger });
     const formatter = new CommentFormatter();
 
     // Verify gh CLI is authenticated
-    await ghClient.checkAuth();
+    await githubClient.checkAuth();
 
     // Resolve PR context
-    const repo = await ghClient.getRepo(options.repo);
-    const pr = await ghClient.getPrNumber(options.pr);
+    const repo = await githubClient.getRepo({ repo: options.repo });
+    const pr = await githubClient.getPrNumber({ pr: options.pr });
     const ctx = { repo, pr };
 
     this.logger.info("Fetching comments", ctx);
 
     // Fetch comments and existing answers in parallel
     const [conversationComments, reviewComments] = await Promise.all([
-      ghClient.fetchConversationComments(ctx),
-      ghClient.fetchReviewComments(ctx),
+      githubClient.fetchConversationComments(ctx),
+      githubClient.fetchReviewComments(ctx),
     ]);
     const existingAnswers = await loadExistingAnswers(pr);
 
@@ -152,7 +154,10 @@ export class FixPrPipeline {
         this.logger.info("All comments already fixed, skipping Codex");
       } else {
         const prompt = CODEX_PROMPT_TEMPLATE(outputPath, answersPath);
-        codexLaunched = await ghClient.launchCodex(prompt);
+        codexLaunched = await codexClient.launch({
+          prompt,
+          context: "fix issues",
+        });
 
         // After Codex completes, merge new answers with existing
         if (codexLaunched) {
