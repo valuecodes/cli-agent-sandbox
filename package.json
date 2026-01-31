@@ -13,6 +13,7 @@
     "scaffold:cli": "tsx scripts/scaffold-cli.ts",
     "run:fix-pr-comments": "tsx src/cli/fix-pr-comments/main.ts",
     "run:update-docs": "tsx src/cli/update-docs/main.ts",
+    "run:resolve-pr-comments": "tsx src/cli/resolve-pr-comments/main.ts",
     "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

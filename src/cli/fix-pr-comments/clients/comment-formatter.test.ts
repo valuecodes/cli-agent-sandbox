@@ -18,6 +18,7 @@ describe("CommentFormatter", () => {
     const reviewComment: ReviewComment = {
       ...baseComment,
       id: 1,
+      node_id: "PRRC_1",
       path: "src/index.ts",
       line: 42,
       original_line: null,
@@ -38,6 +39,7 @@ describe("CommentFormatter", () => {
     const reviewComment: ReviewComment = {
       ...baseComment,
       id: 2,
+      node_id: "PRRC_2",
       path: "src/index.ts",
       line: null,
       original_line: null,

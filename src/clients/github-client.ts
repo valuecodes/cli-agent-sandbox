@@ -20,6 +20,7 @@ export type Comment = z.infer<typeof CommentSchema>;
 
 export const ReviewCommentSchema = CommentSchema.extend({
   id: z.number(),
+  node_id: z.string(),
   path: z.string(),
   line: z.number().nullable().optional(),
   original_line: z.number().nullable().optional(),
@@ -160,5 +161,35 @@ export class GitHubClient {
     const comments = z.array(ReviewCommentSchema).parse(data);
     this.logger.debug("Fetched review comments", { count: comments.length });
     return comments;
+  }
+
+  /**
+   * Reply to a review comment.
+   */
+  async replyToComment(
+    ctx: PrContext,
+    commentId: number,
+    body: string
+  ): Promise<void> {
+    this.logger.debug("Replying to comment", { ...ctx, commentId });
+    await $`gh api repos/${ctx.repo}/pulls/${ctx.pr}/comments/${commentId}/replies -f body=${body}`.quiet();
+    this.logger.debug("Reply posted", { commentId });
+  }
+
+  /**
+   * Resolve a review thread using GraphQL mutation.
+   * The threadId is the node_id of any comment in the thread.
+   */
+  async resolveThread(threadId: string): Promise<void> {
+    this.logger.debug("Resolving thread", { threadId });
+    const mutation = `
+      mutation ResolveThread($threadId: ID!) {
+        resolveReviewThread(input: { threadId: $threadId }) {
+          thread { isResolved }
+        }
+      }
+    `;
+    await $`gh api graphql -f query=${mutation} -f threadId=${threadId}`.quiet();
+    this.logger.debug("Thread resolved", { threadId });
   }
 }
