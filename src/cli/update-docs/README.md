@@ -70,6 +70,6 @@ flowchart TD
 When Codex runs, it updates:
 
 1. `README.md` - If new features, changed usage, or new dependencies
-2. `CLAUDE.md/AGENTS.md` - If new patterns, conventions, or tools added
+2. `AGENTS.md` - If new patterns, conventions, or tools added
 3. `src/cli/*/README.md` - CLI-specific docs for changed CLIs
 4. Inline JSDoc comments - For changed/new functions
