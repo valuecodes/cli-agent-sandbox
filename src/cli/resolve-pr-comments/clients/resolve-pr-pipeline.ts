@@ -21,6 +21,7 @@ type RunOptions = {
 type RunResult = {
   totalComments: number;
   addressedCount: number;
+  uncertainCount: number;
   resolvedCount: number;
 };
 
@@ -50,23 +51,39 @@ export class ResolvePrPipeline {
 
     this.logger.info("Analyzing PR comments", ctx);
 
-    const [reviewComments, diff] = await Promise.all([
+    const [reviewComments, diff, reviewThreads] = await Promise.all([
       githubClient.fetchReviewComments(ctx),
       gitClient.getDiff({ base: options.base }),
+      githubClient.fetchReviewThreads(ctx),
     ]);
 
     if (reviewComments.length === 0) {
       this.logger.info("No review comments to analyze");
-      return { totalComments: 0, addressedCount: 0, resolvedCount: 0 };
+      return { totalComments: 0, addressedCount: 0, uncertainCount: 0, resolvedCount: 0 };
     }
 
+    // Filter out already-resolved comments
+    const resolvedCommentIds = new Set(
+      reviewThreads.filter((t) => t.isResolved).map((t) => t.firstCommentId)
+    );
+    const unresolvedComments = reviewComments.filter(
+      (c) => !resolvedCommentIds.has(c.id)
+    );
+
     this.logger.info("Fetched data", {
-      comments: reviewComments.length,
+      totalComments: reviewComments.length,
+      unresolvedComments: unresolvedComments.length,
+      skippedResolved: reviewComments.length - unresolvedComments.length,
       diffLength: diff.length,
     });
 
+    if (unresolvedComments.length === 0) {
+      this.logger.info("All review comments are already resolved");
+      return { totalComments: reviewComments.length, addressedCount: 0, uncertainCount: 0, resolvedCount: 0 };
+    }
+
     const analysis = await analyzer.analyze({
-      comments: reviewComments,
+      comments: unresolvedComments,
       diff,
     });
 
@@ -78,7 +95,7 @@ export class ResolvePrPipeline {
       "utf-8"
     );
 
-    const commentById = new Map(reviewComments.map((c) => [c.id, c]));
+    const commentById = new Map(unresolvedComments.map((c) => [c.id, c]));
     let resolvedCount = 0;
 
     for (const commentAnalysis of analysis.analyses) {
@@ -103,18 +120,23 @@ export class ResolvePrPipeline {
     }
 
     const addressedCount = analysis.analyses.filter(
-      (a) => a.isAddressed
+      (a) => a.status === "addressed"
+    ).length;
+    const uncertainCount = analysis.analyses.filter(
+      (a) => a.status === "uncertain"
     ).length;
 
     this.logger.info("Resolution complete", {
       totalComments: reviewComments.length,
       addressedCount,
+      uncertainCount,
       resolvedCount,
     });
 
     return {
       totalComments: reviewComments.length,
       addressedCount,
+      uncertainCount,
       resolvedCount,
     };
   }

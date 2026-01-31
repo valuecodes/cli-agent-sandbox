@@ -36,7 +36,7 @@ export class CommentResolver {
     ctx,
     dryRun,
   }: ResolveOptions): Promise<boolean> {
-    if (!analysis.isAddressed) {
+    if (analysis.status === "not_addressed") {
       this.logger.debug("Skipping unaddressed comment", {
         commentId: analysis.commentId,
       });
@@ -44,22 +44,34 @@ export class CommentResolver {
     }
 
     const replyBody = analysis.suggestedReply;
+    const willResolve = analysis.status === "addressed";
 
     if (dryRun) {
-      this.logger.info("[DRY RUN] Would reply and resolve", {
-        commentId: analysis.commentId,
-        reply: replyBody,
-        reasoning: analysis.reasoning,
-      });
+      this.logger.info(
+        willResolve
+          ? "[DRY RUN] Would reply and resolve"
+          : "[DRY RUN] Would reply (uncertain, not resolving)",
+        {
+          commentId: analysis.commentId,
+          status: analysis.status,
+          reply: replyBody,
+          reasoning: analysis.reasoning,
+        }
+      );
       return false;
     }
 
     await this.githubClient.replyToComment(ctx, analysis.commentId, replyBody);
-    this.logger.info("Posted reply", { commentId: analysis.commentId });
+    this.logger.info("Posted reply", {
+      commentId: analysis.commentId,
+      status: analysis.status,
+    });
 
-    await this.githubClient.resolveThread(comment.node_id);
-    this.logger.info("Resolved thread", { commentId: analysis.commentId });
+    if (willResolve) {
+      await this.githubClient.resolveThread(comment.node_id);
+      this.logger.info("Resolved thread", { commentId: analysis.commentId });
+    }
 
-    return true;
+    return willResolve;
   }
 }

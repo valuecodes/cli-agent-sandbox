@@ -29,6 +29,38 @@ export const ReviewCommentSchema = CommentSchema.extend({
 
 export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
 
+// GraphQL response schema for review threads
+const ReviewThreadCommentSchema = z.object({
+  id: z.string(),
+  databaseId: z.number(),
+});
+
+const ReviewThreadNodeSchema = z.object({
+  id: z.string(),
+  isResolved: z.boolean(),
+  comments: z.object({
+    nodes: z.array(ReviewThreadCommentSchema),
+  }),
+});
+
+const ReviewThreadsResponseSchema = z.object({
+  data: z.object({
+    repository: z.object({
+      pullRequest: z.object({
+        reviewThreads: z.object({
+          nodes: z.array(ReviewThreadNodeSchema),
+        }),
+      }),
+    }),
+  }),
+});
+
+export type ReviewThread = {
+  id: string;
+  isResolved: boolean;
+  firstCommentId: number | null;
+};
+
 export type PrContext = {
   repo: string;
   pr: number;
@@ -191,5 +223,54 @@ export class GitHubClient {
     `;
     await $`gh api graphql -f query=${mutation} -f threadId=${threadId}`.quiet();
     this.logger.debug("Thread resolved", { threadId });
+  }
+
+  /**
+   * Fetch review threads with resolution status using GraphQL.
+   * Returns thread info including whether each thread is resolved.
+   */
+  async fetchReviewThreads(ctx: PrContext): Promise<ReviewThread[]> {
+    this.logger.debug("Fetching review threads", ctx);
+
+    const [owner, repo] = ctx.repo.split("/");
+    const query = `
+      query GetReviewThreads($owner: String!, $repo: String!, $pr: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pr) {
+            reviewThreads(first: 100) {
+              nodes {
+                id
+                isResolved
+                comments(first: 1) {
+                  nodes {
+                    id
+                    databaseId
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const result =
+      await $`gh api graphql -f query=${query} -f owner=${owner} -f repo=${repo} -F pr=${ctx.pr}`.quiet();
+    const data: unknown = JSON.parse(result.stdout);
+    const parsed = ReviewThreadsResponseSchema.parse(data);
+
+    const threads: ReviewThread[] =
+      parsed.data.repository.pullRequest.reviewThreads.nodes.map((node) => ({
+        id: node.id,
+        isResolved: node.isResolved,
+        firstCommentId: node.comments.nodes[0]?.databaseId ?? null,
+      }));
+
+    this.logger.debug("Fetched review threads", {
+      count: threads.length,
+      resolved: threads.filter((t) => t.isResolved).length,
+    });
+
+    return threads;
   }
 }
