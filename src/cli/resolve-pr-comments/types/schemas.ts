@@ -11,9 +11,17 @@ export const CliArgsSchema = z.object({
 
 export type CliArgs = z.infer<typeof CliArgsSchema>;
 
+export const CommentStatusSchema = z.enum([
+  "addressed",
+  "uncertain",
+  "not_addressed",
+]);
+
+export type CommentStatus = z.infer<typeof CommentStatusSchema>;
+
 export const CommentAnalysisSchema = z.object({
   commentId: z.number(),
-  isAddressed: z.boolean(),
+  status: CommentStatusSchema,
   reasoning: z.string(),
   suggestedReply: z.string(),
 });
