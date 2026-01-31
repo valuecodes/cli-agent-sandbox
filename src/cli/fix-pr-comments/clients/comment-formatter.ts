@@ -15,9 +15,12 @@ export class CommentFormatter {
    * Format a single review comment with file location.
    */
   private formatReviewComment(comment: ReviewComment): string {
-    const line =
-      comment.line ?? comment.original_line ?? comment.position ?? 0;
-    return `— ${comment.created_at}  ${comment.user.login}\n  ${comment.path}:${line}\n  ${comment.body}\n  ${comment.html_url}\n`;
+    const line = comment.line ?? comment.original_line ?? comment.position;
+    const location =
+      line != null
+        ? `${comment.path}:${line}`
+        : `${comment.path}:(no line info)`;
+    return `— ${comment.created_at}  ${comment.user.login}\n  ${location}\n  ${comment.body}\n  ${comment.html_url}\n`;
   }
 
   /**

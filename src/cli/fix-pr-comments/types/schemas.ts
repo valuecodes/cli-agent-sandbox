@@ -24,6 +24,7 @@ export const CommentSchema = z.object({
 export type Comment = z.infer<typeof CommentSchema>;
 
 export const ReviewCommentSchema = CommentSchema.extend({
+  id: z.number(),
   path: z.string(),
   line: z.number().nullable().optional(),
   original_line: z.number().nullable().optional(),
@@ -37,3 +38,13 @@ export type PrContext = {
   repo: string;
   pr: number;
 };
+
+// Schema for Codex answer output
+export const CommentAnswerSchema = z.object({
+  commentId: z.number(),
+  fixed: z.boolean(),
+});
+
+export type CommentAnswer = z.infer<typeof CommentAnswerSchema>;
+
+export const AnswersFileSchema = z.array(CommentAnswerSchema);

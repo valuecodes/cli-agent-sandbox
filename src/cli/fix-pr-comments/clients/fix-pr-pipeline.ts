@@ -1,15 +1,48 @@
 import fs from "node:fs/promises";
 import type { Logger } from "~clients/logger";
+import { $ } from "zx";
 
 import {
   CODEX_PROMPT_TEMPLATE,
+  getAnswersPath,
   getConversationCommentsPath,
   getOutputDir,
   getOutputPath,
   getReviewCommentsPath,
 } from "../constants";
+import type { CommentAnswer } from "../types/schemas";
+import { AnswersFileSchema } from "../types/schemas";
 import { CommentFormatter } from "./comment-formatter";
 import { GhClient } from "./gh-client";
+
+/**
+ * Load existing answers from answers.json, returning empty array if not found or invalid.
+ */
+const loadExistingAnswers = async (
+  prNumber: number
+): Promise<CommentAnswer[]> => {
+  const answersPath = getAnswersPath(prNumber);
+  try {
+    const content = await fs.readFile(answersPath, "utf-8");
+    return AnswersFileSchema.parse(JSON.parse(content));
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Merge existing answers with new answers. New answers override existing ones by commentId.
+ */
+const mergeAnswers = (
+  existing: CommentAnswer[],
+  newAnswers: CommentAnswer[]
+): CommentAnswer[] => {
+  const byId = new Map(existing.map((a) => [a.commentId, a]));
+  for (const answer of newAnswers) {
+    byId.set(answer.commentId, answer);
+  }
+  return Array.from(byId.values());
+};
 
 type FixPrPipelineOptions = {
   logger: Logger;
@@ -51,11 +84,22 @@ export class FixPrPipeline {
 
     this.logger.info("Fetching comments", ctx);
 
-    // Fetch comments in parallel
+    // Fetch comments and existing answers in parallel
     const [conversationComments, reviewComments] = await Promise.all([
       ghClient.fetchConversationComments(ctx),
       ghClient.fetchReviewComments(ctx),
     ]);
+    const existingAnswers = await loadExistingAnswers(pr);
+
+    // Build set of already-fixed comment IDs
+    const fixedIds = new Set(
+      existingAnswers.filter((a) => a.fixed).map((a) => a.commentId)
+    );
+
+    // Filter to only unfixed review comments
+    const unfixedReviewComments = reviewComments.filter(
+      (c) => !fixedIds.has(c.id)
+    );
 
     const commentCounts = {
       conversation: conversationComments.length,
@@ -64,11 +108,18 @@ export class FixPrPipeline {
 
     this.logger.info("Found comments", commentCounts);
 
-    // Format and write output
+    if (fixedIds.size > 0) {
+      this.logger.info("Skipping already-fixed comments", {
+        skipped: fixedIds.size,
+        remaining: unfixedReviewComments.length,
+      });
+    }
+
+    // Format and write output (only unfixed comments for Codex)
     const markdown = formatter.formatMarkdown(
       ctx,
       conversationComments,
-      reviewComments
+      unfixedReviewComments
     );
 
     const outputDir = getOutputDir(pr);
@@ -77,10 +128,10 @@ export class FixPrPipeline {
     const outputPath = getOutputPath(pr);
     await fs.writeFile(outputPath, markdown, "utf-8");
 
-    // Write JSON files
+    // Write JSON files (only unfixed review comments)
     await fs.writeFile(
       getReviewCommentsPath(pr),
-      JSON.stringify(reviewComments, null, 2),
+      JSON.stringify(unfixedReviewComments, null, 2),
       "utf-8"
     );
     await fs.writeFile(
@@ -93,11 +144,51 @@ export class FixPrPipeline {
 
     // Launch codex if enabled
     let codexLaunched = false;
+    const answersPath = getAnswersPath(pr);
+
     if (options.codex) {
-      const prompt = CODEX_PROMPT_TEMPLATE(outputPath);
-      codexLaunched = await ghClient.launchCodex(prompt);
+      // Skip if no unfixed comments
+      if (unfixedReviewComments.length === 0) {
+        this.logger.info("All comments already fixed, skipping Codex");
+      } else {
+        const prompt = CODEX_PROMPT_TEMPLATE(outputPath, answersPath);
+        codexLaunched = await ghClient.launchCodex(prompt);
+
+        // After Codex completes, merge new answers with existing
+        if (codexLaunched) {
+          try {
+            const newAnswers = await loadExistingAnswers(pr);
+            const merged = mergeAnswers(existingAnswers, newAnswers);
+            await fs.writeFile(
+              answersPath,
+              JSON.stringify(merged, null, 2),
+              "utf-8"
+            );
+          } catch {
+            // Answers file may not exist if Codex didn't write it
+          }
+        }
+      }
     }
 
+    // Run code quality checks
+    await this.runCodeQualityChecks();
+
     return { outputPath, commentCounts, codexLaunched };
+  }
+
+  private async runCodeQualityChecks(): Promise<void> {
+    this.logger.info("Running code quality checks...");
+
+    this.logger.info("Running pnpm typecheck");
+    await $`pnpm typecheck`;
+
+    this.logger.info("Running pnpm lint");
+    await $`pnpm lint`;
+
+    this.logger.info("Running pnpm format");
+    await $`pnpm format`;
+
+    this.logger.info("Code quality checks complete");
   }
 }

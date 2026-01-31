@@ -1,7 +1,6 @@
+import type { Logger } from "~clients/logger";
 import { z } from "zod";
 import { $ } from "zx";
-
-import type { Logger } from "~clients/logger";
 
 import type { Comment, PrContext, ReviewComment } from "../types/schemas";
 import { CommentSchema, ReviewCommentSchema } from "../types/schemas";
@@ -24,14 +23,27 @@ export class GhClient {
 
   /**
    * Verify gh CLI is authenticated.
-   * Exits process if not authenticated.
    */
   async checkAuth(): Promise<void> {
     try {
       await $`gh auth status`.quiet();
-    } catch {
-      this.logger.error("gh CLI not authenticated. Run 'gh auth login' first.");
-      process.exit(1);
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: unknown }).code === "ENOENT"
+      ) {
+        const errorMessage = (error as { message?: unknown }).message;
+        const underlyingMessage =
+          typeof errorMessage === "string"
+            ? errorMessage
+            : "Executable not found (ENOENT)";
+        throw new Error(
+          `Failed to run 'gh'. Make sure the GitHub CLI is installed and on your PATH. Underlying error: ${underlyingMessage}`
+        );
+      }
+      throw new Error("gh CLI not authenticated. Run 'gh auth login' first.");
     }
   }
 
@@ -51,20 +63,30 @@ export class GhClient {
   /**
    * Get the PR number for the current branch.
    * Uses provided override or detects from current branch.
-   * Exits process if no PR found and no override provided.
    */
   async getPrNumber(prOverride?: number): Promise<number> {
-    if (prOverride) {
+    if (prOverride !== undefined) {
       return prOverride;
     }
+
+    // Get current branch name for better error messages
+    let branchName = "unknown";
     try {
+      const branchResult = await $`git branch --show-current`.quiet();
+      branchName = branchResult.stdout.trim();
+    } catch {
+      // Ignore - we'll use "unknown" in error message
+    }
+
+    try {
+      // Don't pass --repo flag - it breaks branch-based PR detection
       const result = await $`gh pr view --json number --jq .number`.quiet();
       return parseInt(result.stdout.trim(), 10);
     } catch {
-      this.logger.error(
-        "No PR found for current branch. Use --pr=<number> to specify."
+      throw new Error(
+        `No PR found for branch '${branchName}'. ` +
+          `Use --pr=<number> to specify, or create a PR first with 'gh pr create'.`
       );
-      process.exit(1);
     }
   }
 
@@ -111,7 +133,7 @@ export class GhClient {
     }
 
     this.logger.info("Launching codex to fix issues...");
-    await $({ stdio: "inherit" })`codex ${prompt}`;
+    await $({ stdio: "inherit" })`codex exec --full-auto ${prompt}`;
     return true;
   }
 }

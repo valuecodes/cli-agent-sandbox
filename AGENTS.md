@@ -14,7 +14,7 @@
 6. Run: `pnpm typecheck`, `pnpm lint`, `pnpm test` (and `pnpm format:check` if formatting changed).
 7. All runtime artifacts go under `tmp/` (never commit them).
 
-**Scratch space:** Use `tmp/` for generated HTML/markdown/JSON/reports.
+**Scratch space:** Use `tmp/` for generated HTML/markdown/JSON/reports (for example `tmp/pr-comments/pr-<number>/` with `answers.json` from the PR comments CLI).
 
 ---
 
