@@ -1,6 +1,6 @@
 # cli-agent-sandbox
 
-A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, an AI usage summary CLI, a PR comment fixer CLI, and agent tools scoped to `tmp` with strong safety checks.
+A minimal TypeScript CLI sandbox for testing agent workflows and safe web scraping. This is a single-package repo built with [`@openai/agents`](https://github.com/openai/openai-agents-js), and it includes a guestbook demo, a Finnish name explorer CLI, a publication scraping pipeline with a Playwright-based scraper for JS-rendered pages, an ETF backtest CLI, an agent evals CLI, an AI usage summary CLI, a PR comment fixer CLI, an update-docs CLI for diff-driven doc sync, and agent tools scoped to `tmp` with strong safety checks.
 
 ## Quick Start
 
@@ -15,6 +15,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 9. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
 10. (Optional) Summarize AI usage: `pnpm ai:usage --since 7d`
 11. (Optional) Fetch PR comments: `pnpm run:fix-pr-comments -- --pr=10`
+12. (Optional) Update docs from a branch diff: `pnpm run:update-docs`
 
 ### Python Setup (for ETF backtest)
 
@@ -37,6 +38,7 @@ pip install numpy pandas torch
 | `pnpm run:scrape-publications` | Scrape publication links and build a review page             |
 | `pnpm run:etf-backtest`        | Run ETF backtest + feature optimizer (requires Python)       |
 | `pnpm run:fix-pr-comments`     | Fetch PR comments, write markdown/JSON, optionally run Codex |
+| `pnpm run:update-docs`         | Generate a branch diff and optionally run Codex to sync docs |
 | `pnpm ai:usage`                | Summarize Claude/Codex token usage for a repo                |
 | `pnpm typecheck`               | Run TypeScript type checking                                 |
 | `pnpm lint`                    | Run ESLint for code quality                                  |
@@ -141,6 +143,25 @@ Notes:
 - Review comments marked `fixed` in `answers.json` are skipped in later runs (and `review-comments.json` only includes unfixed entries).
 - Runs `pnpm typecheck`, `pnpm lint`, and `pnpm format` at the end.
 
+## Update docs
+
+The `run:update-docs` CLI compares the current branch against a base branch, writes a diff summary, and optionally launches Codex to sync documentation.
+
+Usage:
+
+```
+pnpm run:update-docs
+pnpm run:update-docs --base=develop
+pnpm run:update-docs --no-codex
+```
+
+Notes:
+
+- Requires git for branch/diff commands.
+- If the `codex` CLI is missing, it logs a warning and skips the auto-update step.
+- Always runs `pnpm format` at the end.
+- Output is written to `tmp/update-docs/<branch>/changes.md` when changes are detected.
+
 ## Tools
 
 File tools are sandboxed to the `tmp/` directory with path validation to prevent traversal and symlink attacks. The `fetchUrl` tool adds SSRF protections and HTML sanitization, and `runPython` executes whitelisted Python scripts from a configured directory.
@@ -197,6 +218,13 @@ src/
 │   │   ├── types/             # CLI schemas
 │   │   │   └── schemas.ts     # CLI args + comment schemas
 │   │   └── clients/           # GitHub + formatting pipeline
+│   ├── update-docs/
+│   │   ├── main.ts            # Update docs CLI entry point
+│   │   ├── README.md          # Update docs CLI docs
+│   │   ├── constants.ts       # CLI constants
+│   │   ├── types/             # CLI schemas
+│   │   │   └── schemas.ts     # CLI args schema
+│   │   └── clients/           # Git + diff formatting pipeline
 │   ├── guestbook/
 │   │   ├── main.ts            # Guestbook CLI entry point
 │   │   ├── README.md          # Guestbook CLI docs

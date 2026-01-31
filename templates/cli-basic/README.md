@@ -27,4 +27,5 @@ flowchart TD
 
 ## Notes
 
-- See `CHECKLIST.md` for post-scaffold setup tasks.
+- Replace `_CLI_TITLE_` and `_CLI_DESCRIPTION_` with the real CLI name and summary.
+- Update the arguments/output sections to match the CLI behavior.

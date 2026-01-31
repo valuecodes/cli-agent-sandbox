@@ -59,7 +59,7 @@ Creates `src/cli/my-cli/` with starter files. After scaffolding:
 
 1. Add `"run:my-cli": "tsx src/cli/my-cli/main.ts"` to `package.json`
 2. Implement logic in `main.ts`
-3. Follow the checklist in `CHECKLIST.md`
+3. Update `src/cli/my-cli/README.md` with the CLI description, arguments, and flowchart
 
 **Rule:** When creating a new CLI, use `pnpm scaffold:cli` — don't create ad-hoc folders.
 
