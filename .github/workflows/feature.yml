@@ -90,8 +90,7 @@ jobs:
     needs: [typecheck, lint, format-check, test]
     if: >-
       github.event.action != 'opened' &&
-      !github.event.pull_request.head.repo.fork &&
-      secrets.OPENAI_API_KEY != ''
+      !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
       pull-requests: write
