@@ -110,5 +110,4 @@ jobs:
         run: |
           pnpm run:resolve-pr-comments -- \
             --pr=${{ github.event.pull_request.number }} \
-            --repo=${{ github.repository }} \
-            --base=${{ github.event.pull_request.base.ref }}
+            --repo=${{ github.repository }}

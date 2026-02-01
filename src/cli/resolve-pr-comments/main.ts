@@ -4,7 +4,7 @@
  * Analyze PR diff and resolve addressed review comments.
  *
  * Usage:
- *   pnpm run:resolve-pr-comments -- --pr=10 --base=main
+ *   pnpm run:resolve-pr-comments -- --pr=10
  *   pnpm run:resolve-pr-comments -- --pr=10 --dry-run
  */
 import "dotenv/config";
@@ -24,7 +24,6 @@ try {
   await pipeline.run({
     pr: args.pr,
     repo: args.repo,
-    base: args.base,
     dryRun: args.dryRun,
   });
 } catch (err: unknown) {

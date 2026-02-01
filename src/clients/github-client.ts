@@ -238,6 +238,17 @@ export class GitHubClient {
   }
 
   /**
+   * Fetch the unified diff for a PR using gh CLI.
+   * Works without needing the base branch locally.
+   */
+  async fetchPrDiff(ctx: PrContext): Promise<string> {
+    this.logger.debug("Fetching PR diff", ctx);
+    const result = await $`gh pr diff ${ctx.pr} --repo ${ctx.repo}`.quiet();
+    this.logger.debug("Fetched PR diff", { length: result.stdout.length });
+    return result.stdout;
+  }
+
+  /**
    * Fetch review threads with resolution status using GraphQL.
    * Returns thread info including whether each thread is resolved.
    */
