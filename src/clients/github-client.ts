@@ -268,9 +268,7 @@ export class GitHubClient {
     const result =
       await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
     const data: unknown = JSON.parse(result.stdout || "[]");
-    const reactions = z
-      .array(z.object({ content: z.string() }))
-      .parse(data);
+    const reactions = z.array(z.object({ content: z.string() })).parse(data);
 
     return reactions.some((r) => r.content === reaction);
   }
@@ -305,9 +303,7 @@ export class GitHubClient {
       const result =
         await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
       const data: unknown = JSON.parse(result.stdout || "[]");
-      const reactions = z
-        .array(z.object({ content: z.string() }))
-        .parse(data);
+      const reactions = z.array(z.object({ content: z.string() })).parse(data);
 
       if (reactions.some((r) => r.content === reaction)) {
         reacted.add(commentId);
