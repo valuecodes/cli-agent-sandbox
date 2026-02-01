@@ -59,7 +59,12 @@ export class ResolvePrPipeline {
 
     if (reviewComments.length === 0) {
       this.logger.info("No review comments to analyze");
-      return { totalComments: 0, addressedCount: 0, uncertainCount: 0, resolvedCount: 0 };
+      return {
+        totalComments: 0,
+        addressedCount: 0,
+        uncertainCount: 0,
+        resolvedCount: 0,
+      };
     }
 
     // Filter out already-resolved comments
@@ -79,7 +84,12 @@ export class ResolvePrPipeline {
 
     if (unresolvedComments.length === 0) {
       this.logger.info("All review comments are already resolved");
-      return { totalComments: reviewComments.length, addressedCount: 0, uncertainCount: 0, resolvedCount: 0 };
+      return {
+        totalComments: reviewComments.length,
+        addressedCount: 0,
+        uncertainCount: 0,
+        resolvedCount: 0,
+      };
     }
 
     const analysis = await analyzer.analyze({
