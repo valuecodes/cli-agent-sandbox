@@ -7,6 +7,22 @@ import { CommentAnalyzer } from "./comment-analyzer";
 import { CommentResolver } from "./comment-resolver";
 import { buildCommentThreadIndex } from "./review-thread-index";
 
+/**
+ * Extract file paths that have changes in the diff.
+ */
+const getChangedFilesFromDiff = (diff: string): Set<string> => {
+  const files = new Set<string>();
+  const diffHeaderRegex = /^diff --git a\/.+ b\/(.+)$/gm;
+  let match;
+  while ((match = diffHeaderRegex.exec(diff)) !== null) {
+    const filePath = match[1];
+    if (filePath) {
+      files.add(filePath);
+    }
+  }
+  return files;
+};
+
 type ResolvePrPipelineOptions = {
   logger: Logger;
 };
@@ -86,20 +102,41 @@ export class ResolvePrPipeline {
       return !entry?.isResolved;
     });
 
-    // Filter out comments already marked with 👍 reaction (previously processed)
-    const alreadyAddressedIds = await resolver.getAlreadyAddressedIds(
-      ctx,
-      unresolvedComments.map((c) => c.id)
-    );
-    const pendingComments = unresolvedComments.filter(
-      (comment) => !alreadyAddressedIds.has(comment.id)
-    );
+    // Filter out comments already marked with reactions (previously processed)
+    const commentIds = unresolvedComments.map((c) => c.id);
+    const [alreadyAddressedIds, previouslyUncertainIds] = await Promise.all([
+      resolver.getAlreadyAddressedIds(ctx, commentIds),
+      resolver.getPreviouslyUncertainIds(ctx, commentIds),
+    ]);
+
+    const changedFiles = getChangedFilesFromDiff(diff);
+
+    const pendingComments = unresolvedComments.filter((comment) => {
+      // Skip if already addressed with 👍
+      if (alreadyAddressedIds.has(comment.id)) {
+        return false;
+      }
+
+      // If previously uncertain (👀), only re-analyze if file changed
+      if (previouslyUncertainIds.has(comment.id)) {
+        return changedFiles.has(comment.path);
+      }
+
+      // New comment - analyze
+      return true;
+    });
+
+    const reanalyzedCount = pendingComments.filter((c) =>
+      previouslyUncertainIds.has(c.id)
+    ).length;
 
     this.logger.info("Fetched data", {
       totalComments: reviewComments.length,
       botComments: reviewComments.length - humanComments.length,
       unresolvedComments: unresolvedComments.length,
       alreadyAddressed: alreadyAddressedIds.size,
+      previouslyUncertain: previouslyUncertainIds.size,
+      reanalyzed: reanalyzedCount,
       pendingComments: pendingComments.length,
       diffLength: diff.length,
     });
