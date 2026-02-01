@@ -5,7 +5,6 @@ export type { PrContext, ReviewComment } from "~clients/github-client";
 export const CliArgsSchema = z.object({
   pr: z.coerce.number(),
   repo: z.string().optional(),
-  base: z.string().default("main"),
   dryRun: z.coerce.boolean().default(false),
 });
 

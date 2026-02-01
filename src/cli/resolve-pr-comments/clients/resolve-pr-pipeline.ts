@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import { GitClient } from "~clients/git-client";
 import { GitHubClient } from "~clients/github-client";
 import type { Logger } from "~clients/logger";
 
@@ -15,7 +14,6 @@ type ResolvePrPipelineOptions = {
 type RunOptions = {
   pr: number;
   repo?: string;
-  base: string;
   dryRun: boolean;
 };
 
@@ -41,7 +39,6 @@ export class ResolvePrPipeline {
 
   async run(options: RunOptions): Promise<RunResult> {
     const githubClient = new GitHubClient({ logger: this.logger });
-    const gitClient = new GitClient({ logger: this.logger });
     const analyzer = new CommentAnalyzer({ logger: this.logger });
     const resolver = new CommentResolver({ logger: this.logger });
 
@@ -54,7 +51,7 @@ export class ResolvePrPipeline {
 
     const [reviewComments, diff, reviewThreads] = await Promise.all([
       githubClient.fetchReviewComments(ctx),
-      gitClient.getDiff({ base: options.base }),
+      githubClient.fetchPrDiff(ctx),
       githubClient.fetchReviewThreads(ctx),
     ]);
 
