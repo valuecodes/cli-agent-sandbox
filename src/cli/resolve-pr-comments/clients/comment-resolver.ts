@@ -11,11 +11,11 @@ type ResolveOptions = {
   analysis: CommentAnalysis;
   ctx: PrContext;
   dryRun: boolean;
-  threadId?: string;
 };
 
 /**
- * Handles GitHub API operations for replying to and resolving PR comments.
+ * Handles GitHub API operations for replying to and reacting to PR comments.
+ * Uses 👍 reaction to mark addressed comments instead of resolving threads.
  */
 export class CommentResolver {
   private githubClient: GitHubClient;
@@ -26,11 +26,20 @@ export class CommentResolver {
     this.githubClient = new GitHubClient({ logger: options.logger });
   }
 
+  /**
+   * Get comment IDs that have already been marked with 👍 reaction.
+   */
+  async getAlreadyAddressedIds(
+    ctx: PrContext,
+    commentIds: number[]
+  ): Promise<Set<number>> {
+    return this.githubClient.getCommentIdsWithReaction(ctx, commentIds, "+1");
+  }
+
   async resolveComment({
     analysis,
     ctx,
     dryRun,
-    threadId,
   }: ResolveOptions): Promise<boolean> {
     if (analysis.status === "not_addressed") {
       this.logger.debug("Skipping unaddressed comment", {
@@ -40,13 +49,13 @@ export class CommentResolver {
     }
 
     const replyBody = analysis.suggestedReply;
-    const willResolve = analysis.status === "addressed";
+    const isAddressed = analysis.status === "addressed";
 
     if (dryRun) {
       this.logger.info(
-        willResolve
-          ? "[DRY RUN] Would reply and resolve"
-          : "[DRY RUN] Would reply (uncertain, not resolving)",
+        isAddressed
+          ? "[DRY RUN] Would reply and react with 👍"
+          : "[DRY RUN] Would reply (uncertain, no reaction)",
         {
           commentId: analysis.commentId,
           status: analysis.status,
@@ -63,18 +72,11 @@ export class CommentResolver {
       status: analysis.status,
     });
 
-    if (willResolve) {
-      if (!threadId) {
-        this.logger.warn("Missing review thread id for comment", {
-          commentId: analysis.commentId,
-        });
-        return false;
-      }
-
-      await this.githubClient.resolveThread(threadId);
-      this.logger.info("Resolved thread", { commentId: analysis.commentId });
+    if (isAddressed) {
+      await this.githubClient.reactToComment(ctx, analysis.commentId, "+1");
+      this.logger.info("Added 👍 reaction", { commentId: analysis.commentId });
     }
 
-    return willResolve;
+    return isAddressed;
   }
 }
