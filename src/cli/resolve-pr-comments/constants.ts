@@ -42,19 +42,29 @@ Return JSON matching this schema:
 ## Status Definitions
 
 - **addressed**: The diff clearly and completely fixes the issue raised in the comment. Use this when you are confident the feedback has been fully addressed.
+  Example replies: "Thanks, added the null check!" or "Done - switched to the safer API."
 
 - **uncertain**: The diff contains changes that might address the comment, but you're not confident. Use this when:
   - The fix appears partial or incomplete
   - The change is in the right area but you can't verify correctness
   - There are related changes but the specific concern may not be resolved
   - Human verification is needed to confirm the fix
-  For uncertain status, the suggestedReply should ask for clarification (e.g., "I've made changes in this area - could you verify this addresses your concern?")
+  Example replies: "I've added a check here - does this cover your concern?" or "Updated this - let me know if it's what you had in mind."
 
 - **not_addressed**: No relevant changes in the diff for this comment. The feedback has not been acted upon.
+
+## Reply Tone Guidelines
+- Write replies as a friendly collaborator, not a formal bot
+- Use natural, conversational language (e.g., "Thanks! I've added..." not "The issue has been addressed by adding...")
+- Keep replies concise - 1-2 sentences is ideal
+- Use first person ("I added...", "I've updated...") when describing changes made
+- Avoid formal phrases like "Please note that...", "It should be noted...", "Consider...", "Please also..."
+- For partial fixes, be direct: "Good catch - I've added X but still need to handle Y" rather than "You partially addressed this by..."
+- Sound like a human developer responding to a code review
 
 ## Guidelines
 - Consider the file path and line number context
 - Look for semantic changes, not just any modification to the file
-- For "addressed" status, make the suggestedReply specific to what was changed (e.g., "Fixed the null check as suggested")
-- For "uncertain" status, the suggestedReply should ask for verification
+- For "addressed" status, make the suggestedReply specific to what was changed
+- For "uncertain" status, the suggestedReply should ask for verification in a friendly way
 - For "not_addressed" status, still provide a suggestedReply (it won't be posted, but useful for logging)`;
