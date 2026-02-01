@@ -55,7 +55,20 @@ export class ResolvePrPipeline {
       githubClient.fetchReviewThreads(ctx),
     ]);
 
-    if (reviewComments.length === 0) {
+    // Filter out bot's own comments to prevent self-replies
+    const botUsername = process.env.GITHUB_ACTOR ?? "github-actions[bot]";
+    const humanComments = reviewComments.filter(
+      (comment) => comment.user.login !== botUsername
+    );
+
+    if (humanComments.length < reviewComments.length) {
+      this.logger.debug("Filtered bot comments", {
+        botUsername,
+        filtered: reviewComments.length - humanComments.length,
+      });
+    }
+
+    if (humanComments.length === 0) {
       this.logger.info("No review comments to analyze");
       return {
         totalComments: 0,
@@ -68,7 +81,7 @@ export class ResolvePrPipeline {
     const commentThreadIndex = buildCommentThreadIndex(reviewThreads);
 
     // Filter out resolved threads
-    const unresolvedComments = reviewComments.filter((comment) => {
+    const unresolvedComments = humanComments.filter((comment) => {
       const entry = commentThreadIndex.get(comment.id);
       return !entry?.isResolved;
     });
@@ -84,6 +97,7 @@ export class ResolvePrPipeline {
 
     this.logger.info("Fetched data", {
       totalComments: reviewComments.length,
+      botComments: reviewComments.length - humanComments.length,
       unresolvedComments: unresolvedComments.length,
       alreadyAddressed: alreadyAddressedIds.size,
       pendingComments: pendingComments.length,
