@@ -36,6 +36,16 @@ export class CommentResolver {
     return this.githubClient.getCommentIdsWithReaction(ctx, commentIds, "+1");
   }
 
+  /**
+   * Get comment IDs that were previously marked as uncertain with 👀 reaction.
+   */
+  async getPreviouslyUncertainIds(
+    ctx: PrContext,
+    commentIds: number[]
+  ): Promise<Set<number>> {
+    return this.githubClient.getCommentIdsWithReaction(ctx, commentIds, "eyes");
+  }
+
   async resolveComment({
     analysis,
     ctx,
@@ -55,7 +65,7 @@ export class CommentResolver {
       this.logger.info(
         isAddressed
           ? "[DRY RUN] Would reply and react with 👍"
-          : "[DRY RUN] Would reply (uncertain, no reaction)",
+          : "[DRY RUN] Would reply and react with 👀",
         {
           commentId: analysis.commentId,
           status: analysis.status,
@@ -75,6 +85,10 @@ export class CommentResolver {
     if (isAddressed) {
       await this.githubClient.reactToComment(ctx, analysis.commentId, "+1");
       this.logger.info("Added 👍 reaction", { commentId: analysis.commentId });
+    } else {
+      // Uncertain - mark with 👀 so we don't re-process unless file changes
+      await this.githubClient.reactToComment(ctx, analysis.commentId, "eyes");
+      this.logger.info("Added 👀 reaction", { commentId: analysis.commentId });
     }
 
     return isAddressed;
