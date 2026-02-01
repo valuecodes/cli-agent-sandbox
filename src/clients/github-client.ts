@@ -4,6 +4,9 @@ import { $ } from "zx";
 
 $.verbose = false;
 
+const REVIEW_THREAD_PAGE_SIZE = 100;
+const REVIEW_THREAD_COMMENTS_PAGE_SIZE = 100;
+
 // GitHub API response schemas
 const CommentUserSchema = z.object({
   login: z.string(),
@@ -30,8 +33,12 @@ export const ReviewCommentSchema = CommentSchema.extend({
 export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
 
 // GraphQL response schema for review threads
+const PageInfoSchema = z.object({
+  hasNextPage: z.boolean(),
+  endCursor: z.string().nullable(),
+});
+
 const ReviewThreadCommentSchema = z.object({
-  id: z.string(),
   databaseId: z.number(),
 });
 
@@ -40,16 +47,20 @@ const ReviewThreadNodeSchema = z.object({
   isResolved: z.boolean(),
   comments: z.object({
     nodes: z.array(ReviewThreadCommentSchema),
+    pageInfo: PageInfoSchema,
   }),
+});
+
+const ReviewThreadsConnectionSchema = z.object({
+  nodes: z.array(ReviewThreadNodeSchema),
+  pageInfo: PageInfoSchema,
 });
 
 const ReviewThreadsResponseSchema = z.object({
   data: z.object({
     repository: z.object({
       pullRequest: z.object({
-        reviewThreads: z.object({
-          nodes: z.array(ReviewThreadNodeSchema),
-        }),
+        reviewThreads: ReviewThreadsConnectionSchema,
       }),
     }),
   }),
@@ -58,7 +69,8 @@ const ReviewThreadsResponseSchema = z.object({
 export type ReviewThread = {
   id: string;
   isResolved: boolean;
-  firstCommentId: number | null;
+  commentIds: number[];
+  hasMoreComments: boolean;
 };
 
 export type PrContext = {
@@ -210,7 +222,7 @@ export class GitHubClient {
 
   /**
    * Resolve a review thread using GraphQL mutation.
-   * The threadId is the node_id of any comment in the thread.
+   * The threadId must be the review thread node ID.
    */
   async resolveThread(threadId: string): Promise<void> {
     this.logger.debug("Resolving thread", { threadId });
@@ -234,19 +246,31 @@ export class GitHubClient {
 
     const [owner, repo] = ctx.repo.split("/");
     const query = `
-      query GetReviewThreads($owner: String!, $repo: String!, $pr: Int!) {
+      query GetReviewThreads(
+        $owner: String!
+        $repo: String!
+        $pr: Int!
+        $after: String
+      ) {
         repository(owner: $owner, name: $repo) {
           pullRequest(number: $pr) {
-            reviewThreads(first: 100) {
+            reviewThreads(first: ${REVIEW_THREAD_PAGE_SIZE}, after: $after) {
               nodes {
                 id
                 isResolved
-                comments(first: 1) {
+                comments(first: ${REVIEW_THREAD_COMMENTS_PAGE_SIZE}) {
                   nodes {
-                    id
                     databaseId
                   }
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
                 }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
               }
             }
           }
@@ -254,22 +278,45 @@ export class GitHubClient {
       }
     `;
 
-    const result =
-      await $`gh api graphql -f query=${query} -f owner=${owner} -f repo=${repo} -F pr=${ctx.pr}`.quiet();
-    const data: unknown = JSON.parse(result.stdout);
-    const parsed = ReviewThreadsResponseSchema.parse(data);
+    const threads: ReviewThread[] = [];
+    let after: string | null = null;
+    let hasNextPage = true;
 
-    const threads: ReviewThread[] =
-      parsed.data.repository.pullRequest.reviewThreads.nodes.map((node) => ({
-        id: node.id,
-        isResolved: node.isResolved,
-        firstCommentId: node.comments.nodes[0]?.databaseId ?? null,
-      }));
+    while (hasNextPage) {
+      const afterArgs = after ? ["-f", `after=${after}`] : [];
+      const result =
+        await $`gh api graphql -f query=${query} -f owner=${owner} -f repo=${repo} -F pr=${ctx.pr} ${afterArgs}`.quiet();
+      const data: unknown = JSON.parse(result.stdout);
+      const parsed = ReviewThreadsResponseSchema.parse(data);
+      const connection = parsed.data.repository.pullRequest.reviewThreads;
 
+      for (const node of connection.nodes) {
+        threads.push({
+          id: node.id,
+          isResolved: node.isResolved,
+          commentIds: node.comments.nodes.map((comment) => comment.databaseId),
+          hasMoreComments: node.comments.pageInfo.hasNextPage,
+        });
+      }
+
+      hasNextPage = connection.pageInfo.hasNextPage;
+      after = connection.pageInfo.endCursor ?? null;
+    }
+
+    const unresolved = threads.filter((t) => !t.isResolved).length;
+    const truncatedThreads = threads.filter((t) => t.hasMoreComments).length;
     this.logger.debug("Fetched review threads", {
       count: threads.length,
-      resolved: threads.filter((t) => t.isResolved).length,
+      unresolved,
+      truncatedThreads,
     });
+
+    if (truncatedThreads > 0) {
+      this.logger.warn("Some review threads have more than 100 comments", {
+        truncatedThreads,
+        perThreadLimit: REVIEW_THREAD_COMMENTS_PAGE_SIZE,
+      });
+    }
 
     return threads;
   }

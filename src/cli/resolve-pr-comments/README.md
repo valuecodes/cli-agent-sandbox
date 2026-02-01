@@ -1,6 +1,6 @@
 # Resolve PR Comments CLI
 
-Analyze review comments on a GitHub PR against the current diff, then reply to and resolve any comments already addressed.
+Analyze review comments on a GitHub PR against the current diff, then reply to addressed or uncertain comments and resolve those marked addressed.
 
 ## Run
 
@@ -26,7 +26,7 @@ pnpm run:resolve-pr-comments -- --pr=10 --dry-run
 4. Gets the git diff for `base...HEAD`
 5. Analyzes comments vs diff with a single AI request
 6. Writes analysis JSON under `tmp/resolve-pr-comments/pr-<number>/`
-7. Replies to and resolves addressed comments (skipped in dry-run)
+7. Replies to addressed or uncertain comments and resolves addressed ones (skipped in dry-run)
 
 ## Output
 

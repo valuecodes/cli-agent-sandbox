@@ -1,11 +1,7 @@
 import { GitHubClient } from "~clients/github-client";
 import type { Logger } from "~clients/logger";
 
-import type {
-  CommentAnalysis,
-  PrContext,
-  ReviewComment,
-} from "../types/schemas";
+import type { CommentAnalysis, PrContext } from "../types/schemas";
 
 type CommentResolverOptions = {
   logger: Logger;
@@ -13,9 +9,9 @@ type CommentResolverOptions = {
 
 type ResolveOptions = {
   analysis: CommentAnalysis;
-  comment: ReviewComment;
   ctx: PrContext;
   dryRun: boolean;
+  threadId?: string;
 };
 
 /**
@@ -32,9 +28,9 @@ export class CommentResolver {
 
   async resolveComment({
     analysis,
-    comment,
     ctx,
     dryRun,
+    threadId,
   }: ResolveOptions): Promise<boolean> {
     if (analysis.status === "not_addressed") {
       this.logger.debug("Skipping unaddressed comment", {
@@ -68,7 +64,14 @@ export class CommentResolver {
     });
 
     if (willResolve) {
-      await this.githubClient.resolveThread(comment.node_id);
+      if (!threadId) {
+        this.logger.warn("Missing review thread id for comment", {
+          commentId: analysis.commentId,
+        });
+        return false;
+      }
+
+      await this.githubClient.resolveThread(threadId);
       this.logger.info("Resolved thread", { commentId: analysis.commentId });
     }
 
