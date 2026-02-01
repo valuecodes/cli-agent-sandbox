@@ -2,7 +2,7 @@ import { AgentRunner } from "~clients/agent-runner";
 import type { ReviewComment } from "~clients/github-client";
 import type { Logger } from "~clients/logger";
 
-import { ANALYSIS_PROMPT_TEMPLATE } from "../constants";
+import { ANALYSIS_PROMPT_TEMPLATE, MAX_DIFF_CHARS } from "../constants";
 import type { AnalysisResult } from "../types/schemas";
 import { AnalysisResultSchema } from "../types/schemas";
 
@@ -13,6 +13,22 @@ type CommentAnalyzerOptions = {
 type AnalyzeOptions = {
   comments: ReviewComment[];
   diff: string;
+};
+
+export const truncateDiff = (
+  diff: string,
+  maxChars: number
+): { diff: string; truncated: boolean; originalLength: number } => {
+  if (diff.length <= maxChars) {
+    return { diff, truncated: false, originalLength: diff.length };
+  }
+
+  const truncatedDiff = diff.slice(0, maxChars);
+  return {
+    diff: `${truncatedDiff}\n\n... [diff truncated to ${maxChars} characters]\n`,
+    truncated: true,
+    originalLength: diff.length,
+  };
 };
 
 /**
@@ -39,7 +55,15 @@ export class CommentAnalyzer {
       2
     );
 
-    const prompt = ANALYSIS_PROMPT_TEMPLATE(commentsJson, diff);
+    const truncatedDiff = truncateDiff(diff, MAX_DIFF_CHARS);
+    const prompt = ANALYSIS_PROMPT_TEMPLATE(commentsJson, truncatedDiff.diff);
+
+    if (truncatedDiff.truncated) {
+      this.logger.warn("Diff truncated for analysis", {
+        originalLength: truncatedDiff.originalLength,
+        maxChars: MAX_DIFF_CHARS,
+      });
+    }
 
     const runner = new AgentRunner<AnalysisResult>({
       name: "comment-analyzer",

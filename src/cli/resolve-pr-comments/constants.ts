@@ -1,6 +1,7 @@
 import path from "node:path";
 
 export const OUTPUT_BASE_DIR = path.join("tmp", "resolve-pr-comments");
+export const MAX_DIFF_CHARS = 50000;
 
 export const getOutputDir = (prNumber: number): string =>
   path.join(process.cwd(), OUTPUT_BASE_DIR, `pr-${prNumber}`);

@@ -6,6 +6,7 @@ import type { Logger } from "~clients/logger";
 import { getAnalysisPath, getOutputDir } from "../constants";
 import { CommentAnalyzer } from "./comment-analyzer";
 import { CommentResolver } from "./comment-resolver";
+import { buildCommentThreadIndex } from "./review-thread-index";
 
 type ResolvePrPipelineOptions = {
   logger: Logger;
@@ -67,13 +68,11 @@ export class ResolvePrPipeline {
       };
     }
 
-    // Filter out already-resolved comments
-    const resolvedCommentIds = new Set(
-      reviewThreads.filter((t) => t.isResolved).map((t) => t.firstCommentId)
-    );
-    const unresolvedComments = reviewComments.filter(
-      (c) => !resolvedCommentIds.has(c.id)
-    );
+    const commentThreadIndex = buildCommentThreadIndex(reviewThreads);
+    const unresolvedComments = reviewComments.filter((comment) => {
+      const entry = commentThreadIndex.get(comment.id);
+      return !entry?.isResolved;
+    });
 
     this.logger.info("Fetched data", {
       totalComments: reviewComments.length,
@@ -117,11 +116,12 @@ export class ResolvePrPipeline {
         continue;
       }
 
+      const threadEntry = commentThreadIndex.get(commentAnalysis.commentId);
       const resolved = await resolver.resolveComment({
         analysis: commentAnalysis,
-        comment,
         ctx,
         dryRun: options.dryRun,
+        threadId: threadEntry?.threadId,
       });
 
       if (resolved) {
