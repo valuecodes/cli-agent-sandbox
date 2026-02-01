@@ -248,6 +248,9 @@ export class GitHubClient {
   /**
    * Check if a comment has a specific reaction from the current user.
    */
+  /**
+   * Check if a comment has a specific reaction (from any user).
+   */
   async hasReaction(
     ctx: PrContext,
     commentId: number,
@@ -266,26 +269,14 @@ export class GitHubClient {
       await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
     const data: unknown = JSON.parse(result.stdout || "[]");
     const reactions = z
-      .array(
-        z.object({
-          content: z.string(),
-          user: z.object({ login: z.string() }),
-        })
-      )
+      .array(z.object({ content: z.string() }))
       .parse(data);
 
-    // Get current authenticated user
-    const userResult = await $`gh api user --jq .login`.quiet();
-    const currentUser = userResult.stdout.trim();
-
-    return reactions.some(
-      (r) => r.content === reaction && r.user.login === currentUser
-    );
+    return reactions.some((r) => r.content === reaction);
   }
 
   /**
-   * Get comment IDs that have a specific reaction from the current user.
-   * More efficient than checking each comment individually.
+   * Get comment IDs that have a specific reaction (from any user).
    */
   async getCommentIdsWithReaction(
     ctx: PrContext,
@@ -308,31 +299,17 @@ export class GitHubClient {
       count: commentIds.length,
     });
 
-    // Get current authenticated user
-    const userResult = await $`gh api user --jq .login`.quiet();
-    const currentUser = userResult.stdout.trim();
-
     const reacted = new Set<number>();
 
-    // Check reactions for each comment (could be optimized with GraphQL batch query)
     for (const commentId of commentIds) {
       const result =
         await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
       const data: unknown = JSON.parse(result.stdout || "[]");
       const reactions = z
-        .array(
-          z.object({
-            content: z.string(),
-            user: z.object({ login: z.string() }),
-          })
-        )
+        .array(z.object({ content: z.string() }))
         .parse(data);
 
-      if (
-        reactions.some(
-          (r) => r.content === reaction && r.user.login === currentUser
-        )
-      ) {
+      if (reactions.some((r) => r.content === reaction)) {
         reacted.add(commentId);
       }
     }
