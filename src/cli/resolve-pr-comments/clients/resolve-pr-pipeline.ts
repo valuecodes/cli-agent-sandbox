@@ -66,20 +66,32 @@ export class ResolvePrPipeline {
     }
 
     const commentThreadIndex = buildCommentThreadIndex(reviewThreads);
+
+    // Filter out resolved threads
     const unresolvedComments = reviewComments.filter((comment) => {
       const entry = commentThreadIndex.get(comment.id);
       return !entry?.isResolved;
     });
 
+    // Filter out comments already marked with 👍 reaction (previously processed)
+    const alreadyAddressedIds = await resolver.getAlreadyAddressedIds(
+      ctx,
+      unresolvedComments.map((c) => c.id)
+    );
+    const pendingComments = unresolvedComments.filter(
+      (comment) => !alreadyAddressedIds.has(comment.id)
+    );
+
     this.logger.info("Fetched data", {
       totalComments: reviewComments.length,
       unresolvedComments: unresolvedComments.length,
-      skippedResolved: reviewComments.length - unresolvedComments.length,
+      alreadyAddressed: alreadyAddressedIds.size,
+      pendingComments: pendingComments.length,
       diffLength: diff.length,
     });
 
-    if (unresolvedComments.length === 0) {
-      this.logger.info("All review comments are already resolved");
+    if (pendingComments.length === 0) {
+      this.logger.info("No pending comments to analyze");
       return {
         totalComments: reviewComments.length,
         addressedCount: 0,
@@ -89,7 +101,7 @@ export class ResolvePrPipeline {
     }
 
     const analysis = await analyzer.analyze({
-      comments: unresolvedComments,
+      comments: pendingComments,
       diff,
     });
 
@@ -101,7 +113,7 @@ export class ResolvePrPipeline {
       "utf-8"
     );
 
-    const commentById = new Map(unresolvedComments.map((c) => [c.id, c]));
+    const commentById = new Map(pendingComments.map((c) => [c.id, c]));
     let resolvedCount = 0;
 
     for (const commentAnalysis of analysis.analyses) {
@@ -113,12 +125,10 @@ export class ResolvePrPipeline {
         continue;
       }
 
-      const threadEntry = commentThreadIndex.get(commentAnalysis.commentId);
       const resolved = await resolver.resolveComment({
         analysis: commentAnalysis,
         ctx,
         dryRun: options.dryRun,
-        threadId: threadEntry?.threadId,
       });
 
       if (resolved) {

@@ -221,20 +221,129 @@ export class GitHubClient {
   }
 
   /**
-   * Resolve a review thread using GraphQL mutation.
-   * The threadId must be the review thread node ID.
+   * Add a reaction to a review comment.
    */
-  async resolveThread(threadId: string): Promise<void> {
-    this.logger.debug("Resolving thread", { threadId });
-    const mutation = `
-      mutation ResolveThread($threadId: ID!) {
-        resolveReviewThread(input: { threadId: $threadId }) {
-          thread { isResolved }
-        }
+  async reactToComment(
+    ctx: PrContext,
+    commentId: number,
+    reaction:
+      | "+1"
+      | "-1"
+      | "laugh"
+      | "confused"
+      | "heart"
+      | "hooray"
+      | "rocket"
+      | "eyes"
+  ): Promise<void> {
+    this.logger.debug("Adding reaction to comment", {
+      ...ctx,
+      commentId,
+      reaction,
+    });
+    await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions -f content=${reaction}`.quiet();
+    this.logger.debug("Reaction added", { commentId, reaction });
+  }
+
+  /**
+   * Check if a comment has a specific reaction from the current user.
+   */
+  async hasReaction(
+    ctx: PrContext,
+    commentId: number,
+    reaction:
+      | "+1"
+      | "-1"
+      | "laugh"
+      | "confused"
+      | "heart"
+      | "hooray"
+      | "rocket"
+      | "eyes"
+  ): Promise<boolean> {
+    this.logger.debug("Checking reactions on comment", { ...ctx, commentId });
+    const result =
+      await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
+    const data: unknown = JSON.parse(result.stdout || "[]");
+    const reactions = z
+      .array(
+        z.object({
+          content: z.string(),
+          user: z.object({ login: z.string() }),
+        })
+      )
+      .parse(data);
+
+    // Get current authenticated user
+    const userResult = await $`gh api user --jq .login`.quiet();
+    const currentUser = userResult.stdout.trim();
+
+    return reactions.some(
+      (r) => r.content === reaction && r.user.login === currentUser
+    );
+  }
+
+  /**
+   * Get comment IDs that have a specific reaction from the current user.
+   * More efficient than checking each comment individually.
+   */
+  async getCommentIdsWithReaction(
+    ctx: PrContext,
+    commentIds: number[],
+    reaction:
+      | "+1"
+      | "-1"
+      | "laugh"
+      | "confused"
+      | "heart"
+      | "hooray"
+      | "rocket"
+      | "eyes"
+  ): Promise<Set<number>> {
+    if (commentIds.length === 0) {
+      return new Set();
+    }
+
+    this.logger.debug("Checking reactions for comments", {
+      count: commentIds.length,
+    });
+
+    // Get current authenticated user
+    const userResult = await $`gh api user --jq .login`.quiet();
+    const currentUser = userResult.stdout.trim();
+
+    const reacted = new Set<number>();
+
+    // Check reactions for each comment (could be optimized with GraphQL batch query)
+    for (const commentId of commentIds) {
+      const result =
+        await $`gh api repos/${ctx.repo}/pulls/comments/${commentId}/reactions`.quiet();
+      const data: unknown = JSON.parse(result.stdout || "[]");
+      const reactions = z
+        .array(
+          z.object({
+            content: z.string(),
+            user: z.object({ login: z.string() }),
+          })
+        )
+        .parse(data);
+
+      if (
+        reactions.some(
+          (r) => r.content === reaction && r.user.login === currentUser
+        )
+      ) {
+        reacted.add(commentId);
       }
-    `;
-    await $`gh api graphql -f query=${mutation} -f threadId=${threadId}`.quiet();
-    this.logger.debug("Thread resolved", { threadId });
+    }
+
+    this.logger.debug("Found comments with reaction", {
+      reaction,
+      count: reacted.size,
+      total: commentIds.length,
+    });
+
+    return reacted;
   }
 
   /**
