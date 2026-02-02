@@ -263,7 +263,6 @@ src/
 │   │   ├── README.md          # Name Explorer CLI docs
 │   │   └── types/             # CLI schemas + data types
 │   │       ├── ai-output.ts   # Agent output schema
-│   │       ├── index.ts       # Type exports
 │   │       ├── schemas.ts     # CLI args schema
 │   │       └── stats.ts       # Statistics types
 │   └── scrape-publications/
@@ -274,7 +273,7 @@ src/
 │       │   ├── publication-scraper.ts  # Link discovery + selector inference
 │       │   └── review-page-generator.ts # Review HTML generator
 │       └── types/
-│           ├── index.ts       # Publication Zod schemas
+│           ├── publication.ts # Publication Zod schemas
 │           └── schemas.ts     # CLI args schema
 ├── clients/
 │   ├── agent-runner.ts        # Default agent runner wrapper
