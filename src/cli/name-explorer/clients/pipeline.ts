@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Fetch } from "~clients/fetch";
+import { FetchClient } from "~clients/fetch";
 import type { Logger } from "~clients/logger";
 
 import { FETCH_DECADES } from "../constants";
@@ -47,7 +47,7 @@ export class NameSuggesterPipeline {
   private outputDir: string;
   private rawDataDir: string;
   private refetch: boolean;
-  private fetchClient: Fetch;
+  private fetchClient: FetchClient;
   private db: NameDatabase;
 
   constructor(config: NameSuggesterPipelineConfig) {
@@ -55,7 +55,7 @@ export class NameSuggesterPipeline {
     this.outputDir = config.outputDir;
     this.rawDataDir = path.join(config.outputDir, "raw");
     this.refetch = config.refetch ?? false;
-    this.fetchClient = new Fetch({ logger: this.logger });
+    this.fetchClient = new FetchClient({ logger: this.logger });
     this.db = new NameDatabase(this.logger);
   }
 

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Fetch } from "~clients/fetch";
+import { FetchClient } from "~clients/fetch";
 import type { Logger } from "~clients/logger";
 import { PlaywrightScraper } from "~clients/playwright-scraper";
 import { NodeHtmlMarkdown } from "node-html-markdown";
@@ -13,7 +13,7 @@ import type {
   Publication,
   PublicationLink,
   SelectorResult,
-} from "../types/index";
+} from "../types/publication";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
 
@@ -72,7 +72,7 @@ export class PublicationPipeline {
   private logger: Logger;
   private outputDir: string;
   private refetch: boolean;
-  private fetchClient: Fetch;
+  private fetchClient: FetchClient;
   private playwrightScraper: PlaywrightScraper;
   private scraper: PublicationScraper;
   private reviewGenerator: ReviewPageGenerator;
@@ -86,7 +86,7 @@ export class PublicationPipeline {
     this.logger = config.logger;
     this.outputDir = config.outputDir;
     this.refetch = config.refetch ?? false;
-    this.fetchClient = new Fetch({ logger: this.logger });
+    this.fetchClient = new FetchClient({ logger: this.logger });
     this.playwrightScraper = new PlaywrightScraper({ logger: this.logger });
     this.scraper = new PublicationScraper({ logger: this.logger });
     this.reviewGenerator = new ReviewPageGenerator({ logger: this.logger });

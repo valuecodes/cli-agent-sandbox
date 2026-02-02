@@ -2,7 +2,7 @@ import type { Logger } from "~clients/logger";
 import { marked } from "marked";
 import type { z } from "zod";
 
-import type { Publication } from "../types/index";
+import type { Publication } from "../types/publication";
 
 export type ReviewPageGeneratorConfig = {
   logger: Logger;

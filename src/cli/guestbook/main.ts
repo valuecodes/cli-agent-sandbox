@@ -6,21 +6,23 @@ import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { createReadFileTool } from "~tools/read-file/read-file-tool";
 import { createWriteFileTool } from "~tools/write-file/write-file-tool";
-import { question } from "zx";
+import { QuestionHandler } from "~utils/question-handler";
 
+import { AGENT_MODEL, AGENT_NAME, GUESTBOOK_FILE } from "./constants";
 import { OutputSchema } from "./types/schemas";
 
 const logger = new Logger();
 
-logger.info("Guestbook running...");
+try {
+  logger.info("Guestbook running...");
 
-const agentRunner = new AgentRunner({
-  name: "GuestbookAgent",
-  model: "gpt-5-mini",
-  tools: [createWriteFileTool({ logger }), createReadFileTool({ logger })],
-  outputType: OutputSchema,
-  instructions: `
-You maintain a shared "greeting guestbook" at guestbook.md.
+  const agentRunner = new AgentRunner({
+    name: AGENT_NAME,
+    model: AGENT_MODEL,
+    tools: [createWriteFileTool({ logger }), createReadFileTool({ logger })],
+    outputType: OutputSchema,
+    instructions: `
+You maintain a shared "greeting guestbook" at ${GUESTBOOK_FILE}.
 Rules:
 - Only read/write files under tmp. Paths are relative to the tmp directory (e.g., use "guestbook.md" not "./tmp/guestbook.md").
 - Use Markdown.
@@ -32,27 +34,42 @@ Rules:
 IMPORTANT: Always respond with a JSON object in this format:
 {"success": true/false, "message": "description of what was done"}
 `,
-  logger,
-  stateless: true, // Each run is independent
-});
+    logger,
+    stateless: true, // Each run is independent
+  });
 
-const userName = await question("Enter user name: ");
+  const questionHandler = new QuestionHandler({ logger });
 
-const tone = await question("Tone (friendly/formal/sarcastic/cyberpunk): ");
-const lang = await question("Language (en/fi): ");
-const funFact = await question("Fun fact (optional): ");
-const goal = await question("What are you building right now? (optional): ");
+  const userName = await questionHandler.askString({
+    prompt: "Enter user name: ",
+  });
+  const tone = await questionHandler.askString({
+    prompt: "Tone (friendly/formal/sarcastic/cyberpunk): ",
+    allowEmpty: true,
+  });
+  const lang = await questionHandler.askString({
+    prompt: "Language (en/fi): ",
+    allowEmpty: true,
+  });
+  const funFact = await questionHandler.askString({
+    prompt: "Fun fact (optional): ",
+    allowEmpty: true,
+  });
+  const goal = await questionHandler.askString({
+    prompt: "What are you building right now? (optional): ",
+    allowEmpty: true,
+  });
 
-const prompt = `
+  const prompt = `
 Add a guestbook entry for user: "${userName}"
 
 User preferences:
-- tone: ${tone}
-- language: ${lang}
+- tone: ${tone || "(none)"}
+- language: ${lang || "(none)"}
 - funFact: ${funFact || "(none)"}
 - goal: ${goal || "(none)"}
 
-File path: guestbook.md (relative to tmp directory)
+File path: ${GUESTBOOK_FILE} (relative to tmp directory)
 
 Steps:
 1) Try to read the file.
@@ -60,26 +77,30 @@ Steps:
 3) If not found, create a new file with:
    - Title: "# Guestbook"
    - "## Entries" with the first entry including the user's name.
-4) Write the final Markdown back to guestbook.md.
+4) Write the final Markdown back to ${GUESTBOOK_FILE}.
 `;
 
-const result = await agentRunner.run({ prompt });
-const parseResult = OutputSchema.safeParse(result.finalOutput);
+  const result = await agentRunner.run({ prompt });
+  const parseResult = OutputSchema.safeParse(result.finalOutput);
 
-if (parseResult.success) {
-  logger.info("Result", { message: parseResult.data.message });
-} else {
-  logger.warn("Unexpected response format");
-  logger.info(String(result.finalOutput));
-}
+  if (parseResult.success) {
+    logger.info("Result", { message: parseResult.data.message });
+  } else {
+    logger.warn("Unexpected response format");
+    logger.info(String(result.finalOutput));
+  }
 
-// Show the file contents after write
-const preview = await agentRunner.run({
-  prompt: `Read guestbook.md and include its full contents in your response message.`,
-});
-const previewResult = OutputSchema.safeParse(preview.finalOutput);
-if (previewResult.success) {
-  logger.answer(previewResult.data.message);
-} else {
-  logger.answer(JSON.stringify(preview.finalOutput, null, 2));
+  // Show the file contents after write
+  const preview = await agentRunner.run({
+    prompt: `Read ${GUESTBOOK_FILE} and include its full contents in your response message.`,
+  });
+  const previewResult = OutputSchema.safeParse(preview.finalOutput);
+  if (previewResult.success) {
+    logger.answer(previewResult.data.message);
+  } else {
+    logger.answer(JSON.stringify(preview.finalOutput, null, 2));
+  }
+} catch (error) {
+  logger.error("Fatal error", { error });
+  process.exit(1);
 }
