@@ -14,7 +14,7 @@ import type {
   SuffixStats,
   TopName,
   UnisexName,
-} from "../types";
+} from "../types/stats";
 import type { NameDatabase } from "./database";
 
 /**

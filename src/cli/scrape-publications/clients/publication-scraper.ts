@@ -8,8 +8,8 @@ import {
   ContentSelectorResult,
   PublicationLink,
   SelectorResult,
-} from "../types/index";
-import type { LinkCandidate } from "../types/index";
+} from "../types/publication";
+import type { LinkCandidate } from "../types/publication";
 
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;

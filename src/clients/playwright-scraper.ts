@@ -7,7 +7,7 @@ import type { Logger } from "./logger";
 // Possible wait strategies for page load
 export type WaitStrategy = "load" | "domcontentloaded" | "networkidle";
 
-export type PlaywrightScraperConfig = {
+export type PlaywrightScraperOptions = {
   logger: Logger;
   headless?: boolean; // Whether to run browser in headless mode (default: true)
   defaultTimeoutMs?: number; // Default timeout for operations in milliseconds
@@ -53,15 +53,16 @@ export class PlaywrightScraper {
   private defaultWaitStrategy: WaitStrategy;
   private browser: Browser | null = null;
 
-  /**
-   * Creates a new PlaywrightScraper instance.
-   * @param config - Configuration with logger and optional browser settings
-   */
-  constructor(config: PlaywrightScraperConfig) {
-    this.logger = config.logger;
-    this.headless = config.headless ?? true;
-    this.defaultTimeoutMs = config.defaultTimeoutMs ?? 30000;
-    this.defaultWaitStrategy = config.defaultWaitStrategy ?? "load";
+  constructor({
+    logger,
+    headless,
+    defaultTimeoutMs,
+    defaultWaitStrategy,
+  }: PlaywrightScraperOptions) {
+    this.logger = logger;
+    this.headless = headless ?? true;
+    this.defaultTimeoutMs = defaultTimeoutMs ?? 30000;
+    this.defaultWaitStrategy = defaultWaitStrategy ?? "load";
   }
 
   /**
