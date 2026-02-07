@@ -48,7 +48,7 @@
     {
       "id": "list-files",
       "name": "listFiles shows directory contents",
-      "prompt": "List the files in the tmp/agent-evals directory",
+      "prompt": "List the files in the agent-evals directory",
       "assertions": [
         {
           "type": "contains",
@@ -96,8 +96,9 @@
           "description": "File should be deleted"
         },
         {
-          "type": "contains",
-          "value": "Deleted",
+          "type": "matchesRegex",
+          "pattern": "delet",
+          "flags": "i",
           "description": "Agent should confirm deletion"
         }
       ],

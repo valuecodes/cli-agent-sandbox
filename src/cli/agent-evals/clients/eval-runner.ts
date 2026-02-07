@@ -15,6 +15,7 @@ import type {
   EvalSuite,
   SuiteResult,
   SuiteSummary,
+  SupportedModel,
 } from "../types/schemas";
 import { evaluateAssertion } from "../utils/assertions";
 import { createToolsFromNames } from "./tool-registry";
@@ -98,6 +99,23 @@ export class EvalRunner {
       summary,
       cases: caseResults,
     };
+  }
+
+  /**
+   * Run a suite with a specific model override.
+   */
+  async runSuiteWithModel({
+    suite,
+    model,
+  }: {
+    suite: EvalSuite;
+    model: SupportedModel;
+  }): Promise<SuiteResult> {
+    const overriddenSuite: EvalSuite = {
+      ...suite,
+      agent: { ...suite.agent, model },
+    };
+    return this.runSuite(overriddenSuite);
   }
 
   private logCaseResult(caseResult: CaseResult): void {

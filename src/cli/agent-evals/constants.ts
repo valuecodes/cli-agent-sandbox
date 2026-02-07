@@ -16,6 +16,10 @@ export const SUITES_DIR = path.join(
 );
 export const SUITE_FILE_EXTENSION = ".json";
 
+// Comparison mode
+export const MIN_COMPARE_MODELS = 2;
+export const COMPARISON_REPORTS_SUBDIR = "comparison-reports";
+
 // Execution defaults
 export const DEFAULT_CASE_TIMEOUT_MS = 30000;
 export const DEFAULT_MAX_TURNS = 5;

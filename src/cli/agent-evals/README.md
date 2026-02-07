@@ -13,6 +13,12 @@ pnpm run:agent-evals -- --all
 
 # With options
 pnpm run:agent-evals -- --suite=example --verbose --report=both
+
+# Compare models on one suite
+pnpm run:agent-evals -- --suite=example --compare=gpt-5-mini,gpt-4.1-nano
+
+# Compare across all suites
+pnpm run:agent-evals -- --all --compare=gpt-5-mini,gpt-4.1-nano,gpt-4.1-mini --report=both
 ```
 
 ## Arguments
@@ -22,6 +28,7 @@ pnpm run:agent-evals -- --suite=example --verbose --report=both
 - `--report <format>`: Report format: `json`, `md`, or `both` (default: `json`)
 - `--out <path>`: Output base directory under `tmp/` (default: `agent-evals`)
 - `--verbose`: Enable verbose logging with per-assertion failure details
+- `--compare <models>`: Comma-separated list of models to compare (at least 2). Supported: `gpt-5-mini`, `gpt-4.1-nano`, `gpt-4.1-mini`
 
 Either `--suite` or `--all` is required.
 
@@ -32,7 +39,14 @@ Reports are written to `tmp/<out>/reports/` (default: `tmp/agent-evals/reports/`
 - `report-{timestamp}.json`: Machine-readable results
 - `report-{timestamp}.md`: Human-readable markdown report
 
-Exit code is 1 if any tests fail or error.
+When `--compare` is used, reports are written to `tmp/<out>/comparison-reports/`:
+
+- `comparison-{timestamp}.json`: Machine-readable comparison results
+- `comparison-{timestamp}.md`: Side-by-side markdown comparison report
+
+In comparison mode, `tmp/<out>/` is cleaned before each model run so tool side effects do not leak between models.
+
+Exit code is 1 if any tests fail or error (single-model mode only).
 
 ## Creating Evaluation Suites
 
@@ -66,7 +80,7 @@ Add JSON files to `suites/` directory. Example structure:
 
 ### Suite Field Notes
 
-- `agent.model` is currently fixed to `gpt-5-mini`.
+- `agent.model` supports: `gpt-5-mini`, `gpt-4.1-nano`, `gpt-4.1-mini`. When using `--compare`, the suite's model is overridden for each comparison model.
 - `agent.tools` accepts tool names from the registry: `readFile`, `writeFile`, `listFiles`, `deleteFile`.
 - `agent.maxTurns` defaults to `5` if omitted.
 - `defaults.timeout` applies per-case when the case does not provide `timeout`.
@@ -135,12 +149,17 @@ These assertions read files under `tmp/` to verify tool side effects. Paths are 
 ```mermaid
 flowchart TD
   A["Start"] --> B["Parse args"]
-  B --> C["Load suites"]
-  C --> D["Run each suite"]
-  D --> E["Run each case"]
-  E --> F["Evaluate assertions"]
-  F --> G["Collect results"]
-  G --> H["Generate reports"]
-  H --> I["Print summary"]
-  I --> J["Exit"]
+  B --> C{"--compare?"}
+  C -->|No| D["Load suites"]
+  C -->|Yes| E["Load suites"]
+  D --> F["Run each suite"]
+  F --> G["Generate report"]
+  G --> H["Print summary"]
+  H --> I["Exit"]
+  E --> J["For each model"]
+  J --> K["Run each suite with model"]
+  K --> L["Collect results by model"]
+  L --> M["Generate comparison report"]
+  M --> N["Print per-model summary"]
+  N --> I
 ```

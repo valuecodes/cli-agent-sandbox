@@ -6,10 +6,12 @@ import type { Logger } from "./logger";
 
 const DEFAULT_RESULT_PREVIEW_LIMIT = 200;
 
+export type SupportedModel = "gpt-5-mini" | "gpt-4.1-nano" | "gpt-4.1-mini";
+
 export type AgentRunnerConfig<TOutput> = {
   // Agent config
   name: string;
-  model: "gpt-5-mini";
+  model: SupportedModel;
   tools: Tool[];
   /** Zod schema for structured output. Omit for plain text responses. */
   outputType?: ZodType<TOutput>;

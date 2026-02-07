@@ -9,7 +9,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
 5. Run the demo: `pnpm run:guestbook`
-6. (Optional) Run agent evals: `pnpm run:agent-evals -- --suite=example`
+6. (Optional) Run agent evals: `pnpm run:agent-evals -- --suite=example` or compare models with `--compare=gpt-5-mini,gpt-4.1-nano`
 7. (Optional) Explore Finnish name stats: `pnpm run:name-explorer -- --mode ai|stats`
 8. (Optional) Run publication scraping: `pnpm run:scrape-publications -- --url="https://example.com"`
 9. (Optional) Run ETF backtest: `pnpm run:etf-backtest -- --isin=IE00B5BMR087` (requires Python setup below)
@@ -99,14 +99,22 @@ Notes:
 
 ## Agent evals
 
-The `run:agent-evals` CLI executes evaluation suites for agents and writes reports under `tmp/agent-evals/` by default.
+The `run:agent-evals` CLI executes evaluation suites for agents and supports both single-model runs and side-by-side model comparison.
+
+Single-model reports are written under `tmp/agent-evals/reports/` by default. Comparison-mode reports are written under `tmp/agent-evals/comparison-reports/`.
 
 Usage:
 
 ```
 pnpm run:agent-evals -- --suite=example
 pnpm run:agent-evals -- --all
+pnpm run:agent-evals -- --suite=example --compare=gpt-5-mini,gpt-4.1-nano
 ```
+
+Notes:
+
+- `--compare` expects at least 2 comma-separated models. Supported models are `gpt-5-mini`, `gpt-4.1-nano`, and `gpt-4.1-mini`.
+- In comparison mode, the suite `agent.model` value is overridden per model run.
 
 ## AI usage
 
@@ -220,7 +228,7 @@ src/
 │   │   ├── constants.ts       # CLI constants
 │   │   ├── types/             # CLI schemas
 │   │   │   └── schemas.ts     # CLI args + suite schemas
-│   │   ├── clients/           # Suite runner + report generator
+│   │   ├── clients/           # Pipeline + suite runner + report generators
 │   │   ├── utils/             # Assertion + formatting helpers
 │   │   └── suites/            # Example evaluation suites
 │   ├── etf-backtest/
