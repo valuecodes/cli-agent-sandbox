@@ -15,6 +15,7 @@ import { OUTPUT_BASE_DIR } from "./constants";
 import { CliArgsSchema } from "./types/schemas";
 
 const logger = new Logger({ level: "info", useColors: true });
+let pipeline: PublicationPipeline | null = null;
 
 try {
   logger.info("Scrape Publications running...");
@@ -39,7 +40,7 @@ try {
   logger.info("Output directory", { outputDir });
 
   // 3. Create pipeline
-  const pipeline = new PublicationPipeline({
+  pipeline = new PublicationPipeline({
     logger,
     outputDir,
     refetch: shouldRefetch,
@@ -92,10 +93,16 @@ try {
       targetUrl,
     });
   }
-
-  // Cleanup
-  await pipeline.close();
 } catch (error) {
   logger.error("Fatal error", { error });
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  if (pipeline) {
+    try {
+      await pipeline.close();
+    } catch (closeError) {
+      logger.error("Failed to close pipeline", { error: closeError });
+      process.exitCode = process.exitCode ?? 1;
+    }
+  }
 }
