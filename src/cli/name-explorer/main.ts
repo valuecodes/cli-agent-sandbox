@@ -9,6 +9,7 @@ import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import { QuestionHandler } from "~utils/question-handler";
 
+import type { AggregatedNameDatabase, NameDatabase } from "./clients/database";
 import { NameSuggesterPipeline } from "./clients/pipeline";
 import { StatsGenerator } from "./clients/stats-generator";
 import { StatsPageGenerator } from "./clients/stats-page-generator";
@@ -25,6 +26,9 @@ import { CliArgsSchema } from "./types/schemas";
 
 const logger = new Logger();
 
+let db: NameDatabase | null = null;
+let aggregatedDb: AggregatedNameDatabase | null = null;
+
 try {
   // --- Parse CLI arguments ---
   const { refetch: shouldRefetch, mode } = parseArgs({
@@ -39,12 +43,16 @@ try {
     refetch: shouldRefetch,
   });
 
-  const { db, aggregatedDb } = await pipeline.setup();
+  const setupResult = await pipeline.setup();
+  db = setupResult.db;
+  aggregatedDb = setupResult.aggregatedDb;
+  const nameDb = setupResult.db;
+  const aggregatedNameDb = setupResult.aggregatedDb;
 
   // --- Stats Mode: Generate HTML statistics page ---
   const runStatsMode = async () => {
     logger.info("Computing statistics...");
-    const statsGenerator = new StatsGenerator(db);
+    const statsGenerator = new StatsGenerator(nameDb);
     const stats = statsGenerator.computeAll();
 
     logger.info("Generating HTML page...");
@@ -61,14 +69,14 @@ try {
     logger.info("Starting AI mode...");
 
     const tools = [
-      createSqlQueryTool(db),
+      createSqlQueryTool(nameDb),
       createFetchNameTool({
         cacheDir: "tmp/name-explorer/individual",
         refetch: shouldRefetch,
       }),
     ];
-    if (aggregatedDb) {
-      tools.push(createAggregatedSqlQueryTool(aggregatedDb));
+    if (aggregatedNameDb) {
+      tools.push(createAggregatedSqlQueryTool(aggregatedNameDb));
     }
 
     const agentRunner = new AgentRunner({
@@ -143,10 +151,10 @@ When answering, do not include any questions. Do not include markdown or extra k
   } else {
     await runAiMode();
   }
-
-  db.close();
-  aggregatedDb?.close();
 } catch (error) {
   logger.error("Fatal error", { error });
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  db?.close();
+  aggregatedDb?.close();
 }
