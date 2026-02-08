@@ -4,7 +4,19 @@ import {
   DEFAULT_OUT_PATH,
   DEFAULT_REPORT_FORMAT,
   DEFAULT_VERBOSE,
+  MIN_COMPARE_MODELS,
 } from "../constants";
+
+// ============================================
+// Supported Models
+// ============================================
+
+export const SupportedModelSchema = z.enum([
+  "gpt-5-mini",
+  "gpt-4.1-nano",
+  "gpt-4.1-mini",
+]);
+export type SupportedModel = z.infer<typeof SupportedModelSchema>;
 
 // ============================================
 // CLI Arguments
@@ -17,10 +29,24 @@ export const CliArgsSchema = z
     report: z.enum(["json", "md", "both"]).default(DEFAULT_REPORT_FORMAT),
     out: z.string().default(DEFAULT_OUT_PATH),
     verbose: z.coerce.boolean().default(DEFAULT_VERBOSE),
+    compare: z
+      .string()
+      .optional()
+      .transform((val) =>
+        val
+          ? val.split(",").map((m) => SupportedModelSchema.parse(m.trim()))
+          : undefined
+      ),
   })
   .refine((data) => data.suite ?? data.all, {
     message: "Either --suite <name> or --all is required",
-  });
+  })
+  .refine(
+    (data) => !data.compare || data.compare.length >= MIN_COMPARE_MODELS,
+    {
+      message: `--compare requires at least ${MIN_COMPARE_MODELS} models`,
+    }
+  );
 
 export type CliArgs = z.infer<typeof CliArgsSchema>;
 
@@ -132,7 +158,7 @@ export type EvalCase = z.infer<typeof EvalCaseSchema>;
 
 export const AgentConfigSchema = z.object({
   name: z.string(),
-  model: z.literal("gpt-5-mini"),
+  model: SupportedModelSchema,
   instructions: z.string(),
   tools: z.array(z.string()).default([]),
   maxTurns: z.number().optional(),
@@ -196,13 +222,16 @@ export type CaseResult = z.infer<typeof CaseResultSchema>;
 // Suite Result
 // ============================================
 
-export const SuiteSummarySchema = z.object({
-  total: z.number(),
+const BaseSummarySchema = z.object({
   passed: z.number(),
   failed: z.number(),
   errors: z.number(),
   skipped: z.number(),
   passRate: z.number(),
+});
+
+export const SuiteSummarySchema = BaseSummarySchema.extend({
+  total: z.number(),
 });
 
 export type SuiteSummary = z.infer<typeof SuiteSummarySchema>;
@@ -223,14 +252,9 @@ export type SuiteResult = z.infer<typeof SuiteResultSchema>;
 // Full Report (multiple suites)
 // ============================================
 
-export const ReportSummarySchema = z.object({
+export const ReportSummarySchema = BaseSummarySchema.extend({
   totalSuites: z.number(),
   totalCases: z.number(),
-  passed: z.number(),
-  failed: z.number(),
-  errors: z.number(),
-  skipped: z.number(),
-  passRate: z.number(),
 });
 
 export type ReportSummary = z.infer<typeof ReportSummarySchema>;
@@ -243,3 +267,32 @@ export const EvalReportSchema = z.object({
 });
 
 export type EvalReport = z.infer<typeof EvalReportSchema>;
+
+// ============================================
+// Comparison Report Types
+// ============================================
+
+export const ModelSummarySchema = BaseSummarySchema.extend({
+  totalCases: z.number(),
+  avgDurationMs: z.number(),
+  totalDurationMs: z.number(),
+});
+
+export type ModelSummary = z.infer<typeof ModelSummarySchema>;
+
+export const ComparisonSuiteResultSchema = z.object({
+  suiteName: z.string(),
+  suiteVersion: z.string(),
+  modelResults: z.record(z.string(), SuiteResultSchema),
+});
+
+export type ComparisonSuiteResult = z.infer<typeof ComparisonSuiteResultSchema>;
+
+export const ComparisonReportSchema = z.object({
+  generatedAt: z.string(),
+  models: z.array(z.string()),
+  aggregateSummary: z.record(z.string(), ModelSummarySchema),
+  suites: z.array(ComparisonSuiteResultSchema),
+});
+
+export type ComparisonReport = z.infer<typeof ComparisonReportSchema>;
