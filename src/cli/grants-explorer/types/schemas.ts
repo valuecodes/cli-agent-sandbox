@@ -2,6 +2,12 @@ import { z } from "zod";
 
 export const CliArgsSchema = z.object({
   file: z.string().optional(),
+  // Presence-only flag. parseArgv hands us bare `true` for `--refetch` and
+  // `undefined` when absent. Any `--refetch=<value>` form arrives as a string
+  // and is rejected here — preventing the historical `z.coerce.boolean()`
+  // foot-gun where `--refetch=false` would silently *enable* refetch and
+  // clobber the cached workbook.
+  refetch: z.boolean().default(false),
 });
 
 export type CliArgs = z.infer<typeof CliArgsSchema>;
