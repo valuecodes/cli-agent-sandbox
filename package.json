@@ -16,6 +16,7 @@
     "run:owner-lookup": "tsx src/cli/owner-lookup/main.ts",
     "run:update-docs": "tsx src/cli/update-docs/main.ts",
     "run:resolve-pr-comments": "tsx src/cli/resolve-pr-comments/main.ts",
+    "run:grants-explorer": "pnpm -s node:tsx -- src/cli/grants-explorer/main.ts",
     "node:tsx": "node --disable-warning=ExperimentalWarning --import tsx",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -58,13 +59,14 @@
     "prettier": "3.7.4",
     "sanitize-html": "2.17.0",
     "slug": "11.0.1",
+    "stream-json": "2.0.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.52.0",
+    "unzipper": "0.12.3",
     "vitest": "4.0.16",
+    "xlsx": "0.18.5",
     "zod": "4.3.5",
-    "zx": "8.8.5",
-    "stream-json": "2.0.0",
-    "unzipper": "0.12.3"
+    "zx": "8.8.5"
   }
 }
