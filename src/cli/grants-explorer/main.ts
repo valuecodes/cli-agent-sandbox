@@ -1,16 +1,25 @@
 // pnpm run:grants-explorer
 // pnpm run:grants-explorer --file=tmp/paatokset.xlsx
+// pnpm run:grants-explorer --refetch
 
 import "dotenv/config";
 
+import { existsSync } from "node:fs";
 import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import { QuestionHandler } from "~utils/question-handler";
 
 import { GrantsDatabase } from "./clients/database";
+import { XlsxDownloader } from "./clients/xlsx-downloader";
 import { XlsxLoader } from "./clients/xlsx-loader";
-import { AGENT_MODEL, AGENT_NAME, DEFAULT_XLSX_PATH } from "./constants";
+import {
+  AGENT_MODEL,
+  AGENT_NAME,
+  DEFAULT_XLSX_PATH,
+  PAATOKSET_SOURCE_URL,
+} from "./constants";
+import { shouldRefetch } from "./should-refetch";
 import { createSqlQueryTool } from "./tools/sql-tool";
 import {
   CliArgsSchema,
@@ -23,8 +32,19 @@ const logger = new Logger();
 let db: GrantsDatabase | null = null;
 
 try {
-  const { file } = parseArgs({ logger, schema: CliArgsSchema });
+  const { file, refetch } = parseArgs({ logger, schema: CliArgsSchema });
   const xlsxPath = file ?? DEFAULT_XLSX_PATH;
+
+  const exists = existsSync(xlsxPath);
+  if (shouldRefetch({ refetch, exists })) {
+    if (!exists) {
+      logger.info("Local xlsx missing; downloading", { xlsxPath });
+    }
+    await new XlsxDownloader({
+      logger,
+      sourceUrl: PAATOKSET_SOURCE_URL,
+    }).download(xlsxPath);
+  }
 
   const rows = new XlsxLoader({ logger }).load(xlsxPath);
 

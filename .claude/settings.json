@@ -9,7 +9,8 @@
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",
       "Bash(pnpm test:*)",
-      "Bash(tsx scripts/scaffold-cli.ts:*)"
+      "Bash(tsx scripts/scaffold-cli.ts:*)",
+      "Bash(gh pr create:*)"
     ],
     "deny": [
       "Bash(curl:*)",
@@ -20,8 +21,7 @@
       "Read(**/.env.*)",
       "Read(**/.env*)",
       "Read(**/secrets/**)",
-      "Bash(git push:*)",
-      "Bash(gh pr create:*)"
+      "Bash(git push:*)"
     ],
     "ask": [
       "Bash(pnpm install:*)",

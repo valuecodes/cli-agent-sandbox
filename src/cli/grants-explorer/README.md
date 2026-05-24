@@ -7,11 +7,22 @@ Loads the Finnish grant-decisions workbook at `tmp/paatokset.xlsx` into an in-me
 ```
 pnpm run:grants-explorer
 pnpm run:grants-explorer --file=tmp/paatokset.xlsx
+pnpm run:grants-explorer --refetch
 ```
 
 ## Arguments
 
 - `--file` (optional): path to the xlsx workbook. Defaults to `tmp/paatokset.xlsx`.
+- `--refetch` (optional, presence-only flag): force-download the latest xlsx from [tutkihallintoa.fi](https://www.tutkihallintoa.fi/valtionavustukset/tutkiavustuksia/) before loading. Without the flag, the CLI uses the local file if present and auto-downloads only when it's missing. Pass it bare (`--refetch`) to enable; omit it to disable. Any explicit value (`--refetch=false`, `--refetch=true`, …) is rejected by the schema.
+
+## Source data
+
+`paatokset.xlsx` is downloaded from the Tutkiavustuksia.fi Power BI report, pre-filtered to:
+
+- Tab: **Avustusasiat**
+- Slicer: **Sektoriluokitus = S15 Kotitalouksia palvelevat voittoa tavoittelemattomat järjestöt** (Non-profit institutions serving households)
+
+Other filter scopes (date ranges, other sectors, other tabs) are intentionally not exposed as CLI flags — broadening the scope would change which grants land in the SQL DB and invalidate any saved analyses. Filter per-query in SQL after load instead.
 
 ## Table schema
 
