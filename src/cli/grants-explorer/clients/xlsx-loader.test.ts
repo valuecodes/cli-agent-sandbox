@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { Logger } from "~clients/logger";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import XLSX from "xlsx";
 
 import {
@@ -6,7 +10,53 @@ import {
   normalizeEuFunding,
   normalizeExcelDate,
   normalizeText,
+  XlsxLoader,
 } from "./xlsx-loader";
+
+const silentLogger = new Logger({
+  level: "error",
+  useColors: false,
+  useTimestamps: false,
+});
+
+const HEADER_ROW = [
+  "Päätös pvm",
+  "Saajan nimi",
+  "Myöntäjä",
+  "Asianumero",
+  "Haettu",
+  "Myönnetty",
+  "EU-varat",
+  "Hyväksytty käyttötarkoitus",
+  "Haun nimi (asianumero)",
+  "Alueet",
+];
+
+const dataRow = (recipient: string) => [
+  46022,
+  recipient,
+  "Test ELY-keskus",
+  "T-001",
+  1000,
+  800,
+  "",
+  "Test purpose",
+  "Test programme (key-1)",
+  "Test region",
+];
+
+const writeFixtureXlsx = async (
+  workDir: string,
+  rows: string[]
+): Promise<string> => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([HEADER_ROW, ...rows.map(dataRow)]);
+  XLSX.utils.book_append_sheet(wb, ws, "Export");
+  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  const filePath = join(workDir, "fixture.xlsx");
+  await writeFile(filePath, buf);
+  return filePath;
+};
 
 type ParsedDateCode = { y: number; m: number; d: number };
 const ssf = XLSX.SSF as {
@@ -103,5 +153,37 @@ describe("normalizeText", () => {
     expect(normalizeText(undefined)).toBeNull();
     expect(normalizeText("")).toBeNull();
     expect(normalizeText("   ")).toBeNull();
+  });
+});
+
+// Loader integration: builds a minimal real xlsx through SheetJS, writes it
+// to a temp file, and runs the full load() pipeline. This protects against
+// regressions where extractBusinessId is wired up wrong and recipient_business_id
+// ends up always-null while the parser unit test still passes.
+describe("XlsxLoader.load() — recipient_business_id wiring", () => {
+  let workDir: string;
+
+  beforeEach(async () => {
+    workDir = await mkdtemp(join(tmpdir(), "xlsx-loader-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(workDir, { recursive: true, force: true });
+  });
+
+  it("extracts recipient_business_id and preserves the full recipient string", async () => {
+    const filePath = await writeFixtureXlsx(workDir, [
+      "Lapin Martat ry (0210606-0)",
+      "Anonymous private grantee",
+    ]);
+
+    const rows = new XlsxLoader({ logger: silentLogger }).load(filePath);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.recipient).toBe("Lapin Martat ry (0210606-0)");
+    expect(rows[0]?.recipient_business_id).toBe("0210606-0");
+    // Bare-name recipient is still inserted; only the business_id is null.
+    expect(rows[1]?.recipient).toBe("Anonymous private grantee");
+    expect(rows[1]?.recipient_business_id).toBeNull();
   });
 });

@@ -26,20 +26,23 @@ Other filter scopes (date ranges, other sectors, other tabs) are intentionally n
 
 ## Table schema
 
-| Column               | Type    | Source header                |
-| -------------------- | ------- | ---------------------------- |
-| `decision_date`      | TEXT    | Päätös pvm (ISO date)        |
-| `recipient`          | TEXT    | Saajan nimi (incl. y-tunnus) |
-| `granting_authority` | TEXT    | Myöntäjä                     |
-| `case_number`        | TEXT    | Asianumero                   |
-| `amount_applied`     | INTEGER | Haettu (EUR, nullable)       |
-| `amount_granted`     | INTEGER | Myönnetty (EUR, nullable)    |
-| `has_eu_funding`     | INTEGER | EU-varat (0/1)               |
-| `purpose`            | TEXT    | Hyväksytty käyttötarkoitus   |
-| `programme`          | TEXT    | Haun nimi (asianumero)       |
-| `region`             | TEXT    | Alueet                       |
+| Column                  | Type    | Source header                                      |
+| ----------------------- | ------- | -------------------------------------------------- |
+| `decision_date`         | TEXT    | Päätös pvm (ISO date)                              |
+| `recipient`             | TEXT    | Saajan nimi (full original string, incl. y-tunnus) |
+| `recipient_business_id` | TEXT    | Y-tunnus extracted from Saajan nimi (indexed)      |
+| `granting_authority`    | TEXT    | Myöntäjä                                           |
+| `case_number`           | TEXT    | Asianumero                                         |
+| `amount_applied`        | INTEGER | Haettu (EUR, nullable)                             |
+| `amount_granted`        | INTEGER | Myönnetty (EUR, nullable)                          |
+| `has_eu_funding`        | INTEGER | EU-varat (0/1)                                     |
+| `purpose`               | TEXT    | Hyväksytty käyttötarkoitus                         |
+| `programme`             | TEXT    | Haun nimi (asianumero)                             |
+| `region`                | TEXT    | Alueet                                             |
 
 `amount_applied` / `amount_granted` are nullable so an unknown amount stays distinguishable from a real `0 €` decision in aggregates.
+
+`recipient_business_id` is `NULL` for recipients that don't have a Finnish Business ID — private persons, foreign entities, and ad-hoc working groups. The loader logs the count of such rows under `recipientsWithoutBusinessId`. Use `recipient_business_id = '<y-tunnus>'` for indexed equality lookups and `GROUP BY recipient_business_id` to aggregate per legal entity.
 
 ## Example session
 

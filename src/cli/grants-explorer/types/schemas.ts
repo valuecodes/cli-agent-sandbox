@@ -33,6 +33,14 @@ export type GrantsAgentOutput = z.infer<typeof GrantsAgentOutputSchema>;
 export const GrantRowSchema = z.object({
   decision_date: z.string().nullable(),
   recipient: z.string().nullable(),
+  // Y-tunnus (Finnish Business ID) extracted from `recipient` parens. The
+  // regex constraint can never reject a legitimately-loaded row — the loader
+  // emits only matching values or null — but it serves as a tripwire if a
+  // future refactor accidentally pipes the wrong field in.
+  recipient_business_id: z
+    .string()
+    .regex(/^\d{7}-\d$/)
+    .nullable(),
   granting_authority: z.string().nullable(),
   case_number: z.string().nullable(),
   amount_applied: z.number().int().nullable(),

@@ -3,6 +3,7 @@ import XLSX from "xlsx";
 
 import type { GrantRow } from "../types/schemas";
 import { GrantRowSchema } from "../types/schemas";
+import { extractBusinessId } from "../utils/business-id";
 
 type RawCell = string | number | boolean | Date | null;
 type RawRow = RawCell[];
@@ -203,9 +204,13 @@ export class XlsxLoader {
         });
       }
 
+      // Normalize recipient once so the null-propagation chain (null cell →
+      // null recipient → null business_id) is obvious and we don't trim twice.
+      const recipient = normalizeText(at("recipient"));
       const candidate = {
         decision_date: decisionDate,
-        recipient: normalizeText(at("recipient")),
+        recipient,
+        recipient_business_id: extractBusinessId(recipient),
         granting_authority: normalizeText(at("granting_authority")),
         case_number: normalizeText(at("case_number")),
         amount_applied: normalizeAmount(at("amount_applied")),
@@ -238,11 +243,21 @@ export class XlsxLoader {
       );
     }
 
+    // Count loaded rows where the recipient string is present but no
+    // y-tunnus could be extracted (private persons, foreign entities,
+    // working groups). Surfacing this in the loader summary makes silent
+    // source-format drift visible — e.g. if a future export starts placing
+    // y-tunnus somewhere other than the trailing parenthetical.
+    const recipientsWithoutBusinessId = rows.filter(
+      (r) => r.recipient !== null && r.recipient_business_id === null
+    ).length;
+
     this.logger.info("Loaded xlsx rows", {
       filePath,
       rowCount: rows.length,
       dateNormalizationFailures,
       validationFailures,
+      recipientsWithoutBusinessId,
     });
     return rows;
   }

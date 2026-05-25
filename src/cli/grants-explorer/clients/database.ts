@@ -26,6 +26,7 @@ export class GrantsDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         decision_date TEXT,
         recipient TEXT,
+        recipient_business_id TEXT,
         granting_authority TEXT,
         case_number TEXT,
         amount_applied INTEGER,
@@ -37,6 +38,7 @@ export class GrantsDatabase {
       );
 
       CREATE INDEX idx_grants_granting_authority ON grants(granting_authority);
+      CREATE INDEX idx_grants_recipient_business_id ON grants(recipient_business_id);
       CREATE INDEX idx_grants_region ON grants(region);
       CREATE INDEX idx_grants_decision_date ON grants(decision_date);
       CREATE INDEX idx_grants_has_eu_funding ON grants(has_eu_funding);
@@ -47,10 +49,10 @@ export class GrantsDatabase {
   insertRows(rows: GrantRow[]): void {
     const insert = this.db.prepare(`
       INSERT INTO grants (
-        decision_date, recipient, granting_authority, case_number,
-        amount_applied, amount_granted, has_eu_funding,
+        decision_date, recipient, recipient_business_id, granting_authority,
+        case_number, amount_applied, amount_granted, has_eu_funding,
         purpose, programme, region
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     this.db.exec("BEGIN");
@@ -59,6 +61,7 @@ export class GrantsDatabase {
         insert.run(
           row.decision_date,
           row.recipient,
+          row.recipient_business_id,
           row.granting_authority,
           row.case_number,
           row.amount_applied,
