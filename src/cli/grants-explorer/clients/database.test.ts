@@ -13,6 +13,7 @@ const silentLogger = new Logger({
 const row = (overrides: Partial<GrantRow> = {}): GrantRow => ({
   decision_date: "2026-01-15",
   recipient: "Test ry",
+  recipient_business_id: null,
   granting_authority: "Lapin ELY-keskus",
   case_number: "001",
   amount_applied: 1000,
@@ -87,6 +88,43 @@ describe("GrantsDatabase", () => {
     );
     expect(result).toHaveLength(1);
     expect(result[0]?.recipient).toBe("Lapin Martat ry (0210606-0)");
+  });
+
+  it("equality query on recipient_business_id returns the matching row", () => {
+    db.insertRows([
+      row({
+        recipient: "Lapin Martat ry (0210606-0)",
+        recipient_business_id: "0210606-0",
+      }),
+      row({
+        recipient: "Rikala-seura ry (2477520-6)",
+        recipient_business_id: "2477520-6",
+      }),
+    ]);
+    const result = db.query<{ recipient: string }>(
+      "SELECT recipient FROM grants WHERE recipient_business_id = ?",
+      ["0210606-0"]
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.recipient).toBe("Lapin Martat ry (0210606-0)");
+  });
+
+  it("recipient_business_id is genuinely nullable (round-trips NULL)", () => {
+    db.insertRows([
+      row({
+        recipient: "Anonymous private grantee",
+        recipient_business_id: null,
+      }),
+      row({
+        recipient: "Lapin Martat ry (0210606-0)",
+        recipient_business_id: "0210606-0",
+      }),
+    ]);
+    const result = db.query<{ recipient: string }>(
+      "SELECT recipient FROM grants WHERE recipient_business_id IS NULL"
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.recipient).toBe("Anonymous private grantee");
   });
 
   it("CHECK constraint rejects out-of-range has_eu_funding", () => {

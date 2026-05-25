@@ -48,7 +48,8 @@ Table: grants
 Columns (English name | source Finnish header | type):
 - id                  | (auto)                       | INTEGER PRIMARY KEY
 - decision_date       | Päätös pvm                   | TEXT, ISO date 'YYYY-MM-DD', may be NULL
-- recipient           | Saajan nimi                  | TEXT, includes y-tunnus in parentheses (e.g. "Lapin Martat ry (0210606-0)")
+- recipient           | Saajan nimi                  | TEXT, full original name string (e.g. "Lapin Martat ry (0210606-0)")
+- recipient_business_id | (extracted from Saajan nimi) | TEXT, Y-tunnus only (e.g. "0210606-0"), NULL when the recipient has no business ID (private persons, foreign entities, working groups). Indexed.
 - granting_authority  | Myöntäjä                     | TEXT, e.g. "Lapin ELY-keskus"
 - case_number         | Asianumero                   | TEXT
 - amount_applied      | Haettu                       | INTEGER, EUR, may be NULL
@@ -61,7 +62,7 @@ Columns (English name | source Finnish header | type):
 Rules:
 - Only one SELECT statement; no semicolons, no DDL/DML keywords.
 - Amounts and dates can be NULL; use IS NULL / IS NOT NULL where it matters.
-- Use LIKE for partial text matches (e.g. y-tunnus inside recipient).
+- For Y-tunnus searches prefer the indexed equality column: recipient_business_id = '<y-tunnus>'. LIKE on recipient still works for partial-name matches.
 
 Example queries:
 - Total granted per authority:
@@ -69,7 +70,9 @@ Example queries:
 - Top 5 single grants:
     SELECT decision_date, recipient, amount_granted FROM grants ORDER BY amount_granted DESC LIMIT 5
 - EU-funded vs. not:
-    SELECT has_eu_funding, COUNT(*) AS n, SUM(amount_granted) AS sum_eur FROM grants GROUP BY has_eu_funding`,
+    SELECT has_eu_funding, COUNT(*) AS n, SUM(amount_granted) AS sum_eur FROM grants GROUP BY has_eu_funding
+- Top 10 recipients by total granted (one row per legal entity):
+    SELECT recipient_business_id, MAX(recipient) AS name, SUM(amount_granted) AS total FROM grants WHERE recipient_business_id IS NOT NULL GROUP BY recipient_business_id ORDER BY total DESC LIMIT 10`,
     parameters: z.object({
       sql: z.string().describe("A single SQL SELECT query"),
     }),

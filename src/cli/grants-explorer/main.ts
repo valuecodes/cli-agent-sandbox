@@ -65,7 +65,8 @@ Use the \`query_grants\` tool to run SQL SELECT queries against the \`grants\` t
 
 Schema (English column | source Finnish header):
 - decision_date (Päätös pvm)                       ISO date 'YYYY-MM-DD', may be NULL
-- recipient (Saajan nimi)                          incl. y-tunnus in parens, e.g. "Lapin Martat ry (0210606-0)"
+- recipient (Saajan nimi)                          full original name, e.g. "Lapin Martat ry (0210606-0)"
+- recipient_business_id (extracted from Saajan nimi) Y-tunnus only, e.g. "0210606-0"; NULL for recipients without one (private persons, foreign entities, working groups). Indexed.
 - granting_authority (Myöntäjä)                    e.g. "Lapin ELY-keskus"
 - case_number (Asianumero)                         TEXT
 - amount_applied (Haettu)                          EUR, may be NULL
@@ -77,7 +78,8 @@ Schema (English column | source Finnish header):
 
 Notes:
 - Amounts and dates can be NULL; SUM/AVG handle that correctly.
-- For y-tunnus searches use LIKE '%<y-tunnus>%' on recipient.
+- For Y-tunnus equality searches use recipient_business_id = '<y-tunnus>' (preferred — indexed and exact). The full string is also available in recipient for substring/name matching.
+- To aggregate grants per legal entity, GROUP BY recipient_business_id (and filter out NULL when only registered entities are wanted).
 - Answer in the language of the user's question (Finnish or English).
 - Be concise and grounded in the SQL results; don't invent numbers.
 
