@@ -17,6 +17,13 @@ const DANGEROUS_KEYWORDS = [
   "DETACH",
 ];
 
+// Hard cap on rows returned to the agent. The grants table holds ~150k rows,
+// so a `SELECT * FROM grants` would balloon the agent's tool-result context.
+// Aggregations (GROUP BY granting_authority, sektoriluokitus_code, …) rarely
+// produce more than a few hundred groups, so 200 leaves room for the realistic
+// shape while clamping pathological ones.
+const MAX_TOOL_RESULT_ROWS = 200;
+
 // Defense-in-depth: the database is in-memory, but rejecting non-SELECT
 // statements keeps a misbehaving model from corrupting the working dataset
 // mid-conversation.
@@ -87,8 +94,16 @@ Example queries:
         return { error: validation.error };
       }
       try {
-        const results = db.query(sql);
-        return { results };
+        const all = db.query(sql);
+        if (all.length > MAX_TOOL_RESULT_ROWS) {
+          return {
+            results: all.slice(0, MAX_TOOL_RESULT_ROWS),
+            truncated: true,
+            totalCount: all.length,
+            note: `Returned the first ${MAX_TOOL_RESULT_ROWS} of ${all.length} rows. Refine the query with LIMIT, WHERE, or an aggregate (SUM/COUNT/GROUP BY) to see the rest.`,
+          };
+        }
+        return { results: all };
       } catch (error) {
         return { error: String(error) };
       }

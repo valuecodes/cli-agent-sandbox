@@ -65,15 +65,21 @@ const KEYBOARD_NAV_STABLE_THRESHOLD = 10;
 // (focus hadn't updated yet, so the next read saw the same row); 150 ms
 // settles reliably without making a full 200-step walk feel slow.
 const KEYBOARD_NAV_STEP_MS = 150;
-// Sanity guard: the source dataset exposes the full institutional-sector
-// classification (S11..S15 plus sub-codes). Anything below this is almost
-// certainly a discovery regression — surface loudly rather than ship a partial
-// manifest.
-const MIN_EXPECTED_SECTORS = 3;
+// Sanity guard: upstream currently exposes ~39 options (38 S-codes from S11
+// down to 6-digit sub-codes like S131311, plus the BLANK and PUUTTUU sentinel
+// buckets). A discovery returning many fewer than that is almost certainly a
+// regression (e.g. only the top of the virtualized listbox scrolled into
+// focus). 20 is well below the real count so legitimate upstream pruning
+// won't false-positive, but high enough to catch a half-broken walk.
+const MIN_EXPECTED_SECTORS = 20;
 
 export type XlsxDownloaderOptions = {
   logger: Logger;
   sourceUrl: string;
+  // Override the discovery sanity guard. Production omits this and gets
+  // MIN_EXPECTED_SECTORS; tests pass a smaller value so they don't need to
+  // fabricate 20+ mock sectors per fixture.
+  minExpectedSectors?: number;
 };
 
 /**
@@ -90,10 +96,16 @@ export type XlsxDownloaderOptions = {
 export class XlsxDownloader {
   private logger: Logger;
   private sourceUrl: string;
+  private minExpectedSectors: number;
 
-  constructor({ logger, sourceUrl }: XlsxDownloaderOptions) {
+  constructor({
+    logger,
+    sourceUrl,
+    minExpectedSectors,
+  }: XlsxDownloaderOptions) {
     this.logger = logger;
     this.sourceUrl = sourceUrl;
+    this.minExpectedSectors = minExpectedSectors ?? MIN_EXPECTED_SECTORS;
   }
 
   async download(destDir: string): Promise<void> {
@@ -152,10 +164,10 @@ export class XlsxDownloader {
         count: sectors.length,
         codes: sectors.map((s) => s.code),
       });
-      if (sectors.length < MIN_EXPECTED_SECTORS) {
+      if (sectors.length < this.minExpectedSectors) {
         await this.debugSnapshot(page, "discover-sectors-undersize");
         throw new Error(
-          `Discovered only ${sectors.length} sektoriluokitus option(s); expected at least ${MIN_EXPECTED_SECTORS}. ` +
+          `Discovered only ${sectors.length} sektoriluokitus option(s); expected at least ${this.minExpectedSectors}. ` +
             `See ${DEBUG_DIR}/discover-sectors-undersize-*.png for the live DOM.`
         );
       }
