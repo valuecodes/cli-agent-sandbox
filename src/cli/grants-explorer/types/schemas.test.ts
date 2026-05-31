@@ -18,7 +18,7 @@ describe("CliArgsSchema (grants-explorer)", () => {
       rawArgs: [],
     });
     expect(args.refetch).toBe(false);
-    expect(args.file).toBeUndefined();
+    expect(args.dir).toBeUndefined();
   });
 
   it("enables refetch when --refetch is present (no value)", () => {
@@ -30,13 +30,13 @@ describe("CliArgsSchema (grants-explorer)", () => {
     expect(args.refetch).toBe(true);
   });
 
-  it("accepts --file= as a path string", () => {
+  it("accepts --dir= as a directory path string", () => {
     const args = parseArgs({
       logger: silentLogger,
       schema: CliArgsSchema,
-      rawArgs: ["--file=tmp/other.xlsx"],
+      rawArgs: ["--dir=tmp/other-paatokset"],
     });
-    expect(args.file).toBe("tmp/other.xlsx");
+    expect(args.dir).toBe("tmp/other-paatokset");
     expect(args.refetch).toBe(false);
   });
 

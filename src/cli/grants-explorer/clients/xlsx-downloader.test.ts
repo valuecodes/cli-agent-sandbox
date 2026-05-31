@@ -1,17 +1,12 @@
-import {
-  mkdtemp,
-  readdir,
-  readFile,
-  rm,
-  stat,
-  writeFile,
-} from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { Logger } from "~clients/logger";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import XLSX from "xlsx";
+
+import { MANIFEST_FILE } from "../constants";
 
 // === Test fixture: a tiny valid xlsx with the schema the downloader's
 // post-download validation step expects (XlsxLoader). One header row + one
@@ -55,14 +50,13 @@ type Behavior = {
   failTabClick?: boolean;
   produceInvalidXlsx?: boolean;
   fixture: Buffer;
+  discoveredSectorTexts: string[];
 };
 
 let closeMock: Mock;
 
 const resolved = vi.fn(() => Promise.resolve());
 
-// A chainable noop locator/handle. Most methods return the same object so
-// `.first().click()`, `.filter({...}).first().click()`, etc. all resolve.
 type ChainOverrides = {
   click?: Mock;
 };
@@ -94,15 +88,46 @@ const buildPlaywrightMock = (behavior: Behavior) => {
     return Promise.resolve();
   });
 
+  // The downloader makes two flavors of `frame.evaluate(...)`:
+  //  1. Readiness check (returns boolean — anything truthy works here)
+  //  2. activeElement focused-text read (used by both discoverSectors and
+  //     the keyboard-nav selection path for BLANK/PUUTTUU)
+  // We dispatch on the function source. The focused-text read is identified
+  // by its `document.activeElement` reference; everything else falls through
+  // to the readiness branch.
+  //
+  // `focusIndex` walks `discoveredSectorTexts` and resets to 0 every time the
+  // slicer dropdown is (re-)opened — that mirrors the real listbox restarting
+  // its focus at the top when the dropdown re-opens, so both the initial
+  // discovery walk AND each per-sector selection walk see a fresh sequence.
+  // Once the list is exhausted, the index sticks at the end so the
+  // stable-threshold loop can terminate.
+  let focusIndex = 0;
+  const evaluate = vi.fn((fn: unknown): Promise<unknown> => {
+    const src = typeof fn === "function" ? fn.toString() : String(fn);
+    if (src.includes("activeElement")) {
+      const texts = behavior.discoveredSectorTexts;
+      const text = texts[focusIndex] ?? texts[texts.length - 1] ?? "";
+      if (focusIndex < texts.length) {
+        focusIndex++;
+      }
+      return Promise.resolve(text);
+    }
+    return Promise.resolve(true);
+  });
+
+  const slicerDropdownClick = vi.fn(() => {
+    focusIndex = 0;
+    return Promise.resolve();
+  });
+
   const frameMock = {
     url: () => "https://app.powerbi.com/reportEmbed?reportId=demo",
-    evaluate: vi.fn(() => Promise.resolve(true)),
+    evaluate,
     waitForTimeout: resolved,
     evaluateHandle: vi.fn(() =>
       Promise.resolve({
         asElement: () => ({
-          // Used by both the slicer-search input and the Myönteiset table
-          // visualContainer in the downloader's call sequence.
           click: () => Promise.resolve(),
           boundingBox: () =>
             Promise.resolve({ x: 100, y: 200, width: 800, height: 400 }),
@@ -118,14 +143,19 @@ const buildPlaywrightMock = (behavior: Behavior) => {
         click: isAvustusasiat ? tabClick : resolved,
       });
     }),
-    locator: vi.fn(() => makeChainable()),
-    getByRole: vi.fn(() =>
-      makeChainable({
-        // The optional "confirm export" dialog isn't shown in tests; the
-        // downloader catches this rejection and continues.
-        click: vi.fn(() => Promise.reject(new Error("no confirmation dialog"))),
-      })
-    ),
+    locator: vi.fn((selector?: string) => {
+      // Re-opening the slicer dropdown resets the listbox focus to the first
+      // option in the real UI. Mirror that here so each per-sector selection
+      // walk sees a fresh sequence from the top of `discoveredSectorTexts`.
+      if (
+        typeof selector === "string" &&
+        selector.includes("Sektoriluokitus")
+      ) {
+        return makeChainable({ click: slicerDropdownClick });
+      }
+      return makeChainable();
+    }),
+    getByRole: vi.fn(() => makeChainable()),
   };
 
   const downloadMock = {
@@ -170,7 +200,6 @@ const buildPlaywrightMock = (behavior: Behavior) => {
   };
 };
 
-// Module-scoped mock holders mutated by each test.
 let playwrightMock: ReturnType<typeof buildPlaywrightMock>;
 vi.mock("playwright", () => ({
   get chromium() {
@@ -186,10 +215,12 @@ const silentLogger = new Logger({
 
 describe("XlsxDownloader", () => {
   let workDir: string;
+  let destDir: string;
   let fixture: Buffer;
 
   beforeEach(async () => {
     workDir = await mkdtemp(join(tmpdir(), "xlsx-downloader-test-"));
+    destDir = join(workDir, "paatokset");
     fixture = buildFixtureXlsx();
   });
 
@@ -197,55 +228,136 @@ describe("XlsxDownloader", () => {
     await rm(workDir, { recursive: true, force: true });
   });
 
-  it("creates nested destination directories before writing", async () => {
-    playwrightMock = buildPlaywrightMock({ fixture });
+  it("writes one xlsx per discovered sector (incl. deep codes + blank buckets) + a manifest", async () => {
+    playwrightMock = buildPlaywrightMock({
+      fixture,
+      discoveredSectorTexts: [
+        "Valitse kaikki", // select-all control — must be skipped
+        "(Tyhjä)", // blank bucket → BLANK
+        "S11 Yritykset",
+        "S131311 Kunnat", // 6-digit code the old \d{2,4} regex dropped
+        "S15 Kotitalouksia palvelevat voittoa tavoittelemattomat järjestöt",
+        "Sektoriluokitus puuttuu", // missing bucket → PUUTTUU
+      ],
+    });
     const { XlsxDownloader } = await import("./xlsx-downloader");
-    const dest = join(workDir, "nested", "deep", "paatokset.xlsx");
 
     await new XlsxDownloader({
       logger: silentLogger,
       sourceUrl: "https://example.invalid/source",
-    }).download(dest);
+    }).download(destDir);
 
-    const info = await stat(dest);
-    expect(info.size).toBeGreaterThan(0);
+    const files = (await readdir(destDir)).sort();
+    expect(files).toEqual([
+      "BLANK.xlsx",
+      "PUUTTUU.xlsx",
+      "S11.xlsx",
+      "S131311.xlsx",
+      "S15.xlsx",
+      MANIFEST_FILE,
+    ]);
+
+    const manifest = JSON.parse(
+      await readFile(join(destDir, MANIFEST_FILE), "utf8")
+    ) as { code: string; label: string }[];
+    expect(manifest).toEqual([
+      { code: "BLANK", label: "(Tyhjä)" },
+      { code: "S11", label: "Yritykset" },
+      { code: "S131311", label: "Kunnat" },
+      {
+        code: "S15",
+        label: "Kotitalouksia palvelevat voittoa tavoittelemattomat järjestöt",
+      },
+      { code: "PUUTTUU", label: "Sektoriluokitus puuttuu" },
+    ]);
   });
 
-  it("closes the browser when navigation throws", async () => {
-    playwrightMock = buildPlaywrightMock({ fixture, failTabClick: true });
+  it("aborts when discovery returns fewer than MIN_EXPECTED_SECTORS sectors", async () => {
+    playwrightMock = buildPlaywrightMock({
+      fixture,
+      discoveredSectorTexts: ["S15 Lonely"],
+    });
     const { XlsxDownloader } = await import("./xlsx-downloader");
-    const dest = join(workDir, "paatokset.xlsx");
 
     await expect(
       new XlsxDownloader({
         logger: silentLogger,
         sourceUrl: "https://example.invalid/source",
-      }).download(dest)
+      }).download(destDir)
+    ).rejects.toThrow(/Discovered only 1 sektoriluokitus/);
+
+    const files = await readdir(destDir);
+    expect(files).not.toContain(MANIFEST_FILE);
+    expect(files).not.toContain("S15.xlsx");
+  });
+
+  it("closes the browser when navigation throws", async () => {
+    playwrightMock = buildPlaywrightMock({
+      fixture,
+      failTabClick: true,
+      discoveredSectorTexts: ["S15 Whatever"],
+    });
+    const { XlsxDownloader } = await import("./xlsx-downloader");
+
+    await expect(
+      new XlsxDownloader({
+        logger: silentLogger,
+        sourceUrl: "https://example.invalid/source",
+      }).download(destDir)
     ).rejects.toThrow(/tab click failure/);
 
     expect(closeMock).toHaveBeenCalledTimes(1);
   });
 
-  it("preserves the existing destination file when validation fails", async () => {
-    playwrightMock = buildPlaywrightMock({ fixture, produceInvalidXlsx: true });
+  it("skips sectors whose xlsx already exists and parses", async () => {
+    playwrightMock = buildPlaywrightMock({
+      fixture,
+      discoveredSectorTexts: [
+        "S11 Yritykset",
+        "S13 Julkisyhteisöt",
+        "S15 NPISH",
+      ],
+    });
     const { XlsxDownloader } = await import("./xlsx-downloader");
-    const dest = join(workDir, "paatokset.xlsx");
 
-    // Pre-populate destination with the known-good fixture bytes.
-    await writeFile(dest, fixture);
-    const goodBytes = await readFile(dest);
+    // Pre-populate S11.xlsx with the valid fixture — the downloader should
+    // see it as cached and only fetch the remaining sectors.
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(destDir, { recursive: true });
+    await writeFile(join(destDir, "S11.xlsx"), fixture);
+
+    await new XlsxDownloader({
+      logger: silentLogger,
+      sourceUrl: "https://example.invalid/source",
+    }).download(destDir);
+
+    const files = (await readdir(destDir)).sort();
+    expect(files).toEqual(["S11.xlsx", "S13.xlsx", "S15.xlsx", MANIFEST_FILE]);
+  });
+
+  it("on validation failure: throws, manifest is not written, no temp leftovers", async () => {
+    playwrightMock = buildPlaywrightMock({
+      fixture,
+      produceInvalidXlsx: true,
+      discoveredSectorTexts: [
+        "S11 Yritykset",
+        "S13 Julkisyhteisöt",
+        "S15 NPISH",
+      ],
+    });
+    const { XlsxDownloader } = await import("./xlsx-downloader");
 
     await expect(
       new XlsxDownloader({
         logger: silentLogger,
         sourceUrl: "https://example.invalid/source",
-      }).download(dest)
+      }).download(destDir)
     ).rejects.toThrow();
 
-    const afterBytes = await readFile(dest);
-    expect(afterBytes.equals(goodBytes)).toBe(true);
-
-    const siblings = await readdir(dirname(dest));
-    expect(siblings.some((f) => f.includes(".tmp-"))).toBe(false);
+    const files = await readdir(destDir);
+    // No manifest because the run aborted before that step.
+    expect(files).not.toContain(MANIFEST_FILE);
+    // No leftover *.tmp-* siblings (cleanupTemp ran on failure).
+    expect(files.some((f) => f.includes(".tmp-"))).toBe(false);
   });
 });
