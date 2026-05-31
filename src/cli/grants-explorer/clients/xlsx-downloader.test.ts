@@ -245,6 +245,9 @@ describe("XlsxDownloader", () => {
     await new XlsxDownloader({
       logger: silentLogger,
       sourceUrl: "https://example.invalid/source",
+      // Production guard expects ~20 sectors; this fixture has 5. Lower
+      // the bar so the happy path runs without fabricating bulk noise.
+      minExpectedSectors: 1,
     }).download(destDir);
 
     const files = (await readdir(destDir)).sort();
@@ -329,6 +332,7 @@ describe("XlsxDownloader", () => {
     await new XlsxDownloader({
       logger: silentLogger,
       sourceUrl: "https://example.invalid/source",
+      minExpectedSectors: 1,
     }).download(destDir);
 
     const files = (await readdir(destDir)).sort();
@@ -351,6 +355,7 @@ describe("XlsxDownloader", () => {
       new XlsxDownloader({
         logger: silentLogger,
         sourceUrl: "https://example.invalid/source",
+        minExpectedSectors: 1,
       }).download(destDir)
     ).rejects.toThrow();
 

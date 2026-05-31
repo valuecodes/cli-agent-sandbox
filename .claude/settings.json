@@ -9,8 +9,7 @@
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",
       "Bash(pnpm test:*)",
-      "Bash(tsx scripts/scaffold-cli.ts:*)",
-      "Bash(gh pr create:*)"
+      "Bash(tsx scripts/scaffold-cli.ts:*)"
     ],
     "deny": [
       "Bash(curl:*)",
@@ -27,7 +26,8 @@
       "Bash(pnpm install:*)",
       "Bash(pnpm add:*)",
       "Bash(pnpm remove:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh pr create:*)"
     ],
     "defaultMode": "default"
   },

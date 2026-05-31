@@ -65,7 +65,6 @@ try {
 
   db = new GrantsDatabase(logger);
   const loader = new XlsxLoader({ logger });
-  const allRows: GrantRow[] = [];
   for (const sector of manifest) {
     const xlsxPath = join(destDir, `${sector.code}.xlsx`);
     if (!existsSync(xlsxPath)) {
@@ -73,9 +72,7 @@ try {
         `Manifest references ${sector.code} but ${xlsxPath} is missing — re-run with --refetch`
       );
     }
-    const rows = loader.load(xlsxPath, { sector });
-    db.insertRows(rows);
-    allRows.push(...rows);
+    db.insertRows(loader.load(xlsxPath, { sector }));
   }
   logger.info("Grants loaded into in-memory SQL", {
     rows: db.getTotalCount(),
@@ -83,13 +80,19 @@ try {
   });
 
   // Persist a single combined JSON of every row alongside the per-sector
-  // xlsx cache. Always written after a successful load so the on-disk file
-  // mirrors what was just loaded — downstream tools (jq/duckdb/pandas) can
-  // point at one canonical path without re-running the xlsx parse pipeline.
+  // xlsx cache. We query the rows back out of SQLite instead of accumulating
+  // them in a parallel array during the load loop — single source of truth,
+  // and avoids holding two full copies in memory for the duration of load.
   await writeCombinedGrants({
     logger,
     path: join(dirname(destDir), DEFAULT_COMBINED_GRANTS_FILE),
-    rows: allRows,
+    rows: db.query<GrantRow>(
+      `SELECT decision_date, recipient, recipient_business_id, granting_authority,
+              case_number, amount_applied, amount_granted, has_eu_funding,
+              purpose, programme, region, sektoriluokitus_code, sektoriluokitus_label
+       FROM grants
+       ORDER BY id`
+    ),
   });
 
   const agentRunner = new AgentRunner({
@@ -157,13 +160,23 @@ No markdown, no extra keys.`,
 
     const output = parseResult.data.response;
     if (output.status === "needs_clarification") {
-      currentQuestion = await questionHandler.askString({
+      const followUp = await questionHandler.askString({
         prompt: output.content,
         allowEmpty: true,
       });
-      if (!currentQuestion.trim()) {
+      if (!followUp.trim()) {
         break;
       }
+      // AgentRunner is stateless: each .run() starts fresh, so a raw
+      // follow-up like "2024" would arrive without the original question
+      // ("Top recipients?") in context. Rebuild the prompt to carry the
+      // full clarification round so the next call has what it needs.
+      currentQuestion = `Original question: ${userQuestion}
+
+You asked for clarification: "${output.content}"
+User's answer: ${followUp}
+
+Now answer the original question with this added context.`;
       continue;
     }
 
