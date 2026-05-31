@@ -22,6 +22,9 @@ const row = (overrides: Partial<GrantRow> = {}): GrantRow => ({
   purpose: "Test purpose",
   programme: "Test programme",
   region: "Test region",
+  sektoriluokitus_code: "S15",
+  sektoriluokitus_label:
+    "Kotitalouksia palvelevat voittoa tavoittelemattomat järjestöt",
   ...overrides,
 });
 
@@ -130,6 +133,25 @@ describe("GrantsDatabase", () => {
   it("CHECK constraint rejects out-of-range has_eu_funding", () => {
     expect(() => {
       db.insertRows([row({ has_eu_funding: 2 as unknown as 0 | 1 })]);
+    }).toThrow();
+  });
+
+  it("filters by sektoriluokitus_code via indexed equality", () => {
+    db.insertRows([
+      row({ sektoriluokitus_code: "S15", sektoriluokitus_label: "NPISH" }),
+      row({ sektoriluokitus_code: "S11", sektoriluokitus_label: "Yritykset" }),
+      row({ sektoriluokitus_code: "S11", sektoriluokitus_label: "Yritykset" }),
+    ]);
+    const result = db.queryOne<{ n: number }>(
+      "SELECT COUNT(*) as n FROM grants WHERE sektoriluokitus_code = ?",
+      ["S11"]
+    );
+    expect(result?.n).toBe(2);
+  });
+
+  it("rejects rows with NULL sektoriluokitus_code (schema NOT NULL)", () => {
+    expect(() => {
+      db.insertRows([row({ sektoriluokitus_code: null as unknown as string })]);
     }).toThrow();
   });
 });

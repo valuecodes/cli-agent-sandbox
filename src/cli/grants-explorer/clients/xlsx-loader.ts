@@ -1,7 +1,7 @@
 import type { Logger } from "~clients/logger";
 import XLSX from "xlsx";
 
-import type { GrantRow } from "../types/schemas";
+import type { GrantRow, Sector } from "../types/schemas";
 import { GrantRowSchema } from "../types/schemas";
 import { extractBusinessId } from "../utils/business-id";
 
@@ -131,6 +131,13 @@ export type XlsxLoaderOptions = {
  * Header mapping is by exact Finnish column name (see HEADER_TO_FIELD); column
  * order in the workbook does not matter. Unknown headers are ignored.
  */
+export type LoadOptions = {
+  // Sector tag attached to every row of the loaded xlsx. Required: each
+  // per-sector xlsx must be loaded with the matching manifest entry so the
+  // sektoriluokitus_code / _label columns in the DB carry traceable values.
+  sector: Sector;
+};
+
 export class XlsxLoader {
   private logger: Logger;
 
@@ -138,7 +145,7 @@ export class XlsxLoader {
     this.logger = logger;
   }
 
-  load(filePath: string): GrantRow[] {
+  load(filePath: string, options: LoadOptions): GrantRow[] {
     this.logger.debug("Reading xlsx file", { filePath });
     const workbook = XLSX.readFile(filePath, { cellDates: true });
     const sheetName = workbook.SheetNames[0];
@@ -219,6 +226,8 @@ export class XlsxLoader {
         purpose: normalizeText(at("purpose")),
         programme: normalizeText(at("programme")),
         region: normalizeText(at("region")),
+        sektoriluokitus_code: options.sector.code,
+        sektoriluokitus_label: options.sector.label,
       };
 
       const parsed = GrantRowSchema.safeParse(candidate);
@@ -254,6 +263,7 @@ export class XlsxLoader {
 
     this.logger.info("Loaded xlsx rows", {
       filePath,
+      sektoriluokitusCode: options.sector.code,
       rowCount: rows.length,
       dateNormalizationFailures,
       validationFailures,

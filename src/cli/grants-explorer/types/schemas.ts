@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const CliArgsSchema = z.object({
-  file: z.string().optional(),
+  dir: z.string().optional(),
   // Presence-only flag. parseArgv hands us bare `true` for `--refetch` and
   // `undefined` when absent. Any `--refetch=<value>` form arrives as a string
   // and is rejected here — preventing the historical `z.coerce.boolean()`
@@ -26,6 +26,24 @@ export const GrantsAgentOutputSchema = GrantsAgentOutputTypeSchema;
 
 export type GrantsAgentOutput = z.infer<typeof GrantsAgentOutputSchema>;
 
+// Sektoriluokitus = Finnish institutional sector classification (S11–S15, plus
+// sub-codes). Each sector's grants are exported as a separate xlsx; the manifest
+// (sectors.json) records the code/label pairs the downloader discovered, so the
+// loader can tag rows back to their sector at insert time.
+// Sektoriluokitus code: either a real S-code (S2..S131311 — 1 to 6 digits)
+// or one of the two sentinel buckets for rows with no sector (BLANK = null
+// value, PUUTTUU = the source's explicit "Sektoriluokitus puuttuu").
+const SECTOR_CODE_RE = /^(S\d{1,6}|BLANK|PUUTTUU)$/;
+
+export const SectorSchema = z.object({
+  code: z.string().regex(SECTOR_CODE_RE),
+  label: z.string().min(1),
+});
+export type Sector = z.infer<typeof SectorSchema>;
+
+export const SectorManifestSchema = z.array(SectorSchema).min(1);
+export type SectorManifest = z.infer<typeof SectorManifestSchema>;
+
 // Single source of truth for one row loaded from the xlsx. Used as a runtime
 // validation tripwire in XlsxLoader: if the per-cell normalizers ever produce
 // a value that violates this shape (off-by-one bug, schema drift, etc.), the
@@ -49,6 +67,10 @@ export const GrantRowSchema = z.object({
   purpose: z.string().nullable(),
   programme: z.string().nullable(),
   region: z.string().nullable(),
+  // Sektoriluokitus tag attached by XlsxLoader from the sector manifest.
+  // Both fields are required (every row originates from one sector's xlsx).
+  sektoriluokitus_code: z.string().regex(SECTOR_CODE_RE),
+  sektoriluokitus_label: z.string().min(1),
 });
 
 export type GrantRow = z.infer<typeof GrantRowSchema>;

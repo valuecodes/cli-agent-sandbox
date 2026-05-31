@@ -34,7 +34,9 @@ export class GrantsDatabase {
         has_eu_funding INTEGER NOT NULL CHECK (has_eu_funding IN (0, 1)),
         purpose TEXT,
         programme TEXT,
-        region TEXT
+        region TEXT,
+        sektoriluokitus_code TEXT NOT NULL,
+        sektoriluokitus_label TEXT NOT NULL
       );
 
       CREATE INDEX idx_grants_granting_authority ON grants(granting_authority);
@@ -42,6 +44,7 @@ export class GrantsDatabase {
       CREATE INDEX idx_grants_region ON grants(region);
       CREATE INDEX idx_grants_decision_date ON grants(decision_date);
       CREATE INDEX idx_grants_has_eu_funding ON grants(has_eu_funding);
+      CREATE INDEX idx_grants_sektoriluokitus_code ON grants(sektoriluokitus_code);
     `);
     this.logger.debug("Grants schema created");
   }
@@ -51,8 +54,9 @@ export class GrantsDatabase {
       INSERT INTO grants (
         decision_date, recipient, recipient_business_id, granting_authority,
         case_number, amount_applied, amount_granted, has_eu_funding,
-        purpose, programme, region
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        purpose, programme, region,
+        sektoriluokitus_code, sektoriluokitus_label
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     this.db.exec("BEGIN");
@@ -69,7 +73,9 @@ export class GrantsDatabase {
           row.has_eu_funding,
           row.purpose,
           row.programme,
-          row.region
+          row.region,
+          row.sektoriluokitus_code,
+          row.sektoriluokitus_label
         );
       }
       this.db.exec("COMMIT");

@@ -160,6 +160,11 @@ describe("normalizeText", () => {
 // to a temp file, and runs the full load() pipeline. This protects against
 // regressions where extractBusinessId is wired up wrong and recipient_business_id
 // ends up always-null while the parser unit test still passes.
+const TEST_SECTOR = {
+  code: "S15",
+  label: "Kotitalouksia palvelevat voittoa tavoittelemattomat järjestöt",
+};
+
 describe("XlsxLoader.load() — recipient_business_id wiring", () => {
   let workDir: string;
 
@@ -177,7 +182,9 @@ describe("XlsxLoader.load() — recipient_business_id wiring", () => {
       "Anonymous private grantee",
     ]);
 
-    const rows = new XlsxLoader({ logger: silentLogger }).load(filePath);
+    const rows = new XlsxLoader({ logger: silentLogger }).load(filePath, {
+      sector: TEST_SECTOR,
+    });
 
     expect(rows).toHaveLength(2);
     expect(rows[0]?.recipient).toBe("Lapin Martat ry (0210606-0)");
@@ -185,5 +192,23 @@ describe("XlsxLoader.load() — recipient_business_id wiring", () => {
     // Bare-name recipient is still inserted; only the business_id is null.
     expect(rows[1]?.recipient).toBe("Anonymous private grantee");
     expect(rows[1]?.recipient_business_id).toBeNull();
+  });
+
+  it("tags every loaded row with the sektoriluokitus code and label", async () => {
+    const filePath = await writeFixtureXlsx(workDir, [
+      "Lapin Martat ry (0210606-0)",
+      "Anonymous private grantee",
+    ]);
+
+    const rows = new XlsxLoader({ logger: silentLogger }).load(filePath, {
+      sector: TEST_SECTOR,
+    });
+
+    expect(rows.every((r) => r.sektoriluokitus_code === TEST_SECTOR.code)).toBe(
+      true
+    );
+    expect(
+      rows.every((r) => r.sektoriluokitus_label === TEST_SECTOR.label)
+    ).toBe(true);
   });
 });

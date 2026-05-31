@@ -46,23 +46,26 @@ export const createSqlQueryTool = (db: GrantsDatabase) =>
 
 Table: grants
 Columns (English name | source Finnish header | type):
-- id                  | (auto)                       | INTEGER PRIMARY KEY
-- decision_date       | Päätös pvm                   | TEXT, ISO date 'YYYY-MM-DD', may be NULL
-- recipient           | Saajan nimi                  | TEXT, full original name string (e.g. "Lapin Martat ry (0210606-0)")
+- id                    | (auto)                       | INTEGER PRIMARY KEY
+- decision_date         | Päätös pvm                   | TEXT, ISO date 'YYYY-MM-DD', may be NULL
+- recipient             | Saajan nimi                  | TEXT, full original name string (e.g. "Lapin Martat ry (0210606-0)")
 - recipient_business_id | (extracted from Saajan nimi) | TEXT, Y-tunnus only (e.g. "0210606-0"), NULL when the recipient has no business ID (private persons, foreign entities, working groups). Indexed.
-- granting_authority  | Myöntäjä                     | TEXT, e.g. "Lapin ELY-keskus"
-- case_number         | Asianumero                   | TEXT
-- amount_applied      | Haettu                       | INTEGER, EUR, may be NULL
-- amount_granted      | Myönnetty                    | INTEGER, EUR, may be NULL
-- has_eu_funding      | EU-varat                     | INTEGER (0 or 1), 1 = EU funding present
-- purpose             | Hyväksytty käyttötarkoitus   | TEXT, approved purpose
-- programme           | Haun nimi (asianumero)       | TEXT, funding programme incl. programme key
-- region              | Alueet                       | TEXT, region / municipality
+- granting_authority    | Myöntäjä                     | TEXT, e.g. "Lapin ELY-keskus"
+- case_number           | Asianumero                   | TEXT
+- amount_applied        | Haettu                       | INTEGER, EUR, may be NULL
+- amount_granted        | Myönnetty                    | INTEGER, EUR, may be NULL
+- has_eu_funding        | EU-varat                     | INTEGER (0 or 1), 1 = EU funding present
+- purpose               | Hyväksytty käyttötarkoitus   | TEXT, approved purpose
+- programme             | Haun nimi (asianumero)       | TEXT, funding programme incl. programme key
+- region                | Alueet                       | TEXT, region / municipality
+- sektoriluokitus_code  | Sektoriluokitus              | TEXT NOT NULL, e.g. "S11", "S15", "S131311" (S + 1–6 digits). Sentinels "BLANK"/"PUUTTUU" mark sector-less rows. Indexed.
+- sektoriluokitus_label | Sektoriluokitus              | TEXT NOT NULL, human-readable sector name matching the code.
 
 Rules:
 - Only one SELECT statement; no semicolons, no DDL/DML keywords.
 - Amounts and dates can be NULL; use IS NULL / IS NOT NULL where it matters.
 - For Y-tunnus searches prefer the indexed equality column: recipient_business_id = '<y-tunnus>'. LIKE on recipient still works for partial-name matches.
+- The DB contains rows from every available sektoriluokitus. To match the historical "non-profits only" scope, filter WHERE sektoriluokitus_code = 'S15'. Codes 'BLANK' and 'PUUTTUU' are sector-less rows; exclude with WHERE sektoriluokitus_code LIKE 'S%' for classified-only analysis.
 
 Example queries:
 - Total granted per authority:
@@ -72,7 +75,9 @@ Example queries:
 - EU-funded vs. not:
     SELECT has_eu_funding, COUNT(*) AS n, SUM(amount_granted) AS sum_eur FROM grants GROUP BY has_eu_funding
 - Top 10 recipients by total granted (one row per legal entity):
-    SELECT recipient_business_id, MAX(recipient) AS name, SUM(amount_granted) AS total FROM grants WHERE recipient_business_id IS NOT NULL GROUP BY recipient_business_id ORDER BY total DESC LIMIT 10`,
+    SELECT recipient_business_id, MAX(recipient) AS name, SUM(amount_granted) AS total FROM grants WHERE recipient_business_id IS NOT NULL GROUP BY recipient_business_id ORDER BY total DESC LIMIT 10
+- Grants per sektoriluokitus:
+    SELECT sektoriluokitus_code, MAX(sektoriluokitus_label) AS label, COUNT(*) AS n, SUM(amount_granted) AS total FROM grants GROUP BY sektoriluokitus_code ORDER BY total DESC`,
     parameters: z.object({
       sql: z.string().describe("A single SQL SELECT query"),
     }),
