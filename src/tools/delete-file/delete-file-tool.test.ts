@@ -9,7 +9,7 @@ import { createDeleteFileTool } from "./delete-file-tool";
 describe("createDeleteFileTool tmp path safety", () => {
   let testDir = "";
   let relativeDir = "";
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // oxlint-disable-next-line typescript/no-empty-function
   const mockLogger = { tool: () => {} } as never;
 
   beforeEach(async () => {

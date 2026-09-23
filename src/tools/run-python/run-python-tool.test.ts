@@ -43,7 +43,7 @@ describe("isValidScriptName", () => {
 describe("createRunPythonTool", () => {
   let testDir = "";
   let scriptsDir = "";
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // oxlint-disable-next-line typescript/no-empty-function
   const mockLogger = { tool: () => {} } as never;
 
   beforeEach(async () => {

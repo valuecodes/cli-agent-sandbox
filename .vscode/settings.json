@@ -1,19 +1,7 @@
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
-  "github.copilot.chat.commitMessageGeneration.instructions": [
-    {
-      "file": ".github/commit-message-instructions.md"
-    }
-  ],
-  "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
-    {
-      "file": ".github/pull-request-description-instructions.md"
-    }
-  ],
+  "oxc.enable": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
   "github.copilot.enable": {
     "*": true,
     "dotenv": false

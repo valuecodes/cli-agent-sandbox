@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FetchResult } from "./fetch-url-tool";
 import { createFetchUrlTool } from "./fetch-url-tool";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+// oxlint-disable-next-line typescript/no-empty-function
 const mockLogger = { tool: () => {} } as never;
 
 // Mock the url-safety module

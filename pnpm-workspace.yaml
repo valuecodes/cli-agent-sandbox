@@ -1,0 +1,44 @@
+# Single-package repo: no `packages:` list. This file exists for the settings
+# below, which pnpm 11 reads from here rather than from `.npmrc`.
+
+# Toolchain versions, kept in the same shape as the `catalog:` block of the
+# agentic-monorepo-starter template this repo was seeded from. With one manifest
+# a catalog is not needed to stop drift between packages; it is here so a
+# template sync is a diff of this block. package.json references each entry
+# with a bare `catalog:`. Other dependencies stay pinned inline in package.json.
+#
+# Scoped keys must be double-quoted: unquoted `@` is a YAML syntax error, and
+# Prettier checks this file, so single quotes fail `format:check`.
+catalog:
+  # Node typings track the supported runtime (`engines.node` / `.nvmrc`, Node
+  # 24), not the template's Node 26 typings: newer typings would let code
+  # typecheck against APIs that do not exist at runtime.
+  "@types/node": 24.13.3
+  prettier: 3.9.6
+  # The native (Go) compiler; its binary is still called `tsc`.
+  typescript: 7.0.2
+  vitest: 4.1.11
+
+  # Prettier plugin, loaded by prettier.config.ts.
+  "@ianvs/prettier-plugin-sort-imports": 4.7.1
+
+# Routes `pnpm add` / `pnpm update <pkg>` into the catalog and fails a version
+# that conflicts with an entry. NOTE: it acts on those commands only — a plain
+# `pnpm install` never evaluates it — so it is an authoring guardrail, not a
+# CI-enforced invariant. A hand-written version in package.json will still
+# install.
+catalogMode: strict
+
+allowBuilds:
+  # tsx and Vitest both run through esbuild, and this install script is what
+  # links its native binary.
+  esbuild: true
+
+# 14 days, in minutes. A newly published version is not resolvable until it has
+# been on the registry this long, which blunts the compromised-release window.
+#
+# Consequence worth knowing: "latest" now means "newest stable at least 14 days
+# old", so `pnpm up --latest` will deliberately skip a fresh release and pick it
+# up on a later run. Use `minimumReleaseAgeExclude` if one package genuinely
+# needs to move faster.
+minimumReleaseAge: 20160

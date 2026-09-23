@@ -1,38 +1,25 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "~tools/*": ["src/tools/*"],
-      "~clients/*": ["src/clients/*"],
-      "~utils/*": ["src/utils/*"]
+      "~tools/*": ["./src/tools/*"],
+      "~clients/*": ["./src/clients/*"],
+      "~utils/*": ["./src/utils/*"]
     },
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "target": "ES2024",
     "lib": ["ES2024"],
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-
-    "incremental": false,
-    "disableSourceOfProjectReferenceRedirect": true,
-
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "checkJs": true,
-
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "noEmit": true
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "src",
-    "scripts",
-    "templates",
-    "eslint.config.ts",
-    "prettier.config.ts"
-  ],
+  "include": ["src", "scripts", "templates", "prettier.config.ts"],
   "exclude": ["node_modules"]
 }

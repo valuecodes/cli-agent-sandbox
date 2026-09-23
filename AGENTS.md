@@ -29,7 +29,9 @@
 
 ## 2) Setup & commands
 
+- Requires Node.js >=24.12 (see `.nvmrc`) and pnpm 11 (`corepack enable` picks up `packageManager`)
 - Install deps: `pnpm install`
+- Toolchain versions (`typescript`, `prettier`, `vitest`, `@types/node`, sort-imports plugin) live in the `catalog:` block of `pnpm-workspace.yaml`; `package.json` references them as `catalog:`. New releases resolve only after 14 days (`minimumReleaseAge`).
 - Set `OPENAI_API_KEY` via env or `.env` (humans do this; agents must not read secrets)
 - If a task requires Playwright, follow the repo README for system deps
 - If a task requires Python (e.g., `etf-backtest`), set up the venv:
@@ -45,7 +47,7 @@
 - `pnpm run:[cli-name-here]`
 - `pnpm ai:usage` (summarize Claude/Codex usage logs for a repo)
 - `pnpm typecheck`
-- `pnpm lint` (use `pnpm lint:fix` if errors are auto-fixable)
+- `pnpm lint` — type-aware oxlint (`.oxlintrc.json`; use `pnpm lint:fix` if errors are auto-fixable). The logger template-literal ban is a local oxlint JS plugin in `scripts/oxlint/`.
 - `pnpm format` / `pnpm format:check`
 - `pnpm test`
 
