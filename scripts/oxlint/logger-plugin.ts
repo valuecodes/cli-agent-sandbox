@@ -14,9 +14,10 @@ export const NO_TEMPLATE_LITERAL_MESSAGE =
  * Port of the ESLint `no-restricted-syntax` selectors this repo used:
  *   CallExpression[callee.object.name='logger'][callee.property.name=/…/] > TemplateLiteral
  *   CallExpression[callee.object.property.name='logger'][callee.property.name=/…/] > TemplateLiteral
- * So `logger.info(…)`, `this.logger.info(…)` and `obj.logger.info(…)` are
- * matched, and only template literals that are *direct* arguments are reported
- * (any position; one nested in an object argument is not).
+ * So `logger.info(…)`, `this.logger.info(…)`, `this.#logger.info(…)` and
+ * `obj.logger.info(…)` are matched, and only template literals that are
+ * *direct* arguments are reported (any position; one nested in an object
+ * argument is not).
  */
 const noTemplateLiteral: Rule = {
   meta: {
@@ -37,7 +38,10 @@ const noTemplateLiteral: Rule = {
       const isLogger =
         (receiver.type === "Identifier" && receiver.name === "logger") ||
         (receiver.type === "MemberExpression" &&
-          receiver.property.type === "Identifier" &&
+          // `PrivateIdentifier` too: the old selector matched `this.#logger`,
+          // since ESTree gives private names a `name` as well.
+          (receiver.property.type === "Identifier" ||
+            receiver.property.type === "PrivateIdentifier") &&
           receiver.property.name === "logger");
       if (!isLogger) {
         return;

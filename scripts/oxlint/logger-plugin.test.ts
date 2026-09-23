@@ -41,6 +41,10 @@ new RuleTester({ languageOptions: { sourceType: "module" } }).run(
       { code: "logger.info(`a ${b}`);", errors: [error] },
       { code: "this.logger.warn(`x`);", errors: [error] },
       { code: "obj.logger.error(`${e}`);", errors: [error] },
+      {
+        code: "class A { #logger = console; m() { this.#logger.info(`x`); } }",
+        errors: [error],
+      },
       { code: "logger.debug(`x`);", errors: [error] },
       { code: "logger.tool(`x`);", errors: [error] },
       { code: "logger.question(`x`);", errors: [error] },
