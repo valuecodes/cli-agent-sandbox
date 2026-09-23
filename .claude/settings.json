@@ -5,6 +5,7 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm lint:fix:*)",
       "Bash(pnpm typecheck:*)",
+      "Bash(pnpm typecheck *)",
       "Bash(pnpm build:*)",
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",

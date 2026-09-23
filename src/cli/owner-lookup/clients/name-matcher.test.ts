@@ -6,18 +6,17 @@ import { findBestMatch } from "./name-matcher";
 const makeCompany = (
   businessId: string,
   names: { name: string; type: string; endDate?: string }[]
-): PrhCompany =>
-  ({
-    businessId: { value: businessId },
-    names: names.map((n) => ({
-      name: n.name,
-      type: n.type,
-      registrationDate: "2000-01-01",
-      endDate: n.endDate,
-    })),
-    addresses: [],
-    companyForms: [],
-  }) as unknown as PrhCompany;
+): PrhCompany => ({
+  businessId: { value: businessId },
+  names: names.map((n) => ({
+    name: n.name,
+    type: n.type,
+    registrationDate: "2000-01-01",
+    endDate: n.endDate,
+  })),
+  addresses: [],
+  companyForms: [],
+});
 
 describe("findBestMatch", () => {
   const companies = [

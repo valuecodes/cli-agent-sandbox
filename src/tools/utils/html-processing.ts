@@ -203,7 +203,7 @@ export const extractMainContent = (html: string): string => {
   // Try to find main content area
   for (const selector of MAIN_CONTENT_SELECTORS) {
     const mainContent = document.querySelector(selector);
-    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- textContent is non-null on Element
+    // oxlint-disable-next-line typescript/prefer-optional-chain -- textContent is non-null on Element
     if (mainContent && mainContent.textContent.trim()) {
       return mainContent.innerHTML;
     }

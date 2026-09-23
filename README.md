@@ -4,7 +4,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 
 ## Quick Start
 
-1. Install Node.js and pnpm
+1. Install Node.js >=24.12 (see `.nvmrc`) and pnpm 11 (`corepack enable`)
 2. Install dependencies: `pnpm install`
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
@@ -43,8 +43,8 @@ pip install numpy pandas torch
 | `pnpm run:update-docs`         | Generate a branch diff and optionally run Codex to sync docs |
 | `pnpm ai:usage`                | Summarize Claude/Codex token usage for a repo                |
 | `pnpm typecheck`               | Run TypeScript type checking                                 |
-| `pnpm lint`                    | Run ESLint for code quality                                  |
-| `pnpm lint:fix`                | Run ESLint and auto-fix issues                               |
+| `pnpm lint`                    | Run oxlint (type-aware) for code quality                     |
+| `pnpm lint:fix`                | Run oxlint and auto-fix issues                               |
 | `pnpm format`                  | Format code with Prettier                                    |
 | `pnpm format:check`            | Check code formatting                                        |
 | `pnpm test`                    | Run Vitest test suite                                        |

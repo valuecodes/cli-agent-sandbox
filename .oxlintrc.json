@@ -1,0 +1,287 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+
+  // Migrated from eslint.config.ts. The rule set is the *effective* ESLint
+  // config (`eslint --print-config`), not the preset names: that config was
+  // eslint:recommended + typescript-eslint recommended, recommendedTypeChecked,
+  // strictTypeChecked and stylisticTypeChecked, plus local rules. The strict
+  // presets also tighten options on shared rules (e.g. `ban-ts-comment`
+  // minimumDescriptionLength 10, `restrict-plus-operands` all-false, `return-await`
+  // "error-handling-correctness-only"), so every option is spelled out below.
+  //
+  // Every rule is listed explicitly and every category is off, because
+  // oxlint's categories are not the same set as those presets. `unicorn` and
+  // `oxc` are ON by default, so `plugins` has to be explicit to keep them off.
+  // `correctness` has to be turned off by NAME: an empty `categories` object
+  // leaves oxlint's default category on, which silently adds ~57 rules.
+  //
+  // Two ESLint rules have no oxlint equivalent:
+  // - `no-restricted-syntax` (template literals in logger calls) is replaced by
+  //   the local JS plugin rule `logger/no-template-literal` below.
+  // - `no-octal` is dropped: every source file is a TypeScript ES module, where
+  //   tsc already rejects legacy octal literals (TS1121).
+  "plugins": ["typescript", "import"],
+  "categories": { "correctness": "off" },
+
+  // JS plugins are alpha in oxlint and not covered by semver; pin oxlint and
+  // re-run scripts/oxlint/logger-plugin.test.ts when bumping it. Node >=22.18
+  // loads the TypeScript plugin file natively.
+  "jsPlugins": ["./scripts/oxlint/logger-plugin.ts"],
+
+  // Type-aware rules (the no-unsafe-* family, no-floating-promises,
+  // unbound-method, ...) need the `oxlint-tsgolint` binary. Without it
+  // `oxlint` exits 0 having silently skipped all of them, so the `lint`
+  // script also passes `--type-aware` to fail loudly.
+  "options": { "typeAware": true },
+  "env": { "builtin": true },
+
+  // `.gitignore` is read natively by oxlint, which keeps `tmp/`, `.venv/` and
+  // `node_modules/` out. Config files sit outside the tsconfig `include` (or
+  // need a default export), matching the old ESLint ignore.
+  "ignorePatterns": ["**/*.config.*"],
+
+  "rules": {
+    // eslint core
+    "curly": ["error", "all"],
+    "eqeqeq": ["error", "smart"],
+    "for-direction": "error",
+    "func-style": [
+      "error",
+      "expression",
+      {
+        "allowArrowFunctions": false,
+        "allowTypeAnnotation": false,
+        "overrides": {}
+      }
+    ],
+    "no-async-promise-executor": "error",
+    "no-case-declarations": "error",
+    "no-compare-neg-zero": "error",
+    "no-cond-assign": ["error", "except-parens"],
+    "no-constant-binary-expression": "error",
+    "no-constant-condition": ["error", { "checkLoops": "allExceptWhileTrue" }],
+    "no-control-regex": "error",
+    "no-debugger": "error",
+    "no-delete-var": "error",
+    "no-dupe-else-if": "error",
+    "no-duplicate-case": "error",
+    "no-empty": ["error", { "allowEmptyCatch": false }],
+    "no-empty-character-class": "error",
+    "no-empty-pattern": ["error", { "allowObjectPatternsAsParameters": false }],
+    "no-empty-static-block": "error",
+    "no-ex-assign": "error",
+    "no-extra-boolean-cast": ["error", {}],
+    "no-fallthrough": [
+      "error",
+      { "allowEmptyCase": false, "reportUnusedFallthroughComment": false }
+    ],
+    "no-global-assign": ["error", { "exceptions": [] }],
+    "no-invalid-regexp": ["error", {}],
+    "no-irregular-whitespace": [
+      "error",
+      {
+        "skipComments": false,
+        "skipJSXText": false,
+        "skipRegExps": false,
+        "skipStrings": true,
+        "skipTemplates": false
+      }
+    ],
+    "no-loss-of-precision": "error",
+    "no-misleading-character-class": ["error", { "allowEscape": false }],
+    "no-nonoctal-decimal-escape": "error",
+    "no-prototype-builtins": "error",
+    "no-regex-spaces": "error",
+    "no-self-assign": ["error", { "props": true }],
+    "no-shadow-restricted-names": ["error", { "reportGlobalThis": false }],
+    "no-sparse-arrays": "error",
+    "no-unexpected-multiline": "error",
+    "no-unsafe-finally": "error",
+    "no-unsafe-optional-chaining": [
+      "error",
+      { "disallowArithmeticOperators": false }
+    ],
+    "no-unused-labels": "error",
+    "no-unused-private-class-members": "error",
+    "no-useless-backreference": "error",
+    "no-useless-catch": "error",
+    "no-useless-escape": ["error", { "allowRegexCharacters": [] }],
+    "no-var": "error",
+    "prefer-const": [
+      "error",
+      { "destructuring": "any", "ignoreReadBeforeAssign": false }
+    ],
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "require-yield": "error",
+    "use-isnan": [
+      "error",
+      { "enforceForIndexOf": false, "enforceForSwitchCase": true }
+    ],
+    "valid-typeof": ["error", { "requireStringLiterals": false }],
+
+    // typescript-eslint
+    "typescript/adjacent-overload-signatures": "error",
+    "typescript/array-type": "error",
+    "typescript/await-thenable": "error",
+    "typescript/ban-ts-comment": ["error", { "minimumDescriptionLength": 10 }],
+    "typescript/ban-tslint-comment": "error",
+    "typescript/class-literal-property-style": "error",
+    "typescript/consistent-generic-constructors": "error",
+    "typescript/consistent-indexed-object-style": "error",
+    "typescript/consistent-type-assertions": "error",
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "typescript/consistent-type-exports": "error",
+    "typescript/consistent-type-imports": [
+      "warn",
+      { "fixStyle": "separate-type-imports", "prefer": "type-imports" }
+    ],
+    "typescript/dot-notation": [
+      "error",
+      {
+        "allowIndexSignaturePropertyAccess": false,
+        "allowKeywords": true,
+        "allowPattern": "",
+        "allowPrivateClassPropertyAccess": false,
+        "allowProtectedClassPropertyAccess": false
+      }
+    ],
+    "typescript/no-array-constructor": "error",
+    "typescript/no-array-delete": "error",
+    "typescript/no-base-to-string": "error",
+    "typescript/no-confusing-non-null-assertion": "error",
+    "typescript/no-confusing-void-expression": "error",
+    "typescript/no-deprecated": "error",
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-duplicate-type-constituents": "error",
+    "typescript/no-dynamic-delete": "error",
+    "typescript/no-empty-function": ["error", { "allow": [] }],
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-extra-non-null-assertion": "error",
+    "typescript/no-extraneous-class": "error",
+    "typescript/no-floating-promises": ["error", { "ignoreVoid": true }],
+    "typescript/no-for-in-array": "error",
+    "typescript/no-implied-eval": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/no-invalid-void-type": "error",
+    "typescript/no-meaningless-void-operator": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-misused-promises": [
+      "error",
+      { "checksVoidReturn": { "attributes": false } }
+    ],
+    "typescript/no-misused-spread": "error",
+    "typescript/no-mixed-enums": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-non-null-asserted-nullish-coalescing": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-redundant-type-constituents": "error",
+    "typescript/no-require-imports": "error",
+    // Intentional deviation from the ESLint options (`../../*`, `../../../*`,
+    // `../../../../*`): ESLint matched `group` with gitignore semantics, so
+    // `../../*` also caught nested paths like `../../x/y`. oxlint's glob does
+    // not, so a single `**` pattern restores that coverage at every depth.
+    "typescript/no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["../../**"],
+            "message": "Use path aliases (e.g. ~tools/...) instead of ../../ imports."
+          }
+        ]
+      }
+    ],
+    "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-boolean-literal-compare": "error",
+    "typescript/no-unnecessary-condition": [
+      "error",
+      { "allowConstantLoopConditions": true }
+    ],
+    "typescript/no-unnecessary-template-expression": "error",
+    "typescript/no-unnecessary-type-arguments": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unnecessary-type-conversion": "error",
+    "typescript/no-unnecessary-type-parameters": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unsafe-enum-comparison": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-unary-minus": "error",
+    "typescript/no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": false,
+        "allowTaggedTemplates": false,
+        "allowTernary": false
+      }
+    ],
+    "typescript/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "typescript/no-useless-constructor": "error",
+    "typescript/no-useless-default-assignment": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/non-nullable-type-assertion-style": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-find": "error",
+    "typescript/prefer-for-of": "error",
+    "typescript/prefer-function-type": "error",
+    "typescript/prefer-includes": "error",
+    "typescript/prefer-literal-enum-member": "error",
+    "typescript/prefer-namespace-keyword": "error",
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+    "typescript/prefer-reduce-type-parameter": "error",
+    "typescript/prefer-regexp-exec": "error",
+    "typescript/prefer-return-this-type": "error",
+    "typescript/prefer-string-starts-ends-with": "error",
+    "typescript/related-getter-setter-pairs": "error",
+    "typescript/require-await": "error",
+    "typescript/restrict-plus-operands": [
+      "error",
+      {
+        "allowAny": false,
+        "allowBoolean": false,
+        "allowNullish": false,
+        "allowNumberAndString": false,
+        "allowRegExp": false
+      }
+    ],
+    "typescript/restrict-template-expressions": [
+      "error",
+      {
+        "allowAny": false,
+        "allowBoolean": true,
+        "allowNever": false,
+        "allowNullish": false,
+        "allowNumber": true,
+        "allowRegExp": false
+      }
+    ],
+    "typescript/return-await": ["error", "error-handling-correctness-only"],
+    "typescript/switch-exhaustiveness-check": "error",
+    "typescript/triple-slash-reference": "error",
+    "typescript/unbound-method": "error",
+    "typescript/unified-signatures": "error",
+    "typescript/use-unknown-in-catch-callback-variable": "error",
+
+    // eslint-plugin-import
+    "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+    "import/no-default-export": "error",
+
+    // Local plugin: replaces the `no-restricted-syntax` selectors that banned
+    // template literals as direct arguments of logger.<level>() calls.
+    "logger/no-template-literal": "error"
+  }
+}
