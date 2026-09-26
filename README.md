@@ -4,7 +4,7 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 
 ## Quick Start
 
-1. Install Node.js >=24.12 (see `.nvmrc`) and pnpm 11 (`corepack enable`)
+1. Install Node.js >=24.15 (see `.nvmrc`) and pnpm 11 (`corepack enable`)
 2. Install dependencies: `pnpm install`
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
