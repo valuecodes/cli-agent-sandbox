@@ -83,7 +83,7 @@ export class PrhPipeline {
 
         this.logger.info("Processing entry", { fileName });
 
-        // stream-json v2: withParserAsStream() returns a Duplex that
+        // stream-json: withParserAsStream() returns a Duplex that
         // accepts raw text and emits {key, value} objects
         const jsonStream = entry.pipe(streamArray.withParserAsStream());
 
