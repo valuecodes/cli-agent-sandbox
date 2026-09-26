@@ -3,6 +3,7 @@ import path from "node:path";
 import { tool } from "@openai/agents";
 import type { Logger } from "~clients/logger";
 import { resolveTmpPathForWrite, TMP_ROOT } from "~tools/utils/fs";
+import { z } from "zod";
 
 export type WriteFileToolOptions = {
   logger: Logger;
@@ -13,25 +14,11 @@ export const createWriteFileTool = ({ logger }: WriteFileToolOptions) =>
     name: "writeFile",
     description:
       "Writes content to a file under the repo tmp directory (path is relative to tmp).",
-    parameters: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "Relative path within the repo tmp directory",
-        },
-        content: { type: "string", description: "The content to write" },
-      },
-      required: ["path", "content"],
-      additionalProperties: false,
-    },
-    execute: async ({
-      path: filePath,
-      content,
-    }: {
-      path: string;
-      content: string;
-    }) => {
+    parameters: z.object({
+      path: z.string().describe("Relative path within the repo tmp directory"),
+      content: z.string().describe("The content to write"),
+    }),
+    execute: async ({ path: filePath, content }) => {
       logger.tool("Writing file", { path: filePath });
       const targetPath = await resolveTmpPathForWrite(filePath);
       await fs.writeFile(targetPath, content, "utf8");

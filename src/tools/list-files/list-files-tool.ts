@@ -3,6 +3,7 @@ import path from "node:path";
 import { tool } from "@openai/agents";
 import type { Logger } from "~clients/logger";
 import { resolveTmpPathForList, TMP_ROOT } from "~tools/utils/fs";
+import { z } from "zod";
 
 export type ListFilesToolOptions = {
   logger: Logger;
@@ -13,18 +14,10 @@ export const createListFilesTool = ({ logger }: ListFilesToolOptions) =>
     name: "listFiles",
     description:
       "Lists files and directories under the repo tmp directory (path is relative to tmp). Use an empty path to list the tmp root.",
-    parameters: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "Relative path within the repo tmp directory.",
-        },
-      },
-      required: ["path"],
-      additionalProperties: false,
-    },
-    execute: async ({ path: dirPath }: { path: string }) => {
+    parameters: z.object({
+      path: z.string().describe("Relative path within the repo tmp directory."),
+    }),
+    execute: async ({ path: dirPath }) => {
       const effectivePath = dirPath || undefined;
       logger.tool("Listing files", { path: effectivePath ?? "tmp root" });
       const targetPath = await resolveTmpPathForList(effectivePath);

@@ -79,6 +79,9 @@ export class CommentAnalyzer {
     this.logger.info("Analyzing comments with AI", { count: comments.length });
     const result = await runner.run({ prompt });
 
-    return result.finalOutput as AnalysisResult;
+    if (result.finalOutput === undefined) {
+      throw new Error("Comment analysis returned no output");
+    }
+    return result.finalOutput;
   }
 }

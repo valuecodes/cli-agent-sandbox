@@ -48,6 +48,9 @@ pip install numpy pandas torch
 | `pnpm format`                  | Format code with Prettier                                    |
 | `pnpm format:check`            | Check code formatting                                        |
 | `pnpm test`                    | Run Vitest test suite                                        |
+| `pnpm secrets:scan`            | Scan git history for secrets with gitleaks                   |
+
+`secrets:scan` needs `gitleaks` v8.19+ on PATH or a running Docker daemon (it falls back to a pinned gitleaks image). CI runs it on every PR and push to `main`.
 
 ## Publication scraping
 

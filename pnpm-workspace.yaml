@@ -13,11 +13,11 @@ catalog:
   # Node typings track the supported runtime (`engines.node` / `.nvmrc`, Node
   # 24), not the template's Node 26 typings: newer typings would let code
   # typecheck against APIs that do not exist at runtime.
-  "@types/node": 24.13.3
+  "@types/node": 24.13.4
   prettier: 3.9.6
   # The native (Go) compiler; its binary is still called `tsc`.
   typescript: 7.0.2
-  vitest: 4.1.11
+  vitest: 5.0.0
 
   # Prettier plugin, loaded by prettier.config.ts.
   "@ianvs/prettier-plugin-sort-imports": 4.7.1

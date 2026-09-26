@@ -11,8 +11,10 @@ const isErrnoWithCode = (error: unknown, codes: Set<string>) =>
   typeof (error as NodeJS.ErrnoException).code === "string" &&
   codes.has((error as NodeJS.ErrnoException).code ?? "");
 
+// Takes only `invoke` so tools with any parameter schema are accepted; a bare
+// FunctionTool defaults its schema type to `undefined`.
 export const invokeTool = async <TResult>(
-  tool: FunctionTool,
+  tool: Pick<FunctionTool, "invoke">,
   input: Record<string, unknown>
 ): Promise<TResult> =>
   tool.invoke(RUN_CONTEXT, JSON.stringify(input)) as Promise<TResult>;
