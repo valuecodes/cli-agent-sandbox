@@ -86,8 +86,7 @@ Steps:
   if (parseResult.success) {
     logger.info("Result", { message: parseResult.data.message });
   } else {
-    logger.warn("Unexpected response format");
-    logger.info(JSON.stringify(result.finalOutput, null, 2));
+    logger.warn("Unexpected response format", { output: result.finalOutput });
   }
 
   // Show the file contents after write

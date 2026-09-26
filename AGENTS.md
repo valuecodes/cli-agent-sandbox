@@ -29,7 +29,7 @@
 
 ## 2) Setup & commands
 
-- Requires Node.js >=24.12 (see `.nvmrc`) and pnpm 11 (`corepack enable` picks up `packageManager`)
+- Requires Node.js >=24.15 (see `.nvmrc`) and pnpm 11 (`corepack enable` picks up `packageManager`)
 - Install deps: `pnpm install`
 - Toolchain versions (`typescript`, `prettier`, `vitest`, `@types/node`, sort-imports plugin) live in the `catalog:` block of `pnpm-workspace.yaml`; `package.json` references them as `catalog:`. New releases resolve only after 14 days (`minimumReleaseAge`).
 - Set `OPENAI_API_KEY` via env or `.env` (humans do this; agents must not read secrets)
