@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { tool } from "@openai/agents";
 import type { Logger } from "~clients/logger";
+import { z } from "zod";
 
 /**
  * Result of a Python script execution
@@ -224,24 +225,19 @@ export const createRunPythonTool = ({
       "Only .py files in the scripts directory can be executed. " +
       "Optionally accepts JSON input to pass via stdin. " +
       "Returns stdout, stderr, exit code, and execution time.",
-    parameters: {
-      type: "object",
-      properties: {
-        scriptName: {
-          type: "string",
-          description:
-            'Name of the Python script to run (e.g., "hello.py"). Must be a .py file in the scripts directory.',
-        },
-        input: {
-          type: "string",
-          description:
-            'JSON string to pass to the script via stdin. Pass empty string "" if no input needed. The script should read from stdin using json.load(sys.stdin).',
-        },
-      },
-      required: ["scriptName", "input"],
-      additionalProperties: false,
-    },
-    execute: async (params: { scriptName: string; input: string }) => {
+    parameters: z.object({
+      scriptName: z
+        .string()
+        .describe(
+          'Name of the Python script to run (e.g., "hello.py"). Must be a .py file in the scripts directory.'
+        ),
+      input: z
+        .string()
+        .describe(
+          'JSON string to pass to the script via stdin. Pass empty string "" if no input needed. The script should read from stdin using json.load(sys.stdin).'
+        ),
+    }),
+    execute: async (params) => {
       logger.tool("Running Python script", { scriptName: params.scriptName });
 
       // Parse the input string to object if provided (empty string means no input)

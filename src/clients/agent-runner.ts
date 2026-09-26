@@ -1,5 +1,5 @@
 import { Agent, MemorySession, Runner } from "@openai/agents";
-import type { RunResult, Tool } from "@openai/agents";
+import type { Tool } from "@openai/agents";
 import type { ZodType } from "zod";
 
 import type { Logger } from "./logger";
@@ -111,10 +111,9 @@ export class AgentRunner<TOutput> {
     });
   }
 
-  async run({
-    prompt,
-    ...rest
-  }: RunProps): Promise<RunResult<unknown, AgentType<TOutput>>> {
+  // Return type is inferred: agents 0.18's RunResult constraint rejects an
+  // explicit RunResult<unknown, Agent<unknown, ZodType<TOutput>>> annotation.
+  async run({ prompt, ...rest }: RunProps) {
     // When stateless=true, omit session to avoid reasoning item sequence errors
     // that occur when reusing MemorySession with reasoning models
     const sessionOption = this.stateless ? {} : { session: this.session };

@@ -82,3 +82,21 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  secrets-scan:
+    name: secrets-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      # Full history: gitleaks scans every commit, not just the checked-out tree.
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Same script as `pnpm secrets:scan`; runs the pinned gitleaks Docker
+      # image, so no pnpm/Node setup is needed.
+      - name: Scan for secrets
+        run: sh scripts/secrets-scan.sh

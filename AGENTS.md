@@ -50,6 +50,7 @@
 - `pnpm lint` — type-aware oxlint (`.oxlintrc.json`; use `pnpm lint:fix` if errors are auto-fixable). The logger template-literal ban is a local oxlint JS plugin in `scripts/oxlint/`.
 - `pnpm format` / `pnpm format:check`
 - `pnpm test`
+- `pnpm secrets:scan` (gitleaks over the full git history; needs `gitleaks` v8.19+ or Docker; also a CI job)
 
 **Scaffolding a new CLI:**
 

@@ -3,6 +3,7 @@ import { tool } from "@openai/agents";
 import type { Logger } from "~clients/logger";
 import { processHtmlContent } from "~tools/utils/html-processing";
 import { resolveAndValidateUrl } from "~tools/utils/url-safety";
+import { z } from "zod";
 
 /**
  * Result of a fetch operation
@@ -374,55 +375,44 @@ export const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
       "Fetches a web page via HTTP GET and returns clean, sanitized Markdown content. " +
       "Includes SSRF protection (blocks localhost, private IPs, cloud metadata endpoints). " +
       "HTML content is sanitized to remove scripts, iframes, and event handlers before conversion.",
-    parameters: {
-      type: "object",
-      properties: {
-        url: {
-          type: "string",
-          description: "The URL to fetch (must be http or https)",
-        },
-        timeoutMs: {
-          type: "number",
-          description:
-            "Request timeout in milliseconds (default: 15000, max: 30000)",
-        },
-        maxBytes: {
-          type: "number",
-          description:
-            "Maximum response size in bytes (default: 2097152 / 2MB, max: 5242880 / 5MB)",
-        },
-        maxRedirects: {
-          type: "number",
-          description:
-            "Maximum number of redirects to follow (default: 5, max: 10)",
-        },
-        maxChars: {
-          type: "number",
-          description:
-            "Maximum characters in output markdown/text (default: 50000)",
-        },
-        etag: {
-          type: "string",
-          description: "ETag from previous request for conditional fetch",
-        },
-        lastModified: {
-          type: "string",
-          description:
-            "Last-Modified value from previous request for conditional fetch",
-        },
-      },
-      required: ["url"],
-      additionalProperties: false,
-    },
-    execute: async (params: {
-      url: string;
-      timeoutMs?: number;
-      maxBytes?: number;
-      maxRedirects?: number;
-      maxChars?: number;
-      etag?: string;
-      lastModified?: string;
-    }) => {
+    parameters: z.object({
+      url: z.string().describe("The URL to fetch (must be http or https)"),
+      timeoutMs: z
+        .number()
+        .optional()
+        .describe(
+          "Request timeout in milliseconds (default: 15000, max: 30000)"
+        ),
+      maxBytes: z
+        .number()
+        .optional()
+        .describe(
+          "Maximum response size in bytes (default: 2097152 / 2MB, max: 5242880 / 5MB)"
+        ),
+      maxRedirects: z
+        .number()
+        .optional()
+        .describe(
+          "Maximum number of redirects to follow (default: 5, max: 10)"
+        ),
+      maxChars: z
+        .number()
+        .optional()
+        .describe(
+          "Maximum characters in output markdown/text (default: 50000)"
+        ),
+      etag: z
+        .string()
+        .optional()
+        .describe("ETag from previous request for conditional fetch"),
+      lastModified: z
+        .string()
+        .optional()
+        .describe(
+          "Last-Modified value from previous request for conditional fetch"
+        ),
+    }),
+    execute: async (params) => {
       logger.tool("Fetching URL", { url: params.url });
       const result = await executeFetch(params);
       logger.tool("Fetch result", {
