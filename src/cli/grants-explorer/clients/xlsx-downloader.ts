@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, rename, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import type { Logger } from "~clients/logger";
 import type { Browser, Frame, Page } from "playwright";
 import { chromium } from "playwright";
+import type { Logger } from "~clients/logger";
 
 import type { Sector } from "../types/schemas";
 import {

@@ -1,5 +1,5 @@
-import fs from "node:fs/promises";
 import type { FunctionTool } from "@openai/agents";
+import fs from "node:fs/promises";
 
 const RUN_CONTEXT = {} as unknown as Parameters<FunctionTool["invoke"]>[0];
 const SYMLINK_ERROR_CODES = new Set(["EPERM", "EACCES", "ENOSYS", "EINVAL"]);

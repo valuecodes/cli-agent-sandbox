@@ -1,5 +1,5 @@
-import type { ReviewThread } from "~clients/github-client";
 import { describe, expect, it } from "vitest";
+import type { ReviewThread } from "~clients/github-client";
 
 import { buildCommentThreadIndex } from "./review-thread-index";
 

@@ -1,9 +1,9 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Logger } from "~clients/logger";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import XLSX from "xlsx";
+import { Logger } from "~clients/logger";
 
 import {
   normalizeAmount,

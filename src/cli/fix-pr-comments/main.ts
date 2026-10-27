@@ -9,7 +9,6 @@
  *   pnpm run:fix-pr-comments -- --no-codex    # Skip launching codex
  */
 import "dotenv/config";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

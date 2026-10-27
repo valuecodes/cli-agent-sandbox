@@ -1,9 +1,9 @@
-import crypto from "node:crypto";
 import { tool } from "@openai/agents";
+import crypto from "node:crypto";
+import { z } from "zod";
 import type { Logger } from "~clients/logger";
 import { processHtmlContent } from "~tools/utils/html-processing";
 import { resolveAndValidateUrl } from "~tools/utils/url-safety";
-import { z } from "zod";
 
 /**
  * Result of a fetch operation

@@ -1,9 +1,9 @@
+import { tool } from "@openai/agents";
+import { JSDOM } from "jsdom";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { tool } from "@openai/agents";
-import { resolveAndValidateUrl } from "~tools/utils/url-safety";
-import { JSDOM } from "jsdom";
 import { z } from "zod";
+import { resolveAndValidateUrl } from "~tools/utils/url-safety";
 
 /**
  * Statistics for a single decade row

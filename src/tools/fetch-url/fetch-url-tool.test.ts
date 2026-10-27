@@ -1,6 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { invokeTool } from "~tools/utils/test-utils";
 import * as urlSafety from "~tools/utils/url-safety";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchResult } from "./fetch-url-tool";
 import { createFetchUrlTool } from "./fetch-url-tool";

@@ -1,6 +1,6 @@
-import type { Logger } from "~clients/logger";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import sanitize from "sanitize-html";
+import type { Logger } from "~clients/logger";
 
 export type FetchClientOptions = {
   logger: Logger;

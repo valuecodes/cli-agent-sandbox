@@ -2,7 +2,6 @@
 // pnpm run:name-explorer --mode ai
 
 import "dotenv/config";
-
 import { writeFile } from "fs/promises";
 import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";

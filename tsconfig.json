@@ -20,6 +20,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "scripts", "templates", "prettier.config.ts"],
+  "include": ["src", "scripts", "templates", "vitest.config.ts"],
   "exclude": ["node_modules"]
 }

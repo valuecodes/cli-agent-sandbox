@@ -1,8 +1,8 @@
+import { tool } from "@openai/agents";
 import { spawn } from "node:child_process";
 import path from "node:path";
-import { tool } from "@openai/agents";
-import type { Logger } from "~clients/logger";
 import { z } from "zod";
+import type { Logger } from "~clients/logger";
 
 /**
  * Result of a Python script execution

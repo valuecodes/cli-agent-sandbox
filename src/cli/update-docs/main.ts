@@ -3,7 +3,6 @@
 // Update documentation based on branch changes
 
 import "dotenv/config";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

@@ -1,5 +1,5 @@
-import type { Logger } from "~clients/logger";
 import XLSX from "xlsx";
+import type { Logger } from "~clients/logger";
 
 import type { GrantRow, Sector } from "../types/schemas";
 import { GrantRowSchema } from "../types/schemas";

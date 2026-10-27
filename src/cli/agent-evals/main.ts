@@ -3,7 +3,6 @@
 // Run automated evaluation cases for AI agents with PASS/FAIL results and reports
 
 import "dotenv/config";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

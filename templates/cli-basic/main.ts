@@ -3,10 +3,9 @@
 // _CLI_DESCRIPTION_
 
 import "dotenv/config";
-
+import { z } from "zod";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
-import { z } from "zod";
 
 const logger = new Logger();
 

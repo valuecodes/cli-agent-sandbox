@@ -3,7 +3,6 @@
 // pnpm run:grants-explorer --refetch
 
 import "dotenv/config";
-
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { AgentRunner } from "~clients/agent-runner";

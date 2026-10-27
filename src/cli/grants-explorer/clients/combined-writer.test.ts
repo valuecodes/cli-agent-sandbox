@@ -1,9 +1,9 @@
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Logger } from "~clients/logger";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { Logger } from "~clients/logger";
 
 import { GrantRowSchema } from "../types/schemas";
 import type { GrantRow } from "../types/schemas";
