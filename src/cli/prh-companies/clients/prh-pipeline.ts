@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { Logger } from "~clients/logger";
 import streamArray from "stream-json/streamers/stream-array.js";
 import unzipper from "unzipper";
+import type { Logger } from "~clients/logger";
 
 import {
   OUTPUT_FILENAME,

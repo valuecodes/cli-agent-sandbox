@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
+import { $ } from "zx";
 import { CodexClient } from "~clients/codex-client";
 import { GitClient } from "~clients/git-client";
 import type { Logger } from "~clients/logger";
-import { $ } from "zx";
 
 import {
   CODEX_PROMPT_TEMPLATE,

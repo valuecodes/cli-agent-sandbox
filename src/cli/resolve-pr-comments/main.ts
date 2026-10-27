@@ -8,7 +8,6 @@
  *   pnpm run:resolve-pr-comments -- --pr=10 --dry-run
  */
 import "dotenv/config";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

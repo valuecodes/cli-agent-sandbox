@@ -1,4 +1,0 @@
-pnpm-lock.yaml
-# Build output and caches. Prettier also reads .gitignore, which covers tmp/.
-**/dist/
-**/.cache/

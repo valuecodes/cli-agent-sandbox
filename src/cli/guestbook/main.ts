@@ -1,7 +1,6 @@
 // pnpm run:guestbook
 
 import "dotenv/config";
-
 import { AgentRunner } from "~clients/agent-runner";
 import { Logger } from "~clients/logger";
 import { createReadFileTool } from "~tools/read-file/read-file-tool";

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { TMP_ROOT } from "~tools/utils/fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { TMP_ROOT } from "~tools/utils/fs";
 
 import type { Assertion } from "../types/schemas";
 import { evaluateAssertion } from "./assertions";

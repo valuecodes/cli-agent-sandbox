@@ -1,6 +1,6 @@
+import { describe, expect, it } from "vitest";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
-import { describe, expect, it } from "vitest";
 
 import { CliArgsSchema } from "../cli/agent-evals/types/schemas";
 

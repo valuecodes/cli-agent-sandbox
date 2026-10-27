@@ -1,6 +1,6 @@
-import type { Logger } from "~clients/logger";
 import { z } from "zod";
 import { $ } from "zx";
+import type { Logger } from "~clients/logger";
 
 $.verbose = false;
 

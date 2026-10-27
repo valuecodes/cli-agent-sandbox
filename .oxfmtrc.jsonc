@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  // Prettier's default; oxfmt's is 100.
+  "printWidth": 80,
+  "trailingComma": "es5",
+  "sortPackageJson": false,
+  // Third-party imports (the `~tools/`, `~clients/` and `~utils/` aliases sort
+  // with them), then relative imports, each group separated by a blank line.
+  "sortImports": {
+    "groups": [
+      ["builtin", "external"],
+      "internal",
+      ["parent", "sibling", "index"],
+      "unknown",
+    ],
+  },
+  // `.gitignore` is read too, which covers `tmp/`, `.venv/` and `node_modules/`.
+  "ignorePatterns": ["pnpm-lock.yaml", "**/dist/", "**/.cache/"],
+}

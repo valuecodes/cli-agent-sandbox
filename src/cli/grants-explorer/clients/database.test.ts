@@ -1,5 +1,5 @@
-import { Logger } from "~clients/logger";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Logger } from "~clients/logger";
 
 import type { GrantRow } from "../types/schemas";
 import { GrantsDatabase } from "./database";

@@ -3,12 +3,11 @@
 // Scrape publication links from a given webpage and save them to tmp/scraped-publications/[url-slug]/
 
 import "dotenv/config";
-
 import path from "node:path";
+import slug from "slug";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 import { QuestionHandler } from "~utils/question-handler";
-import slug from "slug";
 
 import { PublicationPipeline } from "./clients/publication-pipeline";
 import { OUTPUT_BASE_DIR } from "./constants";

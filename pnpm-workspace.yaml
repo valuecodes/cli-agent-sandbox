@@ -1,32 +1,55 @@
-# Single-package repo: no `packages:` list. This file exists for the settings
-# below, which pnpm 11 reads from here rather than from `.npmrc`.
+# Single-package repo: no `packages:` list. This file exists for the catalog and
+# the settings below, which pnpm reads from here rather than from `.npmrc`.
 
-# Toolchain versions, kept in the same shape as the `catalog:` block of the
-# agentic-monorepo-starter template this repo was seeded from. With one manifest
-# a catalog is not needed to stop drift between packages; it is here so a
-# template sync is a diff of this block. package.json references each entry
-# with a bare `catalog:`. Other dependencies stay pinned inline in package.json.
+# Every external dependency version, referenced as `catalog:` from package.json,
+# in the same shape as the agentic-monorepo-starter template this repo was
+# seeded from. With one manifest a catalog is not needed to stop drift; it is
+# here so the maintenance dashboard, which reads only this block, tracks every
+# dependency, and so a template sync is a diff of this block. Update everything
+# with `pnpm up --latest`, which rewrites only this file and the lockfile.
 #
-# Scoped keys must be double-quoted: unquoted `@` is a YAML syntax error, and
-# Prettier checks this file, so single quotes fail `format:check`.
+# Scoped keys must be double-quoted.
 catalog:
-  # Node typings track the supported runtime (`engines.node` / `.nvmrc`, Node
-  # 24), not the template's Node 26 typings: newer typings would let code
-  # typecheck against APIs that do not exist at runtime.
-  "@types/node": 24.13.4
-  prettier: 3.9.6
-  # The native (Go) compiler; its binary is still called `tsc`.
+  "@openai/agents": 0.18.0
+  # Held on the Node 24 line to match `.nvmrc` (see `updateConfig` below).
+  "@types/node": 24.19.2
+  "@types/jsdom": 30.0.0
+  "@types/lodash-es": 4.17.12
+  "@types/sanitize-html": 2.16.1
+  "@types/slug": 5.0.9
+  "@types/unzipper": 0.10.11
+  dotenv: 17.4.2
+  jsdom: 30.0.1
+  knip: 6.41.0
+  lodash-es: 4.18.1
+  marked: 18.0.12
+  node-html-markdown: 2.0.0
+  oxfmt: 0.72.0
+  oxlint: 1.87.0
+  oxlint-tsgolint: 7.0.2003
+  playwright: 1.63.0
+  sanitize-html: 2.17.7
+  slug: 12.0.1
+  stream-json: 3.6.0
+  tsx: 4.23.13
+  # `typescript` is the native (Go) compiler; its binary is still `tsc`.
   typescript: 7.0.2
-  vitest: 5.0.0
+  unzipper: 0.12.5
+  vitest: 5.0.3
+  xlsx: 0.18.5
+  zod: 4.6.2
+  zx: 8.8.5
 
-  # Prettier plugin, loaded by prettier.config.ts.
-  "@ianvs/prettier-plugin-sort-imports": 4.7.1
+# Skipped by `pnpm up --latest`. `@types/node` must track the Node major in
+# `.nvmrc`, so bump it by hand within that line: newer typings would let code
+# typecheck against APIs that do not exist at runtime.
+updateConfig:
+  ignoreDependencies:
+    - "@types/node"
 
-# Routes `pnpm add` / `pnpm update <pkg>` into the catalog and fails a version
-# that conflicts with an entry. NOTE: it acts on those commands only — a plain
-# `pnpm install` never evaluates it — so it is an authoring guardrail, not a
-# CI-enforced invariant. A hand-written version in package.json will still
-# install.
+# Makes `pnpm add` / `pnpm update` use the catalog and reject conflicting
+# versions. Plain `pnpm install` never evaluates it, so it is an authoring
+# guardrail, not a CI check.
 catalogMode: strict
 
 allowBuilds:
@@ -34,11 +57,14 @@ allowBuilds:
   # links its native binary.
   esbuild: true
 
-# 14 days, in minutes. A newly published version is not resolvable until it has
-# been on the registry this long, which blunts the compromised-release window.
-#
-# Consequence worth knowing: "latest" now means "newest stable at least 14 days
-# old", so `pnpm up --latest` will deliberately skip a fresh release and pick it
-# up on a later run. Use `minimumReleaseAgeExclude` if one package genuinely
-# needs to move faster.
+# 14 days, in minutes: a new release is not resolvable until it is this old.
+# So `pnpm up --latest` deliberately skips fresh releases; use
+# `minimumReleaseAgeExclude` if one package must move faster.
 minimumReleaseAge: 20160
+
+# Fails when a version has weaker trust evidence (provenance, trusted
+# publishing) than an earlier one, the usual sign of a hijacked account.
+# Also re-checked on `--frozen-lockfile` installs. If a downgrade is
+# legitimate, exclude that exact version in `trustPolicyExclude` with a reason,
+# never a bare package name.
+trustPolicy: no-downgrade

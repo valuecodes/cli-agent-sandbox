@@ -1,8 +1,8 @@
 import { Agent, run } from "@openai/agents";
-import type { Logger } from "~clients/logger";
 import { JSDOM } from "jsdom";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 import type { z } from "zod";
+import type { Logger } from "~clients/logger";
 
 import {
   ContentSelectorResult,

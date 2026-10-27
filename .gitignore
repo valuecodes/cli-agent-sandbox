@@ -17,5 +17,11 @@ tmp
 .venv
 __pycache__
 
+# Local git worktrees
+.worktrees/
+
+# Logs
+*.log
+
 # Misc
 .DS_Store

@@ -3,7 +3,6 @@
 // Look up Finnish company name translations from PRH by shareholder/company name
 
 import "dotenv/config";
-
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
 

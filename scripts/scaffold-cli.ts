@@ -9,9 +9,9 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { Logger } from "~clients/logger";
 import { parseArgs } from "~utils/parse-args";
-import { z } from "zod";
 
 const TEMPLATE_DIR = path.join(process.cwd(), "templates", "cli-basic");
 const CLI_DIR = path.join(process.cwd(), "src", "cli");
