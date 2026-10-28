@@ -8,95 +8,12 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A *running* main run is never cancelled; a *pending* one is still replaced
+  # by a newer push.
+  cancel-in-progress: false
 
 jobs:
-  typecheck:
-    name: typecheck
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  checks:
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Lint
-        run: pnpm lint
-
-  format-check:
-    name: format-check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Format check
-        run: pnpm format:check
-
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Test
-        run: pnpm test
-
-  secrets-scan:
-    name: secrets-scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      # Full history: gitleaks scans every commit, not just the checked-out tree.
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      # Same script as `pnpm secrets:scan`; runs the pinned gitleaks Docker
-      # image, so no pnpm/Node setup is needed.
-      - name: Scan for secrets
-        run: sh scripts/secrets-scan.sh
+    uses: ./.github/workflows/checks.yml # zizmor: ignore[self-repository]

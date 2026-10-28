@@ -4,8 +4,8 @@ A minimal TypeScript CLI sandbox for testing agent workflows and safe web scrapi
 
 ## Quick Start
 
-1. Install Node.js >=24.15 (see `.nvmrc`) and pnpm 11 (`corepack enable`)
-2. Install dependencies: `pnpm install`
+1. Install Node.js 24.22.1 (see `.nvmrc`) and pnpm 12 (`corepack enable`)
+2. Install dependencies: `pnpm install` (also turns on the git hooks in `.githooks/`)
 3. Install Playwright system deps (Chromium): `pnpm exec playwright install-deps chromium`
 4. Set `OPENAI_API_KEY` (export it or add to `.env`)
 5. Run the demo: `pnpm run:guestbook`
@@ -45,12 +45,23 @@ pip install numpy pandas torch
 | `pnpm typecheck`               | Run TypeScript type checking                                 |
 | `pnpm lint`                    | Run oxlint (type-aware) for code quality                     |
 | `pnpm lint:fix`                | Run oxlint and auto-fix issues                               |
-| `pnpm format`                  | Format code with Prettier                                    |
+| `pnpm format`                  | Format code with oxfmt                                       |
 | `pnpm format:check`            | Check code formatting                                        |
-| `pnpm test`                    | Run Vitest test suite                                        |
+| `pnpm test`                    | Run Vitest test suite once (`pnpm test:watch` to watch)      |
+| `pnpm knip`                    | Find unused files, exports and dependencies                  |
 | `pnpm secrets:scan`            | Scan git history for secrets with gitleaks                   |
 
-`secrets:scan` needs `gitleaks` v8.19+ on PATH or a running Docker daemon (it falls back to a pinned gitleaks image). CI runs it on every PR and push to `main`.
+`secrets:scan` needs `gitleaks` v8.19+ on PATH or a running Docker daemon (it falls back to a pinned gitleaks image).
+
+### Git hooks and CI
+
+`pnpm install` turns on the git hooks in `.githooks/`: format check, lint and a staged secrets scan before each commit (so committing needs `gitleaks` or Docker); typecheck, test and knip before each push. CI (`.github/workflows/checks.yml`) runs typecheck, lint, knip, format:check, test, a gitleaks scan, and actionlint + zizmor over the workflow files on every PR and push to `main`.
+
+GitHub settings to go with it:
+
+1. **Branches → branch protection for `main`**: require the `all-passed` status check. It fans in every CI job, so it is the only one to require.
+2. **Code security → Dependabot**: turn **alerts** on. `.github/dependabot.yml` bumps the SHA-pinned GitHub Actions monthly; npm dependencies are updated by hand.
+3. **Issues**: run the `Maintenance dashboard` workflow once (**Actions → Maintenance dashboard → Run workflow**), then pin the **Maintenance dashboard** issue it creates. It lists due catalog, pnpm, gitleaks and Node.js updates and `pnpm audit` findings, refreshed daily.
 
 ## Publication scraping
 
