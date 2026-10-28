@@ -20,7 +20,7 @@ type ColumnWidths = {
  * All format methods return strings; printing is the caller's responsibility.
  */
 export class OutputFormatter {
-  private sinceLabel: string;
+  private readonly sinceLabel: string;
 
   constructor(options: OutputFormatterOptions) {
     this.sinceLabel = options.sinceLabel;

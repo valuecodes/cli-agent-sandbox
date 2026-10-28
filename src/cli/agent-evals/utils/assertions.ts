@@ -15,34 +15,6 @@ import {
   evaluateFileNotExistsAssertion,
 } from "./file-assertions";
 
-/**
- * Evaluate a single assertion against the agent output.
- * File assertions are async (require filesystem access).
- */
-export const evaluateAssertion = async (
-  assertion: Assertion,
-  output: unknown
-): Promise<AssertionResult> => {
-  switch (assertion.type) {
-    case "contains":
-      return evaluateContainsAssertion(assertion, output);
-    case "matchesRegex":
-      return evaluateMatchesRegexAssertion(assertion, output);
-    case "equals":
-      return evaluateEqualsAssertion(assertion, output);
-    case "jsonPath":
-      return evaluateJsonPathAssertion(assertion, output);
-    case "fileExists":
-      return evaluateFileExistsAssertion(assertion);
-    case "fileContains":
-      return evaluateFileContainsAssertion(assertion);
-    case "fileJsonPath":
-      return evaluateFileJsonPathAssertion(assertion);
-    case "fileNotExists":
-      return evaluateFileNotExistsAssertion(assertion);
-  }
-};
-
 const evaluateContainsAssertion = (
   assertion: ContainsAssertion,
   output: unknown
@@ -85,11 +57,11 @@ const evaluateMatchesRegexAssertion = (
       actual: outputStr,
       expected: assertion.pattern,
     };
-  } catch (err) {
+  } catch (error) {
     return {
       assertion,
       passed: false,
-      message: `Invalid regex pattern: ${err instanceof Error ? err.message : String(err)}`,
+      message: `Invalid regex pattern: ${error instanceof Error ? error.message : String(error)}`,
       actual: outputStr,
       expected: assertion.pattern,
     };
@@ -130,11 +102,11 @@ const evaluateJsonPathAssertion = (
       actual: value,
       expected: assertion.expected,
     };
-  } catch (err) {
+  } catch (error) {
     return {
       assertion,
       passed: false,
-      message: `Failed to evaluate path ${assertion.path}: ${err instanceof Error ? err.message : String(err)}`,
+      message: `Failed to evaluate path ${assertion.path}: ${error instanceof Error ? error.message : String(error)}`,
       actual: output,
       expected: assertion.expected,
     };
@@ -172,3 +144,48 @@ const getJsonPath = (obj: unknown, path: string): unknown => {
 
   return current;
 };
+
+/**
+ * Evaluate a single assertion against the agent output.
+ * File assertions are async (require filesystem access).
+ */
+const evaluateAssertion = async (
+  assertion: Assertion,
+  output: unknown
+): Promise<AssertionResult> => {
+  switch (assertion.type) {
+    case "contains": {
+      return evaluateContainsAssertion(assertion, output);
+    }
+    case "matchesRegex": {
+      return evaluateMatchesRegexAssertion(assertion, output);
+    }
+    case "equals": {
+      return evaluateEqualsAssertion(assertion, output);
+    }
+    case "jsonPath": {
+      return evaluateJsonPathAssertion(assertion, output);
+    }
+    case "fileExists": {
+      return evaluateFileExistsAssertion(assertion);
+    }
+    case "fileContains": {
+      return evaluateFileContainsAssertion(assertion);
+    }
+    case "fileJsonPath": {
+      return evaluateFileJsonPathAssertion(assertion);
+    }
+    case "fileNotExists": {
+      return evaluateFileNotExistsAssertion(assertion);
+    }
+    default: {
+      // Unreachable for schema-validated input; `never` keeps the switch exhaustive.
+      const unhandled: never = assertion;
+      throw new Error(
+        `Unknown assertion type: ${String((unhandled as { type: unknown }).type)}`
+      );
+    }
+  }
+};
+
+export { evaluateAssertion };

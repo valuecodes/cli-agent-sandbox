@@ -15,7 +15,7 @@ type PrhClientOptions = {
 };
 
 export class PrhClient {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor({ logger }: PrhClientOptions) {
     this.logger = logger;
@@ -27,7 +27,7 @@ export class PrhClient {
     const validation = await resolveAndValidateUrl(url);
     if (!validation.valid) {
       throw new Error(
-        "URL validation failed: " + (validation.error ?? "Unknown error")
+        `URL validation failed: ${validation.error ?? "Unknown error"}`
       );
     }
 
@@ -50,10 +50,7 @@ export class PrhClient {
 
       if (!response.ok) {
         throw new Error(
-          "PRH API error: " +
-            String(response.status) +
-            " " +
-            response.statusText
+          `PRH API error: ${String(response.status)} ${response.statusText}`
         );
       }
 
@@ -61,7 +58,7 @@ export class PrhClient {
       const parsed = PrhApiResponseSchema.safeParse(json);
 
       if (!parsed.success) {
-        throw new Error("Invalid PRH API response: " + parsed.error.message);
+        throw new Error(`Invalid PRH API response: ${parsed.error.message}`);
       }
 
       const result = parsed.data;

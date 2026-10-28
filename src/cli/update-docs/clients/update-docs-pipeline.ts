@@ -27,7 +27,7 @@ type RunResult = {
 };
 
 export class UpdateDocsPipeline {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(options: UpdateDocsPipelineOptions) {
     this.logger = options.logger;

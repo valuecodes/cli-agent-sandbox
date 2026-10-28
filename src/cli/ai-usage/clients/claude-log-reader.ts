@@ -1,7 +1,7 @@
-import { createReadStream } from "fs";
-import { readdir, stat } from "fs/promises";
-import { join } from "path";
-import { createInterface } from "readline";
+import { createReadStream } from "node:fs";
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { createInterface } from "node:readline";
 import type { Logger } from "~clients/logger";
 
 import { CLAUDE_PROJECTS_PATH, PROVIDER_CLAUDE } from "../constants";
@@ -24,14 +24,14 @@ type GetUsageOptions = {
  * /home/juha/code/foo -> -home-juha-code-foo
  */
 const encodeRepoPath = (repoPath: string): string => {
-  const normalizedPath = repoPath.replace(/\\/g, "/");
-  return normalizedPath.replace(/\//g, "-");
+  const normalizedPath = repoPath.replaceAll("\\", "/");
+  return normalizedPath.replaceAll("/", "-");
 };
 
 export class ClaudeLogReader {
-  private logger: Logger;
-  private basePath: string;
-  private debug: boolean;
+  private readonly logger: Logger;
+  private readonly basePath: string;
+  private readonly debug: boolean;
 
   constructor(options: ClaudeLogReaderOptions) {
     this.logger = options.logger;
@@ -116,7 +116,7 @@ export class ClaudeLogReader {
         if (!entry.message?.usage) {
           continue;
         }
-        if (!entry.message.model) {
+        if (entry.message.model === undefined || entry.message.model === "") {
           continue;
         }
         // Skip synthetic entries (client-side error messages, not real API calls)
@@ -130,7 +130,7 @@ export class ClaudeLogReader {
         }
 
         // Skip if cwd is missing or doesn't match repo
-        if (!entry.cwd) {
+        if (entry.cwd === undefined || entry.cwd === "") {
           if (this.debug) {
             this.logger.debug("Skipping entry: cwd missing", { repoPath });
           }

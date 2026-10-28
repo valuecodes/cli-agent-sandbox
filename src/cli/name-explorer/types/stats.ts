@@ -1,6 +1,6 @@
 // TypeScript interfaces for name statistics
 
-export type DecadeGenderStats = {
+type DecadeGenderStats = {
   decade: string;
   gender: "boy" | "girl";
   totalBirths: number;
@@ -19,7 +19,7 @@ export type DecadeGenderStats = {
   entropy: number;
 };
 
-export type TopName = {
+type TopName = {
   decade: string;
   gender: "boy" | "girl";
   rank: number;
@@ -28,7 +28,7 @@ export type TopName = {
   share: number;
 };
 
-export type NameDynamics = {
+type NameDynamics = {
   name: string;
   gender: "boy" | "girl";
   peakDecade: string;
@@ -41,7 +41,7 @@ export type NameDynamics = {
   rankStddev: number;
 };
 
-export type RankChange = {
+type RankChange = {
   name: string;
   gender: "boy" | "girl";
   fromDecade: string;
@@ -51,7 +51,7 @@ export type RankChange = {
   change: number;
 };
 
-export type NewEntry = {
+type NewEntry = {
   name: string;
   gender: "boy" | "girl";
   decade: string;
@@ -59,7 +59,7 @@ export type NewEntry = {
   count: number;
 };
 
-export type Comeback = {
+type Comeback = {
   name: string;
   gender: "boy" | "girl";
   comebackDecade: string;
@@ -68,7 +68,7 @@ export type Comeback = {
   comebackRank: number;
 };
 
-export type ChurnMetrics = {
+type ChurnMetrics = {
   fromDecade: string;
   toDecade: string;
   gender: "boy" | "girl";
@@ -78,7 +78,7 @@ export type ChurnMetrics = {
   jaccardSimilarity: number;
 };
 
-export type UnisexName = {
+type UnisexName = {
   name: string;
   decade: string;
   boyRank: number;
@@ -87,7 +87,7 @@ export type UnisexName = {
   girlCount: number;
 };
 
-export type EvergreenName = {
+type EvergreenName = {
   name: string;
   gender: "boy" | "girl";
   decadesPresent: number;
@@ -95,7 +95,7 @@ export type EvergreenName = {
   totalCount: number;
 };
 
-export type LetterStats = {
+type LetterStats = {
   decade: string;
   gender: "boy" | "girl";
   letter: string;
@@ -104,7 +104,7 @@ export type LetterStats = {
   share: number;
 };
 
-export type SuffixStats = {
+type SuffixStats = {
   decade: string;
   gender: "boy" | "girl";
   suffix: string;
@@ -113,7 +113,7 @@ export type SuffixStats = {
   share: number;
 };
 
-export type NameLengthStats = {
+type NameLengthStats = {
   decade: string;
   gender: "boy" | "girl";
   avgLength: number;
@@ -121,7 +121,7 @@ export type NameLengthStats = {
   maxLength: number;
 };
 
-export type SpecialCharStats = {
+type SpecialCharStats = {
   decade: string;
   gender: "boy" | "girl";
   namesWithUmlautA: number;
@@ -131,7 +131,7 @@ export type SpecialCharStats = {
   umlautOShare: number;
 };
 
-export type AllStats = {
+type AllStats = {
   generatedAt: string;
   dataSource: string;
   decadeRange: { first: string; last: string };
@@ -152,4 +152,21 @@ export type AllStats = {
   suffixStats: SuffixStats[];
   nameLengthStats: NameLengthStats[];
   specialCharStats: SpecialCharStats[];
+};
+
+export type {
+  DecadeGenderStats,
+  TopName,
+  NameDynamics,
+  RankChange,
+  NewEntry,
+  Comeback,
+  ChurnMetrics,
+  UnisexName,
+  EvergreenName,
+  LetterStats,
+  SuffixStats,
+  NameLengthStats,
+  SpecialCharStats,
+  AllStats,
 };

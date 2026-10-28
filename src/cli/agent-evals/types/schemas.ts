@@ -10,7 +10,7 @@ import {
 // CLI Arguments
 // ============================================
 
-export const CliArgsSchema = z
+const CliArgsSchema = z
   .object({
     suite: z.string().optional(),
     all: z.coerce.boolean().default(false),
@@ -22,33 +22,31 @@ export const CliArgsSchema = z
     message: "Either --suite <name> or --all is required",
   });
 
-export type CliArgs = z.infer<typeof CliArgsSchema>;
-
 // ============================================
 // Assertion Types
 // ============================================
 
-export const ContainsAssertionSchema = z.object({
+const ContainsAssertionSchema = z.object({
   type: z.literal("contains"),
   value: z.string(),
   caseSensitive: z.boolean().optional(),
   description: z.string().optional(),
 });
 
-export const MatchesRegexAssertionSchema = z.object({
+const MatchesRegexAssertionSchema = z.object({
   type: z.literal("matchesRegex"),
   pattern: z.string(),
   flags: z.string().optional(),
   description: z.string().optional(),
 });
 
-export const EqualsAssertionSchema = z.object({
+const EqualsAssertionSchema = z.object({
   type: z.literal("equals"),
   expected: z.unknown(),
   description: z.string().optional(),
 });
 
-export const JsonPathAssertionSchema = z.object({
+const JsonPathAssertionSchema = z.object({
   type: z.literal("jsonPath"),
   path: z.string(),
   expected: z.unknown(),
@@ -59,13 +57,13 @@ export const JsonPathAssertionSchema = z.object({
 // File Assertion Types (for verifying tool side effects)
 // ============================================
 
-export const FileExistsAssertionSchema = z.object({
+const FileExistsAssertionSchema = z.object({
   type: z.literal("fileExists"),
   path: z.string(),
   description: z.string().optional(),
 });
 
-export const FileContainsAssertionSchema = z.object({
+const FileContainsAssertionSchema = z.object({
   type: z.literal("fileContains"),
   path: z.string(),
   value: z.string(),
@@ -73,7 +71,7 @@ export const FileContainsAssertionSchema = z.object({
   description: z.string().optional(),
 });
 
-export const FileJsonPathAssertionSchema = z.object({
+const FileJsonPathAssertionSchema = z.object({
   type: z.literal("fileJsonPath"),
   path: z.string(),
   jsonPath: z.string(),
@@ -81,13 +79,13 @@ export const FileJsonPathAssertionSchema = z.object({
   description: z.string().optional(),
 });
 
-export const FileNotExistsAssertionSchema = z.object({
+const FileNotExistsAssertionSchema = z.object({
   type: z.literal("fileNotExists"),
   path: z.string(),
   description: z.string().optional(),
 });
 
-export const AssertionSchema = z.discriminatedUnion("type", [
+const AssertionSchema = z.discriminatedUnion("type", [
   ContainsAssertionSchema,
   MatchesRegexAssertionSchema,
   EqualsAssertionSchema,
@@ -98,23 +96,21 @@ export const AssertionSchema = z.discriminatedUnion("type", [
   FileNotExistsAssertionSchema,
 ]);
 
-export type Assertion = z.infer<typeof AssertionSchema>;
-export type ContainsAssertion = z.infer<typeof ContainsAssertionSchema>;
-export type MatchesRegexAssertion = z.infer<typeof MatchesRegexAssertionSchema>;
-export type EqualsAssertion = z.infer<typeof EqualsAssertionSchema>;
-export type JsonPathAssertion = z.infer<typeof JsonPathAssertionSchema>;
-export type FileExistsAssertion = z.infer<typeof FileExistsAssertionSchema>;
-export type FileContainsAssertion = z.infer<typeof FileContainsAssertionSchema>;
-export type FileJsonPathAssertion = z.infer<typeof FileJsonPathAssertionSchema>;
-export type FileNotExistsAssertion = z.infer<
-  typeof FileNotExistsAssertionSchema
->;
+type Assertion = z.infer<typeof AssertionSchema>;
+type ContainsAssertion = z.infer<typeof ContainsAssertionSchema>;
+type MatchesRegexAssertion = z.infer<typeof MatchesRegexAssertionSchema>;
+type EqualsAssertion = z.infer<typeof EqualsAssertionSchema>;
+type JsonPathAssertion = z.infer<typeof JsonPathAssertionSchema>;
+type FileExistsAssertion = z.infer<typeof FileExistsAssertionSchema>;
+type FileContainsAssertion = z.infer<typeof FileContainsAssertionSchema>;
+type FileJsonPathAssertion = z.infer<typeof FileJsonPathAssertionSchema>;
+type FileNotExistsAssertion = z.infer<typeof FileNotExistsAssertionSchema>;
 
 // ============================================
 // Eval Case
 // ============================================
 
-export const EvalCaseSchema = z.object({
+const EvalCaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
@@ -124,13 +120,13 @@ export const EvalCaseSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
-export type EvalCase = z.infer<typeof EvalCaseSchema>;
+type EvalCase = z.infer<typeof EvalCaseSchema>;
 
 // ============================================
 // Agent Config (for suite)
 // ============================================
 
-export const AgentConfigSchema = z.object({
+const AgentConfigSchema = z.object({
   name: z.string(),
   model: z.literal("gpt-5-mini"),
   instructions: z.string(),
@@ -138,13 +134,11 @@ export const AgentConfigSchema = z.object({
   maxTurns: z.number().optional(),
 });
 
-export type AgentConfig = z.infer<typeof AgentConfigSchema>;
-
 // ============================================
 // Eval Suite
 // ============================================
 
-export const EvalSuiteSchema = z.object({
+const EvalSuiteSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   version: z.string().default("1.0.0"),
@@ -157,13 +151,13 @@ export const EvalSuiteSchema = z.object({
   cases: z.array(EvalCaseSchema).min(1),
 });
 
-export type EvalSuite = z.infer<typeof EvalSuiteSchema>;
+type EvalSuite = z.infer<typeof EvalSuiteSchema>;
 
 // ============================================
 // Assertion Result
 // ============================================
 
-export const AssertionResultSchema = z.object({
+const AssertionResultSchema = z.object({
   assertion: AssertionSchema,
   passed: z.boolean(),
   message: z.string(),
@@ -171,16 +165,16 @@ export const AssertionResultSchema = z.object({
   expected: z.unknown().optional(),
 });
 
-export type AssertionResult = z.infer<typeof AssertionResultSchema>;
+type AssertionResult = z.infer<typeof AssertionResultSchema>;
 
 // ============================================
 // Case Result
 // ============================================
 
-export const CaseStatusSchema = z.enum(["pass", "fail", "error", "skip"]);
-export type CaseStatus = z.infer<typeof CaseStatusSchema>;
+const CaseStatusSchema = z.enum(["pass", "fail", "error", "skip"]);
+type CaseStatus = z.infer<typeof CaseStatusSchema>;
 
-export const CaseResultSchema = z.object({
+const CaseResultSchema = z.object({
   caseId: z.string(),
   caseName: z.string(),
   status: CaseStatusSchema,
@@ -190,13 +184,13 @@ export const CaseResultSchema = z.object({
   error: z.string().nullable(),
 });
 
-export type CaseResult = z.infer<typeof CaseResultSchema>;
+type CaseResult = z.infer<typeof CaseResultSchema>;
 
 // ============================================
 // Suite Result
 // ============================================
 
-export const SuiteSummarySchema = z.object({
+const SuiteSummarySchema = z.object({
   total: z.number(),
   passed: z.number(),
   failed: z.number(),
@@ -205,9 +199,9 @@ export const SuiteSummarySchema = z.object({
   passRate: z.number(),
 });
 
-export type SuiteSummary = z.infer<typeof SuiteSummarySchema>;
+type SuiteSummary = z.infer<typeof SuiteSummarySchema>;
 
-export const SuiteResultSchema = z.object({
+const SuiteResultSchema = z.object({
   suiteName: z.string(),
   suiteVersion: z.string(),
   startedAt: z.string(),
@@ -217,13 +211,13 @@ export const SuiteResultSchema = z.object({
   cases: z.array(CaseResultSchema),
 });
 
-export type SuiteResult = z.infer<typeof SuiteResultSchema>;
+type SuiteResult = z.infer<typeof SuiteResultSchema>;
 
 // ============================================
 // Full Report (multiple suites)
 // ============================================
 
-export const ReportSummarySchema = z.object({
+const ReportSummarySchema = z.object({
   totalSuites: z.number(),
   totalCases: z.number(),
   passed: z.number(),
@@ -233,13 +227,56 @@ export const ReportSummarySchema = z.object({
   passRate: z.number(),
 });
 
-export type ReportSummary = z.infer<typeof ReportSummarySchema>;
+type ReportSummary = z.infer<typeof ReportSummarySchema>;
 
-export const EvalReportSchema = z.object({
+const EvalReportSchema = z.object({
   generatedAt: z.string(),
   durationMs: z.number(),
   summary: ReportSummarySchema,
   suites: z.array(SuiteResultSchema),
 });
 
-export type EvalReport = z.infer<typeof EvalReportSchema>;
+type EvalReport = z.infer<typeof EvalReportSchema>;
+
+export type {
+  Assertion,
+  AssertionResult,
+  CaseResult,
+  CaseStatus,
+  ContainsAssertion,
+  EqualsAssertion,
+  EvalCase,
+  EvalReport,
+  EvalSuite,
+  FileContainsAssertion,
+  FileExistsAssertion,
+  FileJsonPathAssertion,
+  FileNotExistsAssertion,
+  JsonPathAssertion,
+  MatchesRegexAssertion,
+  ReportSummary,
+  SuiteResult,
+  SuiteSummary,
+};
+export {
+  AgentConfigSchema,
+  AssertionResultSchema,
+  AssertionSchema,
+  CaseResultSchema,
+  CaseStatusSchema,
+  CliArgsSchema,
+  ContainsAssertionSchema,
+  EqualsAssertionSchema,
+  EvalCaseSchema,
+  EvalReportSchema,
+  EvalSuiteSchema,
+  FileContainsAssertionSchema,
+  FileExistsAssertionSchema,
+  FileJsonPathAssertionSchema,
+  FileNotExistsAssertionSchema,
+  JsonPathAssertionSchema,
+  MatchesRegexAssertionSchema,
+  ReportSummarySchema,
+  SuiteResultSchema,
+  SuiteSummarySchema,
+};

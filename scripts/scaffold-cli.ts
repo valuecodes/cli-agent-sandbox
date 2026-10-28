@@ -53,12 +53,11 @@ const checkTargetNotExists = async (
   }
 };
 
-const toTitleCase = (kebabName: string): string => {
-  return kebabName
+const toTitleCase = (kebabName: string): string =>
+  kebabName
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-};
 
 const replacePlaceholders = (
   content: string,
@@ -144,7 +143,7 @@ const main = async (): Promise<void> => {
   console.log(`  4. See src/cli/${name}/CHECKLIST.md for full checklist`);
 };
 
-main().catch((err: unknown) => {
-  console.error("Scaffold failed:", err);
+main().catch((error: unknown) => {
+  console.error("Scaffold failed:", error);
   process.exit(1);
 });

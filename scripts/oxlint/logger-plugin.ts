@@ -7,7 +7,7 @@ type Plugin = { meta: { name: string }; rules: Record<string, Rule> };
 
 const LOGGER_METHODS = /^(debug|info|warn|error|tool|question|answer)$/;
 
-export const NO_TEMPLATE_LITERAL_MESSAGE =
+const NO_TEMPLATE_LITERAL_MESSAGE =
   "Avoid template literals in logger calls. Use a plain string and pass data as extra args (e.g. logger.info('Saved file', { path })).";
 
 /**
@@ -55,11 +55,11 @@ const noTemplateLiteral: Rule = {
   }),
 };
 
-export const loggerPlugin: Plugin = {
+const loggerPlugin: Plugin = {
   meta: { name: "logger" },
   rules: { "no-template-literal": noTemplateLiteral },
 };
 
 // oxlint loads `jsPlugins` entries through their default export.
 // oxlint-disable-next-line import/no-default-export -- required by the oxlint JS plugin loader
-export default loggerPlugin;
+export { NO_TEMPLATE_LITERAL_MESSAGE, loggerPlugin, loggerPlugin as default };

@@ -42,7 +42,7 @@ const mergeAnswers = (
   for (const answer of newAnswers) {
     byId.set(answer.commentId, answer);
   }
-  return Array.from(byId.values());
+  return [...byId.values()];
 };
 
 type FixPrPipelineOptions = {
@@ -65,7 +65,7 @@ type RunResult = {
  * Orchestrates fetching PR comments and optionally launching codex.
  */
 export class FixPrPipeline {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(options: FixPrPipelineOptions) {
     this.logger = options.logger;

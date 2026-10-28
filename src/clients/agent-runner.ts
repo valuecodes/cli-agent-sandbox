@@ -6,7 +6,7 @@ import type { Logger } from "./logger";
 
 const DEFAULT_RESULT_PREVIEW_LIMIT = 200;
 
-export type AgentRunnerConfig<TOutput> = {
+type AgentRunnerConfig<TOutput> = {
   // Agent config
   name: string;
   model: "gpt-5-mini";
@@ -28,7 +28,7 @@ export type AgentRunnerConfig<TOutput> = {
   stateless?: boolean;
 };
 
-export type RunProps = {
+type RunProps = {
   prompt: string;
   maxTurns?: number;
   /** If true, run without session history (fresh context). Useful for independent follow-up queries. */
@@ -42,16 +42,16 @@ type AgentType<TOutput> = Agent<unknown, ZodType<TOutput>>;
  * event logging for tool calls. Provides a consistent interface for
  * running agents across different CLIs.
  */
-export class AgentRunner<TOutput> {
-  private agent: AgentType<TOutput>;
-  private runner: Runner;
-  private session: MemorySession;
-  private logger: Logger;
-  private toolsInProgress: Set<string>;
-  private logToolArgs: boolean;
-  private logToolResults: boolean;
-  private resultPreviewLimit: number;
-  private stateless: boolean;
+class AgentRunner<TOutput> {
+  private readonly agent: AgentType<TOutput>;
+  private readonly runner: Runner;
+  private readonly session: MemorySession;
+  private readonly logger: Logger;
+  private readonly toolsInProgress: Set<string>;
+  private readonly logToolArgs: boolean;
+  private readonly logToolResults: boolean;
+  private readonly resultPreviewLimit: number;
+  private readonly stateless: boolean;
 
   constructor(config: AgentRunnerConfig<TOutput>) {
     this.logger = config.logger;
@@ -104,7 +104,7 @@ export class AgentRunner<TOutput> {
       if (this.logToolResults) {
         const preview =
           result.length > this.resultPreviewLimit
-            ? result.substring(0, this.resultPreviewLimit) + "..."
+            ? `${result.slice(0, this.resultPreviewLimit)}...`
             : result;
         this.logger.debug("Tool result preview", { preview });
       }
@@ -127,3 +127,6 @@ export class AgentRunner<TOutput> {
     return this.session;
   }
 }
+
+export type { AgentRunnerConfig, RunProps };
+export { AgentRunner };

@@ -37,7 +37,9 @@ try {
       process.exitCode = 1;
     } else {
       const { company, matchedName, confidence } = match;
-      const activeNames = company.names.filter((n) => !n.endDate);
+      const activeNames = company.names.filter(
+        (n) => n.endDate === undefined || n.endDate === ""
+      );
 
       logger.info("Match found", {
         businessId: company.businessId.value,
@@ -49,7 +51,9 @@ try {
       for (const nameEntry of activeNames) {
         const lang = detectLanguage(nameEntry.name);
         const langLabel = lang === "unknown" ? "??" : lang;
-        logger.answer("  [" + langLabel + "] " + nameEntry.name);
+        // answer() prints user-facing text, so the line is built up front.
+        const line = `  [${langLabel}] ${nameEntry.name}`;
+        logger.answer(line);
       }
     }
   }

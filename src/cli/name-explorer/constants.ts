@@ -1,4 +1,4 @@
-export const DECADES: string[] = [
+const DECADES: string[] = [
   "1889",
   "1900",
   "1910",
@@ -15,7 +15,9 @@ export const DECADES: string[] = [
   "2020",
 ];
 
-export const FETCH_DECADES: string[] = DECADES.slice().reverse();
+const FETCH_DECADES: string[] = [...DECADES].reverse();
 
-export const FIRST_DECADE = DECADES[0] ?? "1889";
-export const LAST_DECADE = DECADES[DECADES.length - 1] ?? "2020";
+const FIRST_DECADE = DECADES[0] ?? "1889";
+const LAST_DECADE = DECADES.at(-1) ?? "2020";
+
+export { DECADES, FETCH_DECADES, FIRST_DECADE, LAST_DECADE };

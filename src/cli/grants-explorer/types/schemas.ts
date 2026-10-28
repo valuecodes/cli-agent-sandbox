@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CliArgsSchema = z.object({
+const CliArgsSchema = z.object({
   dir: z.string().optional(),
   // Presence-only flag. parseArgv hands us bare `true` for `--refetch` and
   // `undefined` when absent. Any `--refetch=<value>` form arrives as a string
@@ -10,21 +10,17 @@ export const CliArgsSchema = z.object({
   refetch: z.boolean().default(false),
 });
 
-export type CliArgs = z.infer<typeof CliArgsSchema>;
-
 // OpenAI structured outputs doesn't allow union/anyOf at the root.
 // We use one flat schema where `content` holds either the answer or
 // a clarifying question, distinguished by `status`.
-export const GrantsAgentOutputTypeSchema = z.object({
+const GrantsAgentOutputTypeSchema = z.object({
   response: z.object({
     status: z.enum(["final", "needs_clarification"]),
     content: z.string().min(1),
   }),
 });
 
-export const GrantsAgentOutputSchema = GrantsAgentOutputTypeSchema;
-
-export type GrantsAgentOutput = z.infer<typeof GrantsAgentOutputSchema>;
+const GrantsAgentOutputSchema = GrantsAgentOutputTypeSchema;
 
 // Sektoriluokitus = Finnish institutional sector classification (S11–S15, plus
 // sub-codes). Each sector's grants are exported as a separate xlsx; the manifest
@@ -35,20 +31,20 @@ export type GrantsAgentOutput = z.infer<typeof GrantsAgentOutputSchema>;
 // value, PUUTTUU = the source's explicit "Sektoriluokitus puuttuu").
 const SECTOR_CODE_RE = /^(S\d{1,6}|BLANK|PUUTTUU)$/;
 
-export const SectorSchema = z.object({
+const SectorSchema = z.object({
   code: z.string().regex(SECTOR_CODE_RE),
   label: z.string().min(1),
 });
-export type Sector = z.infer<typeof SectorSchema>;
+type Sector = z.infer<typeof SectorSchema>;
 
-export const SectorManifestSchema = z.array(SectorSchema).min(1);
-export type SectorManifest = z.infer<typeof SectorManifestSchema>;
+const SectorManifestSchema = z.array(SectorSchema).min(1);
+type SectorManifest = z.infer<typeof SectorManifestSchema>;
 
 // Single source of truth for one row loaded from the xlsx. Used as a runtime
 // validation tripwire in XlsxLoader: if the per-cell normalizers ever produce
 // a value that violates this shape (off-by-one bug, schema drift, etc.), the
 // loader logs the failing row instead of silently inserting garbage into SQL.
-export const GrantRowSchema = z.object({
+const GrantRowSchema = z.object({
   decision_date: z.string().nullable(),
   recipient: z.string().nullable(),
   // Y-tunnus (Finnish Business ID) extracted from `recipient` parens. The
@@ -73,4 +69,14 @@ export const GrantRowSchema = z.object({
   sektoriluokitus_label: z.string().min(1),
 });
 
-export type GrantRow = z.infer<typeof GrantRowSchema>;
+type GrantRow = z.infer<typeof GrantRowSchema>;
+
+export type { GrantRow, Sector, SectorManifest };
+export {
+  CliArgsSchema,
+  GrantRowSchema,
+  GrantsAgentOutputSchema,
+  GrantsAgentOutputTypeSchema,
+  SectorManifestSchema,
+  SectorSchema,
+};

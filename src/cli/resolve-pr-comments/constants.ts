@@ -1,15 +1,15 @@
 import path from "node:path";
 
-export const OUTPUT_BASE_DIR = path.join("tmp", "resolve-pr-comments");
-export const MAX_DIFF_CHARS = 50000;
+const OUTPUT_BASE_DIR = path.join("tmp", "resolve-pr-comments");
+const MAX_DIFF_CHARS = 50_000;
 
-export const getOutputDir = (prNumber: number): string =>
+const getOutputDir = (prNumber: number): string =>
   path.join(process.cwd(), OUTPUT_BASE_DIR, `pr-${prNumber}`);
 
-export const getAnalysisPath = (prNumber: number): string =>
+const getAnalysisPath = (prNumber: number): string =>
   path.join(getOutputDir(prNumber), "analysis.json");
 
-export const ANALYSIS_PROMPT_TEMPLATE = (
+const ANALYSIS_PROMPT_TEMPLATE = (
   commentsJson: string,
   diffContent: string
 ): string => `You are analyzing whether PR review comments have been addressed by code changes.
@@ -68,3 +68,11 @@ Return JSON matching this schema:
 - For "addressed" status, make the suggestedReply specific to what was changed
 - For "uncertain" status, the suggestedReply should ask for verification in a friendly way
 - For "not_addressed" status, still provide a suggestedReply (it won't be posted, but useful for logging)`;
+
+export {
+  ANALYSIS_PROMPT_TEMPLATE,
+  getAnalysisPath,
+  getOutputDir,
+  MAX_DIFF_CHARS,
+  OUTPUT_BASE_DIR,
+};

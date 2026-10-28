@@ -16,7 +16,7 @@ const getChangedFilesFromDiff = (diff: string): Set<string> => {
   let match;
   while ((match = diffHeaderRegex.exec(diff)) !== null) {
     const filePath = match[1];
-    if (filePath) {
+    if (filePath !== undefined && filePath !== "") {
       files.add(filePath);
     }
   }
@@ -47,7 +47,7 @@ type RunResult = {
  * 3. Reply to and resolve addressed comments
  */
 export class ResolvePrPipeline {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(options: ResolvePrPipelineOptions) {
     this.logger = options.logger;
@@ -99,7 +99,7 @@ export class ResolvePrPipeline {
     // Filter out resolved threads
     const unresolvedComments = humanComments.filter((comment) => {
       const entry = commentThreadIndex.get(comment.id);
-      return !entry?.isResolved;
+      return entry?.isResolved !== true;
     });
 
     // Filter out comments already marked with reactions (previously processed)

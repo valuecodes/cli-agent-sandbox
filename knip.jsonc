@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Each CLI and script is run directly by a package.json script. `templates/`
+  // is outside `project`: `pnpm scaffold:cli` copies it, nothing imports it.
+  "entry": ["src/cli/*/main.ts", "scripts/*.ts"],
+  "project": ["src/**/*.ts", "scripts/**/*.ts"],
+  // A schema or options type exported next to the code that uses it is not
+  // dead; only exports nothing reads, in or out of the file, are reported.
+  "ignoreExportsUsedInFile": true,
+}

@@ -12,16 +12,16 @@ const CommentUserSchema = z.object({
   login: z.string(),
 });
 
-export const CommentSchema = z.object({
+const CommentSchema = z.object({
   created_at: z.string(),
   user: CommentUserSchema,
   body: z.string(),
   html_url: z.string(),
 });
 
-export type Comment = z.infer<typeof CommentSchema>;
+type Comment = z.infer<typeof CommentSchema>;
 
-export const ReviewCommentSchema = CommentSchema.extend({
+const ReviewCommentSchema = CommentSchema.extend({
   id: z.number(),
   node_id: z.string(),
   path: z.string(),
@@ -30,7 +30,7 @@ export const ReviewCommentSchema = CommentSchema.extend({
   position: z.number().nullable().optional(),
 });
 
-export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
+type ReviewComment = z.infer<typeof ReviewCommentSchema>;
 
 // GraphQL response schema for review threads
 const PageInfoSchema = z.object({
@@ -66,14 +66,14 @@ const ReviewThreadsResponseSchema = z.object({
   }),
 });
 
-export type ReviewThread = {
+type ReviewThread = {
   id: string;
   isResolved: boolean;
   commentIds: number[];
   hasMoreComments: boolean;
 };
 
-export type PrContext = {
+type PrContext = {
   repo: string;
   pr: number;
 };
@@ -93,8 +93,8 @@ type GetPrNumberOptions = {
 /**
  * Client for GitHub API operations via the GitHub CLI.
  */
-export class GitHubClient {
-  private logger: Logger;
+class GitHubClient {
+  private readonly logger: Logger;
 
   constructor(options: GitHubClientOptions) {
     this.logger = options.logger;
@@ -132,7 +132,7 @@ export class GitHubClient {
    * Uses provided override or detects from current directory.
    */
   async getRepo({ repo }: GetRepoOptions = {}): Promise<string> {
-    if (repo) {
+    if (repo !== undefined && repo !== "") {
       this.logger.debug("Using repo override", { repo });
       return repo;
     }
@@ -376,7 +376,8 @@ export class GitHubClient {
     let hasNextPage = true;
 
     while (hasNextPage) {
-      const afterArgs = after ? ["-f", `after=${after}`] : [];
+      const afterArgs =
+        after !== null && after !== "" ? ["-f", `after=${after}`] : [];
       const result =
         await $`gh api graphql -f query=${query} -f owner=${owner} -f repo=${repo} -F pr=${ctx.pr} ${afterArgs}`.quiet();
       const data: unknown = JSON.parse(result.stdout);
@@ -414,3 +415,6 @@ export class GitHubClient {
     return threads;
   }
 }
+
+export type { Comment, ReviewComment, ReviewThread, PrContext };
+export { CommentSchema, ReviewCommentSchema, GitHubClient };

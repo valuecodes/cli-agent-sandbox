@@ -17,12 +17,12 @@ import {
 import type { EtfDataResponse } from "../types/schemas";
 import { EtfDataResponseSchema, isEtfDataResponse } from "../types/schemas";
 
-export type EtfDataFetcherConfig = {
+type EtfDataFetcherConfig = {
   logger: Logger;
   headless?: boolean;
 };
 
-export type FetchResult = {
+type FetchResult = {
   data: EtfDataResponse;
   dataPath: string;
   fromCache: boolean;
@@ -32,9 +32,9 @@ export type FetchResult = {
  * Fetches ETF data from justetf.com with caching.
  * Data is stored in ISIN-specific folders under tmp/etf-backtest/{isin}/data.json.
  */
-export class EtfDataFetcher {
-  private logger: Logger;
-  private scraper: PlaywrightScraper;
+class EtfDataFetcher {
+  private readonly logger: Logger;
+  private readonly scraper: PlaywrightScraper;
 
   constructor(config: EtfDataFetcherConfig) {
     this.logger = config.logger;
@@ -156,3 +156,6 @@ export class EtfDataFetcher {
     await this.scraper.close();
   }
 }
+
+export type { EtfDataFetcherConfig, FetchResult };
+export { EtfDataFetcher };

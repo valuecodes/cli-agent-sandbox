@@ -5,9 +5,9 @@ import { convertToMarkdown, sanitizeHtml } from "~tools/utils/html-processing";
 import type { Logger } from "./logger";
 
 // Possible wait strategies for page load
-export type WaitStrategy = "load" | "domcontentloaded" | "networkidle";
+type WaitStrategy = "load" | "domcontentloaded" | "networkidle";
 
-export type PlaywrightScraperOptions = {
+type PlaywrightScraperOptions = {
   logger: Logger;
   headless?: boolean; // Whether to run browser in headless mode (default: true)
   defaultTimeoutMs?: number; // Default timeout for operations in milliseconds
@@ -15,29 +15,29 @@ export type PlaywrightScraperOptions = {
 };
 
 // Options for a single scrape operation
-export type ScrapeOptions = {
+type ScrapeOptions = {
   timeoutMs?: number; // Timeout in milliseconds for this specific operation
   waitStrategy?: WaitStrategy; // Page load wait strategy
   waitForSelector?: string; // CSS selector to wait for before scraping
 };
 
-export type ScrapeRequest = {
+type ScrapeRequest = {
   targetUrl: string;
 } & ScrapeOptions;
 
 // Options for network capture during scraping
-export type NetworkCaptureOptions<T = unknown> = ScrapeOptions & {
+type NetworkCaptureOptions<T = unknown> = ScrapeOptions & {
   captureUrlPattern: RegExp; // Pattern to match API requests to capture
   captureTimeoutMs?: number; // Timeout waiting for API response (default: 15000)
   validateResponse?: (data: unknown) => data is T; // Optional validator to filter responses
   localStorage?: Record<string, string>; // Key-value pairs to set in localStorage before navigation
 };
 
-export type NetworkCaptureRequest<T = unknown> = {
+type NetworkCaptureRequest<T = unknown> = {
   targetUrl: string;
 } & NetworkCaptureOptions<T>;
 
-export type NetworkCaptureResult<T> = {
+type NetworkCaptureResult<T> = {
   data: T;
   capturedUrl: string;
 };
@@ -46,11 +46,11 @@ export type NetworkCaptureResult<T> = {
  * A web scraper client that uses Playwright to scrape webpages
  * requiring JavaScript rendering. Returns sanitized HTML or Markdown.
  */
-export class PlaywrightScraper {
-  private logger: Logger;
-  private headless: boolean;
-  private defaultTimeoutMs: number;
-  private defaultWaitStrategy: WaitStrategy;
+class PlaywrightScraper {
+  private readonly logger: Logger;
+  private readonly headless: boolean;
+  private readonly defaultTimeoutMs: number;
+  private readonly defaultWaitStrategy: WaitStrategy;
   private browser: Browser | null = null;
 
   constructor({
@@ -61,7 +61,7 @@ export class PlaywrightScraper {
   }: PlaywrightScraperOptions) {
     this.logger = logger;
     this.headless = headless ?? true;
-    this.defaultTimeoutMs = defaultTimeoutMs ?? 30000;
+    this.defaultTimeoutMs = defaultTimeoutMs ?? 30_000;
     this.defaultWaitStrategy = defaultWaitStrategy ?? "load";
   }
 
@@ -72,7 +72,7 @@ export class PlaywrightScraper {
    * @throws If browser launch fails
    */
   private async getBrowser(): Promise<Browser> {
-    if (!this.browser?.isConnected()) {
+    if (this.browser?.isConnected() !== true) {
       this.logger.debug("Launching browser");
       this.browser = await chromium.launch({ headless: this.headless });
     }
@@ -109,7 +109,10 @@ export class PlaywrightScraper {
       waitUntil: waitStrategy,
     });
 
-    if (options.waitForSelector) {
+    if (
+      options.waitForSelector !== undefined &&
+      options.waitForSelector !== ""
+    ) {
       this.logger.debug("Waiting for selector", {
         selector: options.waitForSelector,
       });
@@ -220,7 +223,7 @@ export class PlaywrightScraper {
   async scrapeWithNetworkCapture<T>({
     targetUrl,
     captureUrlPattern,
-    captureTimeoutMs = 15000,
+    captureTimeoutMs = 15_000,
     validateResponse,
     localStorage,
     ...options
@@ -238,7 +241,7 @@ export class PlaywrightScraper {
       // Add init script that runs before page load to set localStorage
       await page.addInitScript((items: [string, string][]) => {
         for (const [key, value] of items) {
-          window.localStorage.setItem(key, value);
+          globalThis.localStorage.setItem(key, value);
         }
       }, entries);
     }
@@ -300,12 +303,12 @@ export class PlaywrightScraper {
             // Fulfill the route before resolving to avoid race condition
             await route.fulfill({ response });
             resolveCapture({ data: data as T, capturedUrl: url });
-          } catch (err) {
+          } catch (error) {
             // Only continue if not already handled and page is still open
             if (!page.isClosed()) {
               this.logger.warn("Failed to capture response", {
                 url,
-                error: err,
+                error,
               });
               try {
                 await route.continue();
@@ -347,3 +350,14 @@ export class PlaywrightScraper {
     }
   }
 }
+
+export type {
+  WaitStrategy,
+  PlaywrightScraperOptions,
+  ScrapeOptions,
+  ScrapeRequest,
+  NetworkCaptureOptions,
+  NetworkCaptureRequest,
+  NetworkCaptureResult,
+};
+export { PlaywrightScraper };

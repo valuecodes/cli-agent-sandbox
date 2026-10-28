@@ -174,18 +174,18 @@ After running the experiment, analyze the results and decide whether to continue
         prompt: currentPrompt,
         maxTurns: MAX_TURNS_PER_ITERATION, // Limit turns per iteration: 1 tool call + 1 result + 1 output
       });
-    } catch (err) {
+    } catch (error) {
       // Handle MaxTurnsExceededError - try to extract result from partial state
       if (
-        err &&
-        typeof err === "object" &&
-        "state" in err &&
-        err.state &&
-        typeof err.state === "object" &&
-        "_newItems" in err.state
+        error !== null &&
+        typeof error === "object" &&
+        "state" in error &&
+        error.state !== null &&
+        typeof error.state === "object" &&
+        "_newItems" in error.state
       ) {
         logger.warn("Agent exceeded turn limit, extracting partial results...");
-        const state = err.state as {
+        const state = error.state as {
           _newItems?: { type: string; output?: unknown }[];
         };
         const partialResult = extractLastExperimentResult({
@@ -205,7 +205,7 @@ After running the experiment, analyze the results and decide whether to continue
         );
         continue;
       }
-      throw err;
+      throw error;
     }
     const parseResult = AgentOutputSchema.safeParse(runResult.finalOutput);
 

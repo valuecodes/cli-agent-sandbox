@@ -18,6 +18,8 @@ const parseExcelSerialDate = (serial: number): ParsedDateCode | undefined => {
   return ssf.parse_date_code(serial);
 };
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 // Finnish column name (source xlsx header) → English GrantRow field.
 // Order is irrelevant; we map by header text.
 const HEADER_TO_FIELD: Record<string, keyof GrantRow> = {
@@ -41,7 +43,7 @@ const HEADER_TO_FIELD: Record<string, keyof GrantRow> = {
  * a Date. We accept all three shapes for safety: Date (other producers), number
  * (this file), and pre-formatted string.
  */
-export const normalizeExcelDate = (value: unknown): string | null => {
+const normalizeExcelDate = (value: unknown): string | null => {
   if (value === null || value === undefined) {
     return null;
   }
@@ -56,7 +58,6 @@ export const normalizeExcelDate = (value: unknown): string | null => {
     if (!parsed) {
       return null;
     }
-    const pad = (n: number) => String(n).padStart(2, "0");
     return `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`;
   }
   if (typeof value === "string") {
@@ -73,7 +74,7 @@ export const normalizeExcelDate = (value: unknown): string | null => {
  * malformed grant amount must remain distinguishable from a real `0 €`
  * decision in SUM/AVG aggregates.
  */
-export const normalizeAmount = (value: unknown): number | null => {
+const normalizeAmount = (value: unknown): number | null => {
   if (value === null || value === undefined) {
     return null;
   }
@@ -97,7 +98,7 @@ export const normalizeAmount = (value: unknown): number | null => {
  * Non-null primitive cells (number / boolean / Date) are also treated as
  * "present", since for this column any non-empty value indicates funding.
  */
-export const normalizeEuFunding = (value: unknown): 0 | 1 => {
+const normalizeEuFunding = (value: unknown): 0 | 1 => {
   if (value === null || value === undefined) {
     return 0;
   }
@@ -107,7 +108,7 @@ export const normalizeEuFunding = (value: unknown): 0 | 1 => {
   return 1;
 };
 
-export const normalizeText = (value: unknown): string | null => {
+const normalizeText = (value: unknown): string | null => {
   if (value === null || value === undefined) {
     return null;
   }
@@ -121,7 +122,7 @@ export const normalizeText = (value: unknown): string | null => {
   return null;
 };
 
-export type XlsxLoaderOptions = {
+type XlsxLoaderOptions = {
   logger: Logger;
 };
 
@@ -131,15 +132,15 @@ export type XlsxLoaderOptions = {
  * Header mapping is by exact Finnish column name (see HEADER_TO_FIELD); column
  * order in the workbook does not matter. Unknown headers are ignored.
  */
-export type LoadOptions = {
+type LoadOptions = {
   // Sector tag attached to every row of the loaded xlsx. Required: each
   // per-sector xlsx must be loaded with the matching manifest entry so the
   // sektoriluokitus_code / _label columns in the DB carry traceable values.
   sector: Sector;
 };
 
-export class XlsxLoader {
-  private logger: Logger;
+class XlsxLoader {
+  private readonly logger: Logger;
 
   constructor({ logger }: XlsxLoaderOptions) {
     this.logger = logger;
@@ -149,7 +150,7 @@ export class XlsxLoader {
     this.logger.debug("Reading xlsx file", { filePath });
     const workbook = XLSX.readFile(filePath, { cellDates: true });
     const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
+    if (sheetName === undefined || sheetName === "") {
       throw new Error(`No sheets found in ${filePath}`);
     }
     const sheet = workbook.Sheets[sheetName];
@@ -272,3 +273,12 @@ export class XlsxLoader {
     return rows;
   }
 }
+
+export type { LoadOptions, XlsxLoaderOptions };
+export {
+  normalizeAmount,
+  normalizeEuFunding,
+  normalizeExcelDate,
+  normalizeText,
+  XlsxLoader,
+};

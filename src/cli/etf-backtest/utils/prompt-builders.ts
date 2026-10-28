@@ -3,7 +3,7 @@ type RunPythonUsageOptions = {
   dataPath: string;
 };
 
-export const buildRunPythonUsage = ({
+const buildRunPythonUsage = ({
   seed,
   dataPath,
 }: RunPythonUsageOptions): string =>
@@ -13,7 +13,9 @@ export const buildRunPythonUsage = ({
     `- input: { "featureIds": [...your features...], "seed": ${seed}, "dataPath": "${dataPath}" }`,
   ].join("\n");
 
-export const buildRecoveryPrompt = (
+const buildRecoveryPrompt = (
   message: string,
   options: RunPythonUsageOptions
 ): string => [message, "", buildRunPythonUsage(options)].join("\n");
+
+export { buildRecoveryPrompt, buildRunPythonUsage };

@@ -11,8 +11,8 @@ import type { GrantRow } from "../types/schemas";
  * documents the original Finnish header mapping for the agent.
  */
 export class GrantsDatabase {
-  private db: DatabaseSync;
-  private logger: Logger;
+  private readonly db: DatabaseSync;
+  private readonly logger: Logger;
 
   constructor(logger: Logger) {
     this.logger = logger;

@@ -15,7 +15,7 @@ type AnalyzeOptions = {
   diff: string;
 };
 
-export const truncateDiff = (
+const truncateDiff = (
   diff: string,
   maxChars: number
 ): { diff: string; truncated: boolean; originalLength: number } => {
@@ -35,8 +35,8 @@ export const truncateDiff = (
  * AI-powered comment analyzer that determines if comments are addressed by a diff.
  * Makes a single API call to analyze all comments together.
  */
-export class CommentAnalyzer {
-  private logger: Logger;
+class CommentAnalyzer {
+  private readonly logger: Logger;
 
   constructor(options: CommentAnalyzerOptions) {
     this.logger = options.logger;
@@ -85,3 +85,5 @@ export class CommentAnalyzer {
     return result.finalOutput;
   }
 }
+
+export { CommentAnalyzer, truncateDiff };

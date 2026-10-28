@@ -1,11 +1,11 @@
-export const PRH_API_BASE_URL =
+const PRH_API_BASE_URL =
   "https://avoindata.prh.fi/opendata-ytj-api/v3/companies";
-export const USER_AGENT = "cli-agent-sandbox/1.0";
-export const DEFAULT_TIMEOUT_MS = 15_000;
-export const MAX_COMPANIES_TO_RETURN = 20;
+const USER_AGENT = "cli-agent-sandbox/1.0";
+const DEFAULT_TIMEOUT_MS = 15_000;
+const MAX_COMPANIES_TO_RETURN = 20;
 
 /** Keyword patterns for detecting the language of a company name. */
-export const LANGUAGE_KEYWORDS = {
+const LANGUAGE_KEYWORDS = {
   fi: [
     "oy",
     "oyj",
@@ -43,3 +43,11 @@ export const LANGUAGE_KEYWORDS = {
     "insurance",
   ],
 } as const;
+
+export {
+  DEFAULT_TIMEOUT_MS,
+  LANGUAGE_KEYWORDS,
+  MAX_COMPANIES_TO_RETURN,
+  PRH_API_BASE_URL,
+  USER_AGENT,
+};

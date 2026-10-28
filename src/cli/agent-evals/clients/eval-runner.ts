@@ -30,8 +30,8 @@ export type EvalRunnerConfig = {
  * runs each case, validates outputs, and collects PASS/FAIL results.
  */
 export class EvalRunner {
-  private logger: Logger;
-  private verbose: boolean;
+  private readonly logger: Logger;
+  private readonly verbose: boolean;
 
   constructor(config: EvalRunnerConfig) {
     this.logger = config.logger;
@@ -61,18 +61,22 @@ export class EvalRunner {
       caseResults.push(caseResult);
 
       switch (caseResult.status) {
-        case "pass":
+        case "pass": {
           passed++;
           break;
-        case "fail":
+        }
+        case "fail": {
           failed++;
           break;
-        case "error":
+        }
+        case "error": {
           errors++;
           break;
-        case "skip":
+        }
+        case "skip": {
           skipped++;
           break;
+        }
       }
 
       this.logCaseResult(caseResult);
@@ -169,9 +173,10 @@ export class EvalRunner {
         assertionResults,
         error: null,
       };
-    } catch (err) {
+    } catch (error) {
       const durationMs = Date.now() - startTime;
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       return {
         caseId: evalCase.id,

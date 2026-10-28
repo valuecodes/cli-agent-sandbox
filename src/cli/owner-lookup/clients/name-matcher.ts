@@ -1,13 +1,13 @@
 import type { PrhCompany, PrhName } from "../types/schemas";
 
-export type MatchResult = {
+type MatchResult = {
   company: PrhCompany;
   matchedName: PrhName;
   confidence: "exact" | "high" | "low";
 };
 
 const normalize = (s: string): string =>
-  s.toLowerCase().replace(/\s+/g, " ").trim();
+  s.toLowerCase().replaceAll(/\s+/g, " ").trim();
 
 /** Jaccard similarity on word tokens */
 const tokenSimilarity = (a: string, b: string): number => {
@@ -29,7 +29,7 @@ const TOKEN_SIMILARITY_THRESHOLD = 0.5;
  * Find the best matching company from PRH results.
  * Only considers active names (no endDate).
  */
-export const findBestMatch = ({
+const findBestMatch = ({
   query,
   companies,
 }: {
@@ -42,7 +42,9 @@ export const findBestMatch = ({
   let bestScore = 0;
 
   for (const company of companies) {
-    const activeNames = company.names.filter((n) => !n.endDate);
+    const activeNames = company.names.filter(
+      (n) => n.endDate === undefined || n.endDate === ""
+    );
 
     for (const nameEntry of activeNames) {
       const normalizedName = normalize(nameEntry.name);
@@ -80,3 +82,6 @@ export const findBestMatch = ({
 
   return bestMatch;
 };
+
+export type { MatchResult };
+export { findBestMatch };

@@ -9,17 +9,17 @@ export type ReviewPageGeneratorConfig = {
 };
 
 export class ReviewPageGenerator {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(config: ReviewPageGeneratorConfig) {
     this.logger = config.logger;
   }
   private escapeHtml(text: string): string {
     return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
   }
 
   generate(
@@ -28,16 +28,18 @@ export class ReviewPageGenerator {
   ): string {
     const tocItems = publications
       .map((pub, i) => {
-        const dateStr = pub.date ? ` - ${pub.date}` : "";
+        const dateStr =
+          pub.date !== undefined && pub.date !== "" ? ` - ${pub.date}` : "";
         return `      <li><a href="#pub-${i}">${this.escapeHtml(pub.title)}</a>${dateStr}</li>`;
       })
       .join("\n");
 
     const articles = publications
       .map((pub, i) => {
-        const dateDisplay = pub.date
-          ? `<span class="date">${pub.date}</span> | `
-          : "";
+        const dateDisplay =
+          pub.date !== undefined && pub.date !== ""
+            ? `<span class="date">${pub.date}</span> | `
+            : "";
         const contentHtml = marked.parse(pub.content) as string;
         return `    <article id="pub-${i}" class="publication">
       <h2 class="title">${this.escapeHtml(pub.title)}</h2>

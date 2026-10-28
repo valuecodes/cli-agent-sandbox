@@ -16,7 +16,7 @@ type GetDiffOptions = {
 };
 
 export class GitClient {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(options: GitClientOptions) {
     this.logger = options.logger;

@@ -101,7 +101,7 @@ describe("createRunPythonTool", () => {
     });
     await invokeTool<string>(tool, { scriptName: "test.py", input: "" });
 
-    expect(loggedMessages.length).toBe(2);
+    expect(loggedMessages).toHaveLength(2);
     expect(loggedMessages[0]).toContain("Running Python script");
     expect(loggedMessages[1]).toContain("Python result");
   });

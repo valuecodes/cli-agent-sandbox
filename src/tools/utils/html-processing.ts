@@ -5,7 +5,7 @@ import sanitize from "sanitize-html";
 /**
  * Result of processing HTML content
  */
-export type ProcessedContent = {
+type ProcessedContent = {
   title: string | null;
   markdown: string;
   text: string;
@@ -181,14 +181,13 @@ const markdownConverter = new NodeHtmlMarkdown({
  * Sanitize HTML content by removing dangerous elements and attributes.
  * Uses sanitize-html to strip scripts, iframes, event handlers, etc.
  */
-export const sanitizeHtml = (html: string): string =>
-  sanitize(html, SANITIZE_OPTIONS);
+const sanitizeHtml = (html: string): string => sanitize(html, SANITIZE_OPTIONS);
 
 /**
  * Extract the main content from HTML, removing navigation, ads, etc.
  * Falls back to body content if no main content area is found.
  */
-export const extractMainContent = (html: string): string => {
+const extractMainContent = (html: string): string => {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -216,38 +215,38 @@ export const extractMainContent = (html: string): string => {
 /**
  * Convert sanitized HTML to Markdown
  */
-export const convertToMarkdown = (html: string): string =>
+const convertToMarkdown = (html: string): string =>
   markdownConverter.translate(html);
 
 /**
  * Convert Markdown/HTML to plain text by stripping formatting
  */
-export const convertToPlainText = (markdown: string): string =>
+const convertToPlainText = (markdown: string): string =>
   markdown
     // Remove markdown images ![alt](url) -> alt (must come before links)
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replaceAll(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     // Remove markdown links [text](url) -> text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replaceAll(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     // Remove bold/italic markers
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/__([^_]+)__/g, "$1")
-    .replace(/_([^_]+)_/g, "$1")
+    .replaceAll(/\*\*([^*]+)\*\*/g, "$1")
+    .replaceAll(/\*([^*]+)\*/g, "$1")
+    .replaceAll(/__([^_]+)__/g, "$1")
+    .replaceAll(/_([^_]+)_/g, "$1")
     // Remove code blocks
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/`([^`]+)`/g, "$1")
+    .replaceAll(/```[\s\S]*?```/g, "")
+    .replaceAll(/`([^`]+)`/g, "$1")
     // Remove headings markers
-    .replace(/^#{1,6}\s+/gm, "")
+    .replaceAll(/^#{1,6}\s+/gm, "")
     // Remove horizontal rules
-    .replace(/^[-*_]{3,}$/gm, "")
+    .replaceAll(/^[-*_]{3,}$/gm, "")
     // Clean up extra whitespace
-    .replace(/\n{3,}/g, "\n\n")
+    .replaceAll(/\n{3,}/g, "\n\n")
     .trim();
 
 /**
  * Extract the page title from HTML
  */
-export const extractTitle = (html: string): string | null => {
+const extractTitle = (html: string): string | null => {
   const dom = new JSDOM(html);
   const titleElement = dom.window.document.querySelector("title");
   if (!titleElement) {
@@ -265,7 +264,7 @@ export const extractTitle = (html: string): string | null => {
  * 4. Convert to Markdown
  * 5. Generate plain text
  */
-export const processHtmlContent = (html: string): ProcessedContent => {
+const processHtmlContent = (html: string): ProcessedContent => {
   // Extract title before any modifications
   const title = extractTitle(html);
 
@@ -286,4 +285,14 @@ export const processHtmlContent = (html: string): ProcessedContent => {
     markdown,
     text,
   };
+};
+
+export type { ProcessedContent };
+export {
+  sanitizeHtml,
+  extractMainContent,
+  convertToMarkdown,
+  convertToPlainText,
+  extractTitle,
+  processHtmlContent,
 };

@@ -38,7 +38,7 @@ let suitesToRun;
 if (all) {
   logger.info("Loading all suites...");
   suitesToRun = await suiteLoader.loadAll();
-} else if (suite) {
+} else if (suite !== undefined && suite !== "") {
   logger.info("Loading suite", { name: suite });
   const singleSuite = await suiteLoader.load(suite);
   suitesToRun = [singleSuite];

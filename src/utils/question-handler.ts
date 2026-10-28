@@ -2,11 +2,11 @@ import { z } from "zod";
 import { question } from "zx";
 import type { Logger } from "~clients/logger";
 
-export type QuestionHandlerConfig = {
+type QuestionHandlerConfig = {
   logger: Logger;
 };
 
-export type AskOptions<T extends z.ZodType = z.ZodString> = {
+type AskOptions<T extends z.ZodType = z.ZodString> = {
   /** The prompt to display to the user */
   prompt: string;
 
@@ -26,7 +26,7 @@ export type AskOptions<T extends z.ZodType = z.ZodString> = {
   maxRetries?: number;
 };
 
-export type AskResult<T> = {
+type AskResult<T> = {
   /** The validated and processed answer */
   answer: T;
 
@@ -40,8 +40,8 @@ const NonEmptyString = z.string().trim().min(1, "Input cannot be empty");
  * Handles interactive CLI prompts with validation and retry logic.
  * Uses Zod schemas for input validation and provides configurable retry attempts.
  */
-export class QuestionHandler {
-  private logger: Logger;
+class QuestionHandler {
+  private readonly logger: Logger;
 
   /**
    * Creates a new QuestionHandler instance.
@@ -135,3 +135,6 @@ export class QuestionHandler {
     return result.answer;
   }
 }
+
+export type { QuestionHandlerConfig, AskOptions, AskResult };
+export { QuestionHandler };

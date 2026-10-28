@@ -10,11 +10,18 @@ import {
   SelectorResult,
 } from "../types/publication";
 import type { LinkCandidate } from "../types/publication";
+import {
+  extractDate,
+  extractTitle,
+  findParentContainer,
+  getStructureSignature,
+  scoreStructureSignature,
+} from "./publication-html-extractors";
 
 type SelectorAgent = Agent<unknown, typeof SelectorResult>;
 type ContentSelectorAgent = Agent<unknown, typeof ContentSelectorResult>;
 
-export type PublicationScraperConfig = {
+type PublicationScraperConfig = {
   logger: Logger;
   selectorAgent?: SelectorAgent;
   contentSelectorAgent?: ContentSelectorAgent;
@@ -24,11 +31,11 @@ export type PublicationScraperConfig = {
  * Scrapes publication data from HTML pages using AI-powered CSS selector identification.
  * Extracts titles, dates, and content from publication listing pages.
  */
-export class PublicationScraper {
-  private logger: Logger;
-  private selectorAgent: SelectorAgent;
-  private contentSelectorAgent: ContentSelectorAgent;
-  private htmlToMarkdown: NodeHtmlMarkdown;
+class PublicationScraper {
+  private readonly logger: Logger;
+  private readonly selectorAgent: SelectorAgent;
+  private readonly contentSelectorAgent: ContentSelectorAgent;
+  private readonly htmlToMarkdown: NodeHtmlMarkdown;
 
   /**
    * Creates a new PublicationScraper instance.
@@ -108,99 +115,6 @@ IMPORTANT: Respond with ONLY a valid JSON object:
   }
 
   /**
-   * Parses various date formats to ISO format (YYYY-MM-DD).
-   * @param rawDate - Raw date string in various formats
-   * @returns ISO date string or undefined if parsing fails
-   */
-  private parseToIsoDate(rawDate: string): string | undefined {
-    // Already ISO format
-    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
-      return rawDate;
-    }
-
-    // MM.DD.YY format (e.g., "01.15.26")
-    const dotFormat = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(rawDate);
-    if (dotFormat?.[1] && dotFormat[2] && dotFormat[3]) {
-      const month = dotFormat[1];
-      const day = dotFormat[2];
-      const year = dotFormat[3];
-      const fullYear =
-        Number.parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
-      return `${fullYear}-${month}-${day}`;
-    }
-
-    // MM/DD/YYYY or MM-DD-YYYY format
-    const slashFormat = /^(\d{2})[/-](\d{2})[/-](\d{4})$/.exec(rawDate);
-    if (slashFormat?.[1] && slashFormat[2] && slashFormat[3]) {
-      const month = slashFormat[1];
-      const day = slashFormat[2];
-      const year = slashFormat[3];
-      return `${year}-${month}-${day}`;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Finds the parent container element for an anchor (article card, list item, etc.).
-   * @param anchor - The anchor element to find a container for
-   * @returns The container element or the anchor's parent as fallback
-   */
-  private findParentContainer(anchor: Element): Element {
-    const containerTags = ["LI", "ARTICLE", "DIV", "SECTION", "TR", "DD"];
-    let container: Element | null = anchor.parentElement;
-
-    while (container && !containerTags.includes(container.tagName)) {
-      container = container.parentElement;
-    }
-
-    // Fall back to parent if no suitable container found
-    return container ?? anchor.parentElement ?? anchor;
-  }
-
-  /**
-   * Creates a structure signature for an HTML snippet based on its structural features.
-   * Used to group similar HTML structures together for better sampling.
-   */
-  private getStructureSignature(html: string): string {
-    const dom = new JSDOM(html);
-    const root = dom.window.document.body.firstElementChild;
-    if (!root) {
-      return "unknown";
-    }
-
-    const tag = root.tagName.toLowerCase();
-    const hasImage = !!root.querySelector("img");
-    const hasHeading = !!root.querySelector("h1, h2, h3, h4, h5, h6");
-    const hasDate = !!root.querySelector(
-      'time, [class*="date"], [class*="Date"]'
-    );
-
-    return `${tag}:img=${hasImage}:h=${hasHeading}:date=${hasDate}`;
-  }
-
-  /**
-   * Scores a structure signature based on how "article-like" it appears.
-   * Higher scores indicate more likely article content vs navigation.
-   */
-  private scoreStructureSignature(signature: string): number {
-    let score = 0;
-    if (signature.includes("h=true")) {
-      score += 10;
-    } // Has heading - strong signal
-    if (signature.includes("img=true")) {
-      score += 5;
-    } // Has image
-    if (signature.includes("date=true")) {
-      score += 5;
-    } // Has date
-    if (signature.startsWith("article:")) {
-      score += 5;
-    } // Semantic article tag
-    return score;
-  }
-
-  /**
    * Groups candidates by their structure signature.
    */
   private groupCandidatesByStructure(
@@ -209,7 +123,7 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     const groups = new Map<string, z.infer<typeof LinkCandidate>[]>();
 
     for (const candidate of candidates) {
-      const signature = this.getStructureSignature(candidate.html);
+      const signature = getStructureSignature(candidate.html);
       const group = groups.get(signature) ?? [];
       group.push(candidate);
       groups.set(signature, group);
@@ -232,9 +146,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     const groups = this.groupCandidatesByStructure(candidates);
 
     // Sort groups by score (descending)
-    const sortedGroups = Array.from(groups.entries()).sort(
+    const sortedGroups = [...groups.entries()].sort(
       ([sigA], [sigB]) =>
-        this.scoreStructureSignature(sigB) - this.scoreStructureSignature(sigA)
+        scoreStructureSignature(sigB) - scoreStructureSignature(sigA)
     );
 
     // Take samples from the highest-scoring group
@@ -242,7 +156,7 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     if (firstGroup) {
       const [topSignature, topGroup] = firstGroup;
       if (topGroup.length > 0) {
-        const score = this.scoreStructureSignature(topSignature);
+        const score = scoreStructureSignature(topSignature);
         this.logger.debug("Selected structure group", {
           signature: topSignature,
           candidates: topGroup.length,
@@ -254,185 +168,6 @@ IMPORTANT: Respond with ONLY a valid JSON object:
 
     // Fallback to first N candidates
     return candidates.slice(0, maxSamples);
-  }
-
-  /**
-   * Cleans a title by collapsing whitespace (handles multi-span titles).
-   */
-  private cleanTitle(title: string): string {
-    return title.replace(/\s+/g, " ").trim();
-  }
-
-  /**
-   * Finds the anchor element that matches the target URL.
-   * Handles both absolute and relative URLs.
-   */
-  private findTargetAnchor(doc: Document, targetUrl: string): Element | null {
-    const anchors = doc.querySelectorAll("a[href]");
-    for (const anchor of anchors) {
-      const href = anchor.getAttribute("href");
-      if (!href) {
-        continue;
-      }
-
-      // Check if the href matches (could be relative or absolute)
-      if (
-        targetUrl.endsWith(href) ||
-        href.endsWith(new URL(targetUrl).pathname)
-      ) {
-        return anchor;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Extracts a title from candidate HTML using multiple strategies.
-   * Uses the candidate URL to find the specific anchor when container has multiple articles.
-   */
-  private extractTitle(
-    html: string,
-    selectors: z.infer<typeof SelectorResult>,
-    candidateUrl: string
-  ): string | null {
-    const dom = new JSDOM(html);
-    const doc = dom.window.document;
-
-    // Find the specific anchor for this candidate's URL
-    const targetAnchor = this.findTargetAnchor(doc, candidateUrl);
-
-    // Strategy 1: AI-identified selector (within target anchor if found)
-    if (targetAnchor) {
-      const titleElement = targetAnchor.querySelector(selectors.titleSelector);
-      let title = titleElement?.textContent.trim();
-      if (title && title.length > 3) {
-        return this.cleanTitle(title);
-      }
-
-      // Strategy 2: Anchor title attribute
-      const anchorTitle = targetAnchor.getAttribute("title")?.trim();
-      if (anchorTitle && anchorTitle.length > 3) {
-        return this.cleanTitle(anchorTitle);
-      }
-
-      // Strategy 3: Heading inside the anchor (h1-h6)
-      const heading = targetAnchor.querySelector("h1, h2, h3, h4, h5, h6");
-      title = heading?.textContent.trim();
-      if (title && title.length > 3) {
-        return this.cleanTitle(title);
-      }
-
-      // Strategy 4: Direct anchor text
-      title = targetAnchor.textContent.trim();
-      if (title && title.length > 3) {
-        return this.cleanTitle(title);
-      }
-    }
-
-    // Fallback: Try document-level selectors if no target anchor found
-    const titleElement = doc.querySelector(selectors.titleSelector);
-    let title = titleElement?.textContent.trim();
-    if (title && title.length > 3) {
-      return this.cleanTitle(title);
-    }
-
-    const anchor = doc.querySelector("a[title]");
-    title = anchor?.getAttribute("title")?.trim();
-    if (title && title.length > 3) {
-      return this.cleanTitle(title);
-    }
-
-    const heading = doc.querySelector("a h1, a h2, a h3, a h4, a h5, a h6");
-    title = heading?.textContent.trim();
-    if (title && title.length > 3) {
-      return this.cleanTitle(title);
-    }
-
-    const mainAnchor = doc.querySelector("a[href]");
-    title = mainAnchor?.textContent.trim();
-    if (title && title.length > 3) {
-      return this.cleanTitle(title);
-    }
-
-    return null;
-  }
-
-  /**
-   * Parses a date from an element, checking datetime attribute first, then text content.
-   */
-  private parseDateFromElement(el: Element | null): string | undefined {
-    if (!el) {
-      return undefined;
-    }
-    const raw = el.getAttribute("datetime") ?? el.textContent.trim();
-    return raw ? this.parseToIsoDate(raw) : undefined;
-  }
-
-  /**
-   * Extracts a date from candidate HTML using multiple strategies.
-   * Uses the candidate URL to find the specific anchor when container has multiple articles.
-   */
-  private extractDate(
-    html: string,
-    selectors: z.infer<typeof SelectorResult>,
-    candidateUrl: string
-  ): string | undefined {
-    const dom = new JSDOM(html);
-    const doc = dom.window.document;
-
-    // Find the specific anchor for this candidate's URL
-    const targetAnchor = this.findTargetAnchor(doc, candidateUrl);
-
-    // If we found the target anchor, search within its parent container for date
-    if (targetAnchor) {
-      // Strategy 1: AI-identified selector within anchor
-      if (selectors.dateSelector) {
-        const dateEl = targetAnchor.querySelector(selectors.dateSelector);
-        const date = this.parseDateFromElement(dateEl);
-        if (date) {
-          return date;
-        }
-      }
-
-      // Strategy 2: <time> element within anchor
-      const timeEl = targetAnchor.querySelector("time");
-      const timeDate = this.parseDateFromElement(timeEl);
-      if (timeDate) {
-        return timeDate;
-      }
-
-      // Strategy 3: Element with date-related class within anchor
-      const dateClassEl = targetAnchor.querySelector(
-        '[class*="date"], [class*="Date"]'
-      );
-      const classDate = this.parseDateFromElement(dateClassEl);
-      if (classDate) {
-        return classDate;
-      }
-    }
-
-    // Fallback: Try document-level selectors
-    if (selectors.dateSelector) {
-      const dateEl = doc.querySelector(selectors.dateSelector);
-      const date = this.parseDateFromElement(dateEl);
-      if (date) {
-        return date;
-      }
-    }
-
-    const timeEl = doc.querySelector("time");
-    const timeDate = this.parseDateFromElement(timeEl);
-    if (timeDate) {
-      return timeDate;
-    }
-
-    const dateClassEl = doc.querySelector('[class*="date"], [class*="Date"]');
-    const classDate = this.parseDateFromElement(dateClassEl);
-    if (classDate) {
-      return classDate;
-    }
-
-    return undefined;
   }
 
   /**
@@ -456,7 +191,7 @@ IMPORTANT: Respond with ONLY a valid JSON object:
       const href = anchor.getAttribute("href");
       const title = anchor.textContent.trim();
 
-      if (!href || !title) {
+      if (href === null || href === "" || !title) {
         continue;
       }
 
@@ -503,7 +238,7 @@ IMPORTANT: Respond with ONLY a valid JSON object:
 
     for (const anchor of anchors) {
       const href = anchor.getAttribute("href");
-      if (!href) {
+      if (href === null || href === "") {
         continue;
       }
 
@@ -523,9 +258,9 @@ IMPORTANT: Respond with ONLY a valid JSON object:
 
       seenUrls.add(absoluteUrl);
 
-      const container = this.findParentContainer(anchor);
+      const container = findParentContainer(anchor);
       const rawHtml = container.outerHTML;
-      const candidateHtml = rawHtml.replace(/\s+/g, " ").trim();
+      const candidateHtml = rawHtml.replaceAll(/\s+/g, " ").trim();
 
       candidates.push({ url: absoluteUrl, html: candidateHtml });
     }
@@ -550,12 +285,12 @@ IMPORTANT: Respond with ONLY a valid JSON object:
     const sampleCandidates = this.selectSampleCandidates(candidates, 3);
 
     const htmlSamples = sampleCandidates
-      .map((candidate, index) => {
-        return `--- Sample ${index + 1} ---
+      .map(
+        (candidate, index) => `--- Sample ${index + 1} ---
 URL: ${candidate.url}
 HTML:
-${candidate.html}`;
-      })
+${candidate.html}`
+      )
       .join("\n\n");
 
     const prompt = `Analyze the following ${sampleCandidates.length} HTML snippets from a publication listing page.
@@ -589,10 +324,10 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
     for (const candidate of candidates) {
       // Use multi-strategy extraction for title and date
       // Pass the candidate URL to correctly identify the target anchor in containers with multiple articles
-      const title = this.extractTitle(candidate.html, selectors, candidate.url);
-      const date = this.extractDate(candidate.html, selectors, candidate.url);
+      const title = extractTitle(candidate.html, selectors, candidate.url);
+      const date = extractDate(candidate.html, selectors, candidate.url);
 
-      if (!title) {
+      if (title === null || title === "") {
         this.logger.warn("Could not extract title for candidate", {
           url: candidate.url,
         });
@@ -628,7 +363,7 @@ Respond with only a JSON object containing "titleSelector" and "dateSelector" (n
     sampleHtml: string
   ): Promise<z.infer<typeof ContentSelectorResult>> {
     // Truncate HTML for AI analysis (keep first 50KB)
-    const truncatedHtml = sampleHtml.slice(0, 50000);
+    const truncatedHtml = sampleHtml.slice(0, 50_000);
 
     const prompt = `Analyze this HTML from a publication page and identify a CSS selector for the MAIN ARTICLE CONTENT:
 
@@ -658,16 +393,19 @@ Identify a selector that captures the article body text, excluding navigation, h
 
     // Combine all matching elements and convert to markdown
     const htmlParts: string[] = [];
-    for (const element of Array.from(contentElements)) {
+    for (const element of [...contentElements]) {
       htmlParts.push(element.innerHTML);
     }
 
     const combinedHtml = htmlParts.join("\n\n");
     const markdown = this.htmlToMarkdown
       .translate(combinedHtml)
-      .replace(/\n{3,}/g, "\n\n")
+      .replaceAll(/\n{3,}/g, "\n\n")
       .trim();
 
     return markdown;
   }
 }
+
+export type { PublicationScraperConfig };
+export { PublicationScraper };

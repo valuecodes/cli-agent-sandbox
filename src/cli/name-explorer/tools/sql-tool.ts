@@ -44,8 +44,8 @@ const validateReadOnlyQuery = (
   return { valid: true };
 };
 
-export const createSqlQueryTool = (db: NameDatabase) => {
-  return tool({
+const createSqlQueryTool = (db: NameDatabase) =>
+  tool({
     name: "query_names_database",
     description: `Execute a read-only SQL query against the Finnish names database (decade-based data).
 
@@ -71,10 +71,9 @@ Example queries:
       }
     },
   });
-};
 
-export const createAggregatedSqlQueryTool = (db: AggregatedNameDatabase) => {
-  return tool({
+const createAggregatedSqlQueryTool = (db: AggregatedNameDatabase) =>
+  tool({
     name: "query_aggregated_names",
     description: `Execute a read-only SQL query against the aggregated Finnish names database (total counts across all time).
 
@@ -101,4 +100,5 @@ Example queries:
       }
     },
   });
-};
+
+export { createSqlQueryTool, createAggregatedSqlQueryTool };

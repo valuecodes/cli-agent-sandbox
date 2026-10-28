@@ -33,7 +33,7 @@ const HEADER_ROW = [
 ];
 
 const dataRow = (recipient: string) => [
-  46022,
+  46_022,
   recipient,
   "Test ELY-keskus",
   "T-001",
@@ -62,17 +62,17 @@ type ParsedDateCode = { y: number; m: number; d: number };
 const ssf = XLSX.SSF as {
   parse_date_code: (n: number) => ParsedDateCode | undefined;
 };
+const pad = (n: number) => String(n).padStart(2, "0");
 
 describe("normalizeExcelDate", () => {
   it("converts numeric Excel serials via XLSX.SSF.parse_date_code", () => {
     // Compute the expected ISO date from the library itself, so a wrong
     // hard-coded constant in this test can't mask a real bug in the helper.
-    const serial = 46022;
+    const serial = 46_022;
     const parsed = ssf.parse_date_code(serial);
     if (!parsed) {
       throw new Error("XLSX.SSF.parse_date_code returned undefined");
     }
-    const pad = (n: number) => String(n).padStart(2, "0");
     expect(normalizeExcelDate(serial)).toBe(
       `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`
     );
@@ -101,15 +101,15 @@ describe("normalizeExcelDate", () => {
 
 describe("normalizeAmount", () => {
   it("passes through finite numbers (rounded to integer)", () => {
-    expect(normalizeAmount(49855)).toBe(49855);
+    expect(normalizeAmount(49_855)).toBe(49_855);
     expect(normalizeAmount(0)).toBe(0);
-    expect(normalizeAmount(49855.4)).toBe(49855);
-    expect(normalizeAmount(49855.6)).toBe(49856);
+    expect(normalizeAmount(49_855.4)).toBe(49_855);
+    expect(normalizeAmount(49_855.6)).toBe(49_856);
   });
 
   it("parses numeric strings", () => {
-    expect(normalizeAmount("49855")).toBe(49855);
-    expect(normalizeAmount("  49855  ")).toBe(49855);
+    expect(normalizeAmount("49855")).toBe(49_855);
+    expect(normalizeAmount("  49855  ")).toBe(49_855);
   });
 
   it("returns null for null/undefined/empty/NaN/non-numeric (NOT 0, NOT skip)", () => {

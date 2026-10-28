@@ -2,7 +2,7 @@ import { NodeHtmlMarkdown } from "node-html-markdown";
 import sanitize from "sanitize-html";
 import type { Logger } from "~clients/logger";
 
-export type FetchClientOptions = {
+type FetchClientOptions = {
   logger: Logger;
 };
 
@@ -18,8 +18,8 @@ const SANITIZE_OPTIONS: sanitize.IOptions = {
  * HTTP client for fetching and sanitizing web content.
  * Provides methods to fetch HTML and convert to markdown with sanitization.
  */
-export class FetchClient {
-  private logger: Logger;
+class FetchClient {
+  private readonly logger: Logger;
 
   constructor({ logger }: FetchClientOptions) {
     this.logger = logger;
@@ -75,3 +75,6 @@ export class FetchClient {
     return sanitize(html, SANITIZE_OPTIONS);
   }
 }
+
+export type { FetchClientOptions };
+export { FetchClient };
