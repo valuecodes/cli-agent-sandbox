@@ -13,13 +13,13 @@ const manifestPath = (dir: string): string => join(dir, MANIFEST_FILE);
  * is opaque without a valid manifest, so we'd rather fail loudly than load a
  * silently-incomplete dataset.
  */
-export const readManifest = async (dir: string): Promise<SectorManifest> => {
+const readManifest = async (dir: string): Promise<SectorManifest> => {
   const raw = await readFile(manifestPath(dir), "utf8");
   const parsed: unknown = JSON.parse(raw);
   return SectorManifestSchema.parse(parsed);
 };
 
-export const writeManifest = async (
+const writeManifest = async (
   dir: string,
   manifest: SectorManifest
 ): Promise<void> => {
@@ -33,3 +33,5 @@ export const writeManifest = async (
     "utf8"
   );
 };
+
+export { readManifest, writeManifest };

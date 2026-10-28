@@ -8,7 +8,7 @@ import { resolveAndValidateUrl } from "~tools/utils/url-safety";
 /**
  * Result of a fetch operation
  */
-export type FetchResult = {
+type FetchResult = {
   ok: boolean;
   status: number;
   finalUrl: string;
@@ -29,20 +29,20 @@ export type FetchResult = {
  * Default configuration values
  */
 const DEFAULTS = {
-  timeoutMs: 15000,
+  timeoutMs: 15_000,
   maxBytes: 2 * 1024 * 1024, // 2MB
   maxRedirects: 5,
-  maxChars: 50000,
+  maxChars: 50_000,
 } as const;
 
 /**
  * Maximum allowed values
  */
 const MAX_VALUES = {
-  timeoutMs: 30000,
+  timeoutMs: 30_000,
   maxBytes: 5 * 1024 * 1024, // 5MB
   maxRedirects: 10,
-  maxChars: 100000,
+  maxChars: 100_000,
 } as const;
 
 /**
@@ -134,10 +134,10 @@ const executeFetch = async (params: {
       };
 
       // Add conditional request headers if provided
-      if (etag) {
+      if (etag !== undefined && etag !== "") {
         headers["If-None-Match"] = etag;
       }
-      if (lastModified) {
+      if (lastModified !== undefined && lastModified !== "") {
         headers["If-Modified-Since"] = lastModified;
       }
 
@@ -166,7 +166,7 @@ const executeFetch = async (params: {
         }
 
         const location = response.headers.get("location");
-        if (!location) {
+        if (location === null || location === "") {
           return {
             ok: false,
             status: response.status,
@@ -360,7 +360,7 @@ const executeFetch = async (params: {
   }
 };
 
-export type FetchUrlToolOptions = {
+type FetchUrlToolOptions = {
   logger: Logger;
 };
 
@@ -368,7 +368,7 @@ export type FetchUrlToolOptions = {
  * Safe HTTP GET fetch tool for agent runtime.
  * Fetches web pages with SSRF protection, HTML sanitization, and Markdown conversion.
  */
-export const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
+const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
   tool({
     name: "fetchUrl",
     description:
@@ -424,3 +424,6 @@ export const createFetchUrlTool = ({ logger }: FetchUrlToolOptions) =>
       return JSON.stringify(result, null, 2);
     },
   });
+
+export type { FetchResult, FetchUrlToolOptions };
+export { createFetchUrlTool };

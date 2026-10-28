@@ -12,10 +12,10 @@ import type { Sector } from "../types/schemas";
 // in the DB while staying visually distinct from real S-codes.
 const SECTOR_CODE = /^(S\d{1,6})\s+(.+)$/;
 
-export const BLANK_LABEL = "(Tyhjä)";
-export const BLANK_CODE = "BLANK";
-export const MISSING_LABEL = "Sektoriluokitus puuttuu";
-export const MISSING_CODE = "PUUTTUU";
+const BLANK_LABEL = "(Tyhjä)";
+const BLANK_CODE = "BLANK";
+const MISSING_LABEL = "Sektoriluokitus puuttuu";
+const MISSING_CODE = "PUUTTUU";
 
 /**
  * Parse one slicer option's text into a Sector, or return null when the text
@@ -24,7 +24,7 @@ export const MISSING_CODE = "PUUTTUU";
  * isn't an option row). Returning null — rather than throwing — lets the
  * discovery walk skip noise without aborting.
  */
-export const parseSectorOption = (raw: string): Sector | null => {
+const parseSectorOption = (raw: string): Sector | null => {
   const trimmed = raw.trim();
   if (trimmed === BLANK_LABEL) {
     return { code: BLANK_CODE, label: BLANK_LABEL };
@@ -33,8 +33,23 @@ export const parseSectorOption = (raw: string): Sector | null => {
     return { code: MISSING_CODE, label: MISSING_LABEL };
   }
   const match = SECTOR_CODE.exec(trimmed);
-  if (match?.[1] && match[2]) {
-    return { code: match[1], label: match[2].trim() };
+  const code = match?.[1];
+  const label = match?.[2];
+  if (
+    code !== undefined &&
+    code !== "" &&
+    label !== undefined &&
+    label !== ""
+  ) {
+    return { code, label: label.trim() };
   }
   return null;
+};
+
+export {
+  BLANK_CODE,
+  BLANK_LABEL,
+  MISSING_CODE,
+  MISSING_LABEL,
+  parseSectorOption,
 };

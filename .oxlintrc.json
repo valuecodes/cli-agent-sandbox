@@ -9,18 +9,23 @@
   // minimumDescriptionLength 10, `restrict-plus-operands` all-false, `return-await`
   // "error-handling-correctness-only"), so every option is spelled out below.
   //
+  // On top of that come the curated style, cleanup, import, unicorn and vitest
+  // rules of the agentic-monorepo-starter template, minus its React, jsx-a11y
+  // and workspace-boundary rules. Where both define a rule, the stricter
+  // options from the ESLint migration are kept.
+  //
   // Every rule is listed explicitly and every category is off, because
-  // oxlint's categories are not the same set as those presets. `unicorn` and
-  // `oxc` are ON by default, so `plugins` has to be explicit to keep them off.
-  // `correctness` has to be turned off by NAME: an empty `categories` object
-  // leaves oxlint's default category on, which silently adds ~57 rules.
+  // oxlint's categories are not the same set as those presets. `plugins` is
+  // explicit so only the listed ones load; enabling a plugin adds no rules by
+  // itself. `correctness` has to be turned off by NAME: an empty `categories`
+  // object leaves oxlint's default category on, which silently adds ~57 rules.
   //
   // Two ESLint rules have no oxlint equivalent:
   // - `no-restricted-syntax` (template literals in logger calls) is replaced by
   //   the local JS plugin rule `logger/no-template-literal` below.
   // - `no-octal` is dropped: every source file is a TypeScript ES module, where
   //   tsc already rejects legacy octal literals (TS1121).
-  "plugins": ["typescript", "import"],
+  "plugins": ["typescript", "import", "vitest", "unicorn", "oxc"],
   "categories": { "correctness": "off" },
 
   // JS plugins are alpha in oxlint and not covered by semver; pin oxlint and
@@ -36,9 +41,16 @@
   "env": { "builtin": true },
 
   // `.gitignore` is read natively by oxlint, which keeps `tmp/`, `.venv/` and
-  // `node_modules/` out. Config files sit outside the tsconfig `include` (or
-  // need a default export), matching the old ESLint ignore.
-  "ignorePatterns": ["**/*.config.*"],
+  // `node_modules/` out.
+
+  // Vitest loads its config through a default export, so that one rule is off
+  // for config files. They are type-checked through the tsconfig `include`.
+  "overrides": [
+    {
+      "files": ["**/*.config.*"],
+      "rules": { "import/no-default-export": "off" }
+    }
+  ],
 
   "rules": {
     // eslint core
@@ -279,6 +291,97 @@
     // eslint-plugin-import
     "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
     "import/no-default-export": "error",
+
+    // From the starter template: strictness beyond the presets.
+    "typescript/prefer-readonly": "error",
+    "typescript/strict-boolean-expressions": "error",
+    "no-param-reassign": "error",
+    "no-nested-ternary": "error",
+    // Code lines only, so comments and spacing are never what trips it.
+    "max-lines": [
+      "error",
+      { "max": 400, "skipBlankLines": true, "skipComments": true }
+    ],
+
+    // Style: one way to write functions, and the cleanups below.
+    "arrow-body-style": ["error", "as-needed"],
+    "typescript/method-signature-style": ["error", "property"],
+    "object-shorthand": "error",
+    "prefer-template": "error",
+    "no-else-return": "error",
+    "no-lonely-if": "error",
+    "no-useless-return": "error",
+    "no-unneeded-ternary": "error",
+    "no-useless-concat": "error",
+    "no-useless-computed-key": "error",
+    "no-useless-constructor": "error",
+    "logical-assignment-operators": "error",
+    "prefer-arrow-callback": "error",
+    "prefer-object-spread": "error",
+    "yoda": "error",
+    "no-implicit-coercion": "error",
+    "default-param-last": "error",
+    "default-case-last": "error",
+    "no-return-assign": "error",
+    "no-multi-assign": "error",
+    "radix": "error",
+    "array-callback-return": "error",
+    "typescript/consistent-return": "error",
+
+    // eslint-plugin-import, beyond the two rules above.
+    // Circular imports silently break module init order.
+    "import/no-cycle": "error",
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    // Declarations first, one export list at the bottom.
+    "import/exports-last": "error",
+    "import/group-exports": "error",
+    "import/first": "error",
+    "import/newline-after-import": "error",
+    "import/no-mutable-exports": "error",
+
+    // Barrels built on `export *` hide the public API; import modules by path.
+    "oxc/no-barrel-file": ["error", { "threshold": 0 }],
+
+    "unicorn/filename-case": ["error", { "case": "kebabCase" }],
+    // Every disable directive must name the rule it silences.
+    "unicorn/no-abusive-eslint-disable": "error",
+    "unicorn/catch-error-name": "error",
+    "unicorn/throw-new-error": "error",
+    "unicorn/error-message": "error",
+    "unicorn/prefer-optional-catch-binding": "error",
+    "unicorn/switch-case-braces": "error",
+    "unicorn/prefer-at": "error",
+    "unicorn/prefer-string-slice": "error",
+    "unicorn/prefer-string-replace-all": "error",
+    "unicorn/no-typeof-undefined": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/prefer-date-now": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-export-from": "error",
+    "unicorn/prefer-structured-clone": "error",
+    "unicorn/prefer-global-this": "error",
+    "unicorn/prefer-spread": "error",
+    "unicorn/consistent-function-scoping": "error",
+    "unicorn/numeric-separators-style": "error",
+
+    // vitest
+    "vitest/no-focused-tests": "error",
+    "vitest/no-disabled-tests": "warn",
+    "vitest/consistent-test-it": ["error", { "fn": "it" }],
+    "vitest/valid-title": "error",
+    "vitest/valid-expect": "error",
+    "vitest/expect-expect": "error",
+    "vitest/no-identical-title": "error",
+    "vitest/no-standalone-expect": "error",
+    "vitest/no-conditional-expect": "error",
+    "vitest/no-duplicate-hooks": "error",
+    "vitest/prefer-hooks-on-top": "error",
+    "vitest/no-commented-out-tests": "error",
+    "vitest/prefer-to-be": "error",
+    "vitest/prefer-to-have-length": "error",
+    "vitest/prefer-to-contain": "error",
+    "vitest/require-top-level-describe": "error",
 
     // Local plugin: replaces the `no-restricted-syntax` selectors that banned
     // template literals as direct arguments of logger.<level>() calls.

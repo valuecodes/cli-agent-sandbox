@@ -23,8 +23,8 @@ type PipelineResult = {
 };
 
 export class PrhPipeline {
-  private logger: Logger;
-  private outputDir: string;
+  private readonly logger: Logger;
+  private readonly outputDir: string;
 
   constructor({ logger, outputDir }: PrhPipelineOptions) {
     this.logger = logger;

@@ -1,3 +1,4 @@
+import { MemorySession } from "@openai/agents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -12,23 +13,32 @@ let mockRunnerInstance: {
   on: ReturnType<typeof vi.fn>;
   run: ReturnType<typeof vi.fn>;
 };
-let mockSessionInstance: object;
 let eventHandlers: Map<string, EventHandler>;
 
-vi.mock("@openai/agents", () => {
-  // Create fresh mocks that will be configured in beforeEach
-  return {
-    Agent: vi.fn(function MockAgent() {
-      return {};
-    }),
-    Runner: vi.fn(function MockRunner() {
-      return mockRunnerInstance;
-    }),
-    MemorySession: vi.fn(function MockMemorySession() {
-      return mockSessionInstance;
-    }),
-  };
-});
+// The mocks are invoked with `new`, so their implementations must be
+// constructible classes, not arrows. MockRunner reads the spies from
+// mockRunnerInstance at construction time, i.e. after beforeEach has set them.
+vi.mock("@openai/agents", () => ({
+  Agent: vi.fn(
+    class MockAgent {
+      readonly config: unknown;
+      constructor(config: unknown) {
+        this.config = config;
+      }
+    }
+  ),
+  Runner: vi.fn(
+    class MockRunner {
+      readonly on = mockRunnerInstance.on;
+      readonly run = mockRunnerInstance.run;
+    }
+  ),
+  MemorySession: vi.fn(
+    class MockMemorySession {
+      readonly items: unknown[] = [];
+    }
+  ),
+}));
 
 const getHandler = (
   handlers: Map<string, EventHandler>,
@@ -58,8 +68,6 @@ describe("AgentRunner", () => {
       }),
       run: vi.fn().mockResolvedValue({ finalOutput: { message: "test" } }),
     };
-
-    mockSessionInstance = {};
   });
 
   afterEach(() => {
@@ -105,7 +113,7 @@ describe("AgentRunner", () => {
       expect(mockRunnerInstance.run).toHaveBeenCalledWith(
         expect.anything(), // agent
         "test prompt",
-        { session: mockSessionInstance }
+        { session: agentRunner.memorySession }
       );
     });
 
@@ -124,7 +132,7 @@ describe("AgentRunner", () => {
       expect(mockRunnerInstance.run).toHaveBeenCalledWith(
         expect.anything(),
         "test prompt",
-        { session: mockSessionInstance, maxTurns: 3 }
+        { session: agentRunner.memorySession, maxTurns: 3 }
       );
     });
 
@@ -316,7 +324,10 @@ describe("AgentRunner", () => {
         logger,
       });
 
-      expect(agentRunner.memorySession).toBe(mockSessionInstance);
+      expect(vi.mocked(MemorySession).mock.instances).toHaveLength(1);
+      expect(agentRunner.memorySession).toBe(
+        vi.mocked(MemorySession).mock.instances[0]
+      );
     });
   });
 
@@ -389,7 +400,7 @@ describe("AgentRunner", () => {
 
       // Should truncate at 200 chars
       expect(debugLogSpy).toHaveBeenCalledWith("Tool result preview", {
-        preview: "x".repeat(200) + "...",
+        preview: `${"x".repeat(200)}...`,
       });
     });
   });

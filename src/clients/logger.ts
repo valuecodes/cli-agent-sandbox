@@ -1,6 +1,6 @@
-export type LogLevel = "debug" | "info" | "warn" | "error";
+type LogLevel = "debug" | "info" | "warn" | "error";
 
-export type LoggerConfig = {
+type LoggerConfig = {
   level?: LogLevel;
   useColors?: boolean;
   useTimestamps?: boolean;
@@ -11,10 +11,10 @@ export type LoggerConfig = {
  * Provides standard logging methods (debug, info, warn, error) and specialized
  * methods for tool output, questions, and answers.
  */
-export class Logger {
-  private level: LogLevel;
-  private useColors: boolean;
-  private useTimestamps: boolean;
+class Logger {
+  private readonly level: LogLevel;
+  private readonly useColors: boolean;
+  private readonly useTimestamps: boolean;
 
   private static readonly LEVELS: Record<LogLevel, number> = {
     debug: 0,
@@ -190,3 +190,6 @@ export class Logger {
     }
   }
 }
+
+export type { LogLevel, LoggerConfig };
+export { Logger };

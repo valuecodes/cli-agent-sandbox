@@ -18,8 +18,8 @@ type ResolveOptions = {
  * Uses 👍 reaction to mark addressed comments instead of resolving threads.
  */
 export class CommentResolver {
-  private githubClient: GitHubClient;
-  private logger: Logger;
+  private readonly githubClient: GitHubClient;
+  private readonly logger: Logger;
 
   constructor(options: CommentResolverOptions) {
     this.logger = options.logger;

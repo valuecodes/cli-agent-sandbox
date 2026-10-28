@@ -1,7 +1,7 @@
-import { createReadStream } from "fs";
-import { readdir, stat } from "fs/promises";
-import { join } from "path";
-import { createInterface } from "readline";
+import { createReadStream } from "node:fs";
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { createInterface } from "node:readline";
 import type { Logger } from "~clients/logger";
 
 import { CODEX_SESSIONS_PATH, PROVIDER_CODEX } from "../constants";
@@ -30,9 +30,9 @@ type SessionData = {
 };
 
 export class CodexLogReader {
-  private logger: Logger;
-  private basePath: string;
-  private debug: boolean;
+  private readonly logger: Logger;
+  private readonly basePath: string;
+  private readonly debug: boolean;
 
   constructor(options: CodexLogReaderOptions) {
     this.logger = options.logger;
@@ -64,7 +64,7 @@ export class CodexLogReader {
     for (const year of years) {
       const yearPath = join(this.basePath, year);
       const yearStat = await this.safeStat(yearPath);
-      if (!yearStat?.isDirectory()) {
+      if (yearStat?.isDirectory() !== true) {
         continue;
       }
 
@@ -73,7 +73,7 @@ export class CodexLogReader {
       for (const month of months) {
         const monthPath = join(yearPath, month);
         const monthStat = await this.safeStat(monthPath);
-        if (!monthStat?.isDirectory()) {
+        if (monthStat?.isDirectory() !== true) {
           continue;
         }
 
@@ -82,7 +82,7 @@ export class CodexLogReader {
         for (const day of days) {
           const dayPath = join(monthPath, day);
           const dayStat = await this.safeStat(dayPath);
-          if (!dayStat?.isDirectory()) {
+          if (dayStat?.isDirectory() !== true) {
             continue;
           }
 
@@ -202,7 +202,11 @@ export class CodexLogReader {
           const contextResult = CodexTurnContextPayloadSchema.safeParse(
             entry.payload
           );
-          if (contextResult.success && contextResult.data.model) {
+          if (
+            contextResult.success &&
+            contextResult.data.model !== undefined &&
+            contextResult.data.model !== ""
+          ) {
             sessionData.model = contextResult.data.model;
           }
         }
@@ -231,7 +235,7 @@ export class CodexLogReader {
           }
 
           // Skip if cwd is missing or doesn't match repo
-          if (!sessionData.cwd) {
+          if (sessionData.cwd === undefined || sessionData.cwd === "") {
             if (this.debug) {
               this.logger.debug("Skipping Codex entry: cwd missing", {
                 repoPath,

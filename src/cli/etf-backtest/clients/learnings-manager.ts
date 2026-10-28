@@ -25,7 +25,7 @@ export type LearningsManagerConfig = {
  * Stores iteration history and best results per ISIN.
  */
 export class LearningsManager {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(config: LearningsManagerConfig) {
     this.logger = config.logger;

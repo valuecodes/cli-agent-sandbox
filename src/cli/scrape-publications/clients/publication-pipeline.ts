@@ -1,8 +1,6 @@
 import { NodeHtmlMarkdown } from "node-html-markdown";
-import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import slug from "slug";
 import type { z } from "zod";
 import { FetchClient } from "~clients/fetch";
 import type { Logger } from "~clients/logger";
@@ -12,71 +10,41 @@ import type {
   LinkCandidate,
   Publication,
   PublicationLink,
-  SelectorResult,
 } from "../types/publication";
+import { PublicationContentExtractor } from "./publication-content-extractor";
+import {
+  fileExists,
+  filterLinks,
+  titleToSlug,
+  urlToShortHash,
+} from "./publication-files";
+import type {
+  DiscoverLinksResult,
+  ExtractContentResult,
+  FetchPublicationsResult,
+  FetchSource,
+  FetchSourceResult,
+  IdentifyAndExtractResult,
+  PublicationPipelineConfig,
+} from "./publication-pipeline-types";
 import { PublicationScraper } from "./publication-scraper";
 import { ReviewPageGenerator } from "./review-page-generator";
-
-export type FetchSource = "playwright" | "basic-fetch";
-
-export type PublicationPipelineConfig = {
-  logger: Logger;
-  outputDir: string;
-  refetch?: boolean;
-};
-
-export type FetchSourceResult = {
-  markdown: string;
-  html: string;
-  fromCache: { markdown: boolean; html: boolean };
-  source: FetchSource;
-};
-
-export type DiscoverLinksResult = {
-  allLinks: string[];
-  filteredLinks: string[];
-  linkCandidates: z.infer<typeof LinkCandidate>[];
-  source: FetchSource;
-  usedFallback: boolean;
-};
-
-export type IdentifyAndExtractResult = {
-  selectors: z.infer<typeof SelectorResult>;
-  publications: z.infer<typeof PublicationLink>[];
-};
-
-export type FetchPublicationsResult = {
-  fetchedCount: number;
-  skippedCount: number;
-  markdownCount: number;
-};
-
-export type ExtractContentResult = {
-  publications: z.infer<typeof Publication>[];
-  report: {
-    total: number;
-    successful: number;
-    failed: number;
-    results: { success: boolean; filename: string; error?: string }[];
-  };
-};
-
-const MAX_TITLE_SLUG_LENGTH = 80;
 
 /**
  * Orchestrates the full publication scraping pipeline.
  * Handles fetching source content, discovering links, extracting metadata,
  * fetching individual publications, and generating review pages.
  */
-export class PublicationPipeline {
-  private logger: Logger;
-  private outputDir: string;
-  private refetch: boolean;
-  private fetchClient: FetchClient;
-  private playwrightScraper: PlaywrightScraper;
-  private scraper: PublicationScraper;
-  private reviewGenerator: ReviewPageGenerator;
-  private htmlToMarkdown: NodeHtmlMarkdown;
+class PublicationPipeline {
+  private readonly logger: Logger;
+  private readonly outputDir: string;
+  private readonly refetch: boolean;
+  private readonly fetchClient: FetchClient;
+  private readonly playwrightScraper: PlaywrightScraper;
+  private readonly scraper: PublicationScraper;
+  private readonly reviewGenerator: ReviewPageGenerator;
+  private readonly htmlToMarkdown: NodeHtmlMarkdown;
+  private readonly contentExtractor: PublicationContentExtractor;
 
   /**
    * Creates a new PublicationPipeline instance.
@@ -91,51 +59,11 @@ export class PublicationPipeline {
     this.scraper = new PublicationScraper({ logger: this.logger });
     this.reviewGenerator = new ReviewPageGenerator({ logger: this.logger });
     this.htmlToMarkdown = new NodeHtmlMarkdown();
-  }
-
-  /**
-   * Checks if a file exists at the given path.
-   * @param filePath - Path to check
-   * @returns True if file exists, false otherwise
-   */
-  private async fileExists(filePath: string): Promise<boolean> {
-    try {
-      await fs.access(filePath);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Converts a title to a URL-safe slug.
-   * @param title - The title to convert
-   * @returns Slugified title, truncated to MAX_TITLE_SLUG_LENGTH
-   */
-  private titleToSlug(title: string): string {
-    const baseSlug = slug(title, { lower: true });
-    const trimmedSlug = baseSlug.replace(/^-+|-+$/g, "");
-    if (!trimmedSlug) {
-      return "untitled-publication";
-    }
-
-    if (trimmedSlug.length <= MAX_TITLE_SLUG_LENGTH) {
-      return trimmedSlug;
-    }
-
-    const shortened = trimmedSlug
-      .slice(0, MAX_TITLE_SLUG_LENGTH)
-      .replace(/-+$/g, "");
-    return shortened || "untitled-publication";
-  }
-
-  /**
-   * Generates a short hash from a URL for disambiguation.
-   * @param url - The URL to hash
-   * @returns First 8 characters of SHA-256 hash
-   */
-  private urlToShortHash(url: string): string {
-    return crypto.createHash("sha256").update(url).digest("hex").slice(0, 8);
+    this.contentExtractor = new PublicationContentExtractor({
+      logger: this.logger,
+      outputDir: this.outputDir,
+      scraper: this.scraper,
+    });
   }
 
   /**
@@ -157,8 +85,8 @@ export class PublicationPipeline {
     const htmlPath = path.join(this.outputDir, "content.html");
 
     const [hasMarkdown, hasHtml] = await Promise.all([
-      this.fileExists(markdownPath),
-      this.fileExists(htmlPath),
+      fileExists(markdownPath),
+      fileExists(htmlPath),
     ]);
 
     let markdown: string;
@@ -231,11 +159,7 @@ export class PublicationPipeline {
       file: "links.json",
     });
 
-    let filteredLinks = (
-      filterSubstring
-        ? allLinks.filter((link) => link.includes(filterSubstring))
-        : allLinks
-    ).filter((link) => link !== targetUrl);
+    let filteredLinks = filterLinks(allLinks, targetUrl, filterSubstring);
 
     await fs.writeFile(
       path.join(this.outputDir, "filtered-links.json"),
@@ -279,11 +203,7 @@ export class PublicationPipeline {
         JSON.stringify(allLinks, null, 2)
       );
 
-      filteredLinks = (
-        filterSubstring
-          ? allLinks.filter((link) => link.includes(filterSubstring))
-          : allLinks
-      ).filter((link) => link !== targetUrl);
+      filteredLinks = filterLinks(allLinks, targetUrl, filterSubstring);
 
       await fs.writeFile(
         path.join(this.outputDir, "filtered-links.json"),
@@ -384,7 +304,7 @@ export class PublicationPipeline {
     const publicationsDir = path.join(this.outputDir, "publications");
     await fs.mkdir(publicationsDir, { recursive: true });
 
-    const titleSlugs = publications.map((pub) => this.titleToSlug(pub.title));
+    const titleSlugs = publications.map((pub) => titleToSlug(pub.title));
     const titleSlugCounts = new Map<string, number>();
     for (const titleSlug of titleSlugs) {
       titleSlugCounts.set(titleSlug, (titleSlugCounts.get(titleSlug) ?? 0) + 1);
@@ -402,7 +322,7 @@ export class PublicationPipeline {
       const url = publication.url;
       const titleSlug = titleSlugs[index];
 
-      if (!titleSlug) {
+      if (titleSlug === undefined || titleSlug === "") {
         this.logger.warn("Skipping publication with empty title slug", { url });
         continue;
       }
@@ -411,14 +331,14 @@ export class PublicationPipeline {
         (titleSlugCounts.get(titleSlug) ?? 0) > 1 ||
         titleSlug === "untitled-publication";
       const filename = needsDisambiguation
-        ? `${titleSlug}-${this.urlToShortHash(url)}`
+        ? `${titleSlug}-${urlToShortHash(url)}`
         : titleSlug;
       const pubHtmlPath = path.join(publicationsDir, `${filename}.html`);
       const pubMarkdownPath = path.join(publicationsDir, `${filename}.md`);
 
       const [hasPubHtml, hasPubMarkdown] = await Promise.all([
-        this.fileExists(pubHtmlPath),
-        this.fileExists(pubMarkdownPath),
+        fileExists(pubHtmlPath),
+        fileExists(pubMarkdownPath),
       ]);
 
       const needsHtml = this.refetch || !hasPubHtml;
@@ -493,143 +413,7 @@ export class PublicationPipeline {
   }: {
     publications: z.infer<typeof PublicationLink>[];
   }): Promise<ExtractContentResult> {
-    this.logger.info("--- Extracting Publication Content ---");
-
-    const publicationsDir = path.join(this.outputDir, "publications");
-    const htmlFiles = (await fs.readdir(publicationsDir)).filter((f) =>
-      f.endsWith(".html")
-    );
-
-    const firstHtmlFile = htmlFiles[0];
-
-    if (!firstHtmlFile) {
-      this.logger.info(
-        "No HTML files found in publications directory, skipping content extraction"
-      );
-      return {
-        publications: [],
-        report: { total: 0, successful: 0, failed: 0, results: [] },
-      };
-    }
-
-    const sampleHtmlPath = path.join(publicationsDir, firstHtmlFile);
-    const sampleHtml = await fs.readFile(sampleHtmlPath, "utf-8");
-
-    this.logger.info("Analyzing sample HTML", { file: firstHtmlFile });
-    const contentSelectors =
-      await this.scraper.identifyContentSelector(sampleHtml);
-
-    this.logger.info("Identified content selector", {
-      selector: contentSelectors.contentSelector,
-    });
-
-    await fs.writeFile(
-      path.join(this.outputDir, "content-selectors.json"),
-      JSON.stringify(contentSelectors, null, 2)
-    );
-
-    const publicationsWithContent: z.infer<typeof Publication>[] = [];
-    const extractionResults: {
-      success: boolean;
-      filename: string;
-      error?: string;
-    }[] = [];
-
-    for (const publication of publications) {
-      const pubTitleSlug = this.titleToSlug(publication.title);
-      const hash = this.urlToShortHash(publication.url);
-
-      const possibleFilenames = [
-        `${pubTitleSlug}.html`,
-        `${pubTitleSlug}-${hash}.html`,
-      ];
-
-      let pubHtmlContent: string | null = null;
-      let usedFilename: string | null = null;
-
-      for (const filename of possibleFilenames) {
-        const filePath = path.join(publicationsDir, filename);
-        if (await this.fileExists(filePath)) {
-          pubHtmlContent = await fs.readFile(filePath, "utf-8");
-          usedFilename = filename;
-          break;
-        }
-      }
-
-      const firstPossibleFilename = possibleFilenames[0] ?? "unknown.html";
-
-      if (!pubHtmlContent || !usedFilename) {
-        extractionResults.push({
-          success: false,
-          filename: firstPossibleFilename,
-          error: "HTML file not found",
-        });
-        this.logger.warn("HTML file not found for publication", {
-          title: publication.title,
-        });
-        continue;
-      }
-
-      const contentMarkdown = this.scraper.extractContent(
-        pubHtmlContent,
-        contentSelectors.contentSelector
-      );
-
-      if (!contentMarkdown) {
-        extractionResults.push({
-          success: false,
-          filename: usedFilename,
-          error: "No content found with selector",
-        });
-        this.logger.warn("No content found for publication", {
-          title: publication.title,
-        });
-        continue;
-      }
-
-      publicationsWithContent.push({
-        title: publication.title,
-        url: publication.url,
-        date: publication.date,
-        content: contentMarkdown,
-        extractedAt: new Date().toISOString(),
-      });
-
-      extractionResults.push({
-        success: true,
-        filename: usedFilename,
-      });
-
-      this.logger.info("Publication extracted", {
-        index: extractionResults.length,
-        total: publications.length,
-        title: publication.title,
-      });
-    }
-
-    await fs.writeFile(
-      path.join(this.outputDir, "publications.json"),
-      JSON.stringify(publicationsWithContent, null, 2)
-    );
-
-    const report = {
-      total: publications.length,
-      successful: extractionResults.filter((r) => r.success).length,
-      failed: extractionResults.filter((r) => !r.success).length,
-      results: extractionResults,
-    };
-
-    await fs.writeFile(
-      path.join(this.outputDir, "extraction-report.json"),
-      JSON.stringify(report, null, 2)
-    );
-
-    this.logger.info("Content extraction complete", {
-      successful: report.successful,
-      total: report.total,
-    });
-
-    return { publications: publicationsWithContent, report };
+    return this.contentExtractor.extract({ publications });
   }
 
   /**
@@ -662,3 +446,5 @@ export class PublicationPipeline {
     await this.playwrightScraper.close();
   }
 }
+
+export { PublicationPipeline };

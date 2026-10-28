@@ -2,7 +2,7 @@ import type { z } from "zod";
 import { parseArgv } from "zx";
 import type { Logger } from "~clients/logger";
 
-export type ParseArgsOptions<T extends z.ZodType> = {
+type ParseArgsOptions<T extends z.ZodType> = {
   logger: Logger;
   schema: T;
   rawArgs?: string[];
@@ -18,7 +18,7 @@ const sanitizeArgs = (rawArgs: string[]): string[] =>
  * @returns Validated arguments matching the schema type
  * @throws If arguments fail schema validation
  */
-export const parseArgs = <T extends z.ZodType>({
+const parseArgs = <T extends z.ZodType>({
   logger,
   schema,
   rawArgs,
@@ -29,3 +29,6 @@ export const parseArgs = <T extends z.ZodType>({
   logger.debug("Parsed args", { args });
   return args;
 };
+
+export type { ParseArgsOptions };
+export { parseArgs };

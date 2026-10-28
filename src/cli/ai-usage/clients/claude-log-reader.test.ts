@@ -12,7 +12,7 @@ const mockLogger = {
 } as never;
 
 const encodeRepoPath = (repoPath: string) =>
-  repoPath.replace(/\\/g, "/").replace(/\//g, "-");
+  repoPath.replaceAll("\\", "/").replaceAll("/", "-");
 
 const since = new Date("2024-01-01T00:00:00.000Z");
 const repoPath = "/repo";

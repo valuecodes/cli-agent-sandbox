@@ -5,7 +5,7 @@ import { createListFilesTool } from "~tools/list-files/list-files-tool";
 import { createReadFileTool } from "~tools/read-file/read-file-tool";
 import { createWriteFileTool } from "~tools/write-file/write-file-tool";
 
-export type ToolFactoryConfig = {
+type ToolFactoryConfig = {
   logger: Logger;
 };
 
@@ -22,11 +22,11 @@ const toolFactories: Record<string, ToolFactory> = {
  * Creates tool instances from an array of tool names.
  * Throws if an unknown tool name is provided.
  */
-export const createToolsFromNames = (
+const createToolsFromNames = (
   names: string[],
   config: ToolFactoryConfig
-): Tool[] => {
-  return names.map((name) => {
+): Tool[] =>
+  names.map((name) => {
     const factory = toolFactories[name];
     if (!factory) {
       const available = Object.keys(toolFactories).join(", ");
@@ -34,4 +34,6 @@ export const createToolsFromNames = (
     }
     return factory(config);
   });
-};
+
+export type { ToolFactoryConfig };
+export { createToolsFromNames };

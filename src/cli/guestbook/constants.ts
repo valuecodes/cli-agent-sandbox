@@ -1,3 +1,5 @@
-export const GUESTBOOK_FILE = "guestbook.md";
-export const AGENT_NAME = "GuestbookAgent";
-export const AGENT_MODEL = "gpt-5-mini";
+const GUESTBOOK_FILE = "guestbook.md";
+const AGENT_NAME = "GuestbookAgent";
+const AGENT_MODEL = "gpt-5-mini";
+
+export { AGENT_MODEL, AGENT_NAME, GUESTBOOK_FILE };

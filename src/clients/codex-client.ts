@@ -13,7 +13,7 @@ type LaunchOptions = {
 };
 
 export class CodexClient {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(options: CodexClientOptions) {
     this.logger = options.logger;

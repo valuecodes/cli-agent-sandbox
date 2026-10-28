@@ -11,9 +11,9 @@ import {
 } from "../constants";
 import type { EvalReport, ReportSummary, SuiteResult } from "../types/schemas";
 
-export type ReportFormat = "json" | "md" | "both";
+type ReportFormat = "json" | "md" | "both";
 
-export type ReportGeneratorConfig = {
+type ReportGeneratorConfig = {
   logger: Logger;
   outputDir: string;
   format: ReportFormat;
@@ -24,10 +24,10 @@ export type ReportGeneratorConfig = {
  * Reports are written to the configured output directory under tmp/,
  * inside a dedicated reports/ subfolder.
  */
-export class ReportGenerator {
-  private logger: Logger;
-  private outputDir: string;
-  private format: ReportFormat;
+class ReportGenerator {
+  private readonly logger: Logger;
+  private readonly outputDir: string;
+  private readonly format: ReportFormat;
 
   constructor(config: ReportGeneratorConfig) {
     this.logger = config.logger;
@@ -171,7 +171,7 @@ export class ReportGenerator {
         for (const caseResult of problemCases) {
           lines.push(`#### ${caseResult.caseId}: ${caseResult.caseName}`);
           lines.push("");
-          if (caseResult.error) {
+          if (caseResult.error !== null && caseResult.error !== "") {
             lines.push(`**Error:** ${caseResult.error}`);
           }
           if (caseResult.assertionResults.length > 0) {
@@ -194,6 +194,9 @@ export class ReportGenerator {
   }
 
   private getTimestamp(): string {
-    return new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    return new Date().toISOString().replaceAll(/[:.]/g, "-").slice(0, 19);
   }
 }
+
+export type { ReportFormat, ReportGeneratorConfig };
+export { ReportGenerator };

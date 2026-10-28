@@ -101,7 +101,7 @@ try {
       await pipeline.close();
     } catch (closeError) {
       logger.error("Failed to close pipeline", { error: closeError });
-      process.exitCode = process.exitCode ?? 1;
+      process.exitCode ??= 1;
     }
   }
 }

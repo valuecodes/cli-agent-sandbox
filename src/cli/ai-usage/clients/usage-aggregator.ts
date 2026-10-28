@@ -19,8 +19,8 @@ type AggregateOptions = {
 };
 
 export class UsageAggregator {
-  private pricing: PricingConfig;
-  private unknownModels = new Set<string>();
+  private readonly pricing: PricingConfig;
+  private readonly unknownModels = new Set<string>();
 
   constructor(options: UsageAggregatorOptions) {
     this.pricing = options.pricing;
@@ -94,7 +94,7 @@ export class UsageAggregator {
     }
 
     // Build rows
-    const rows: AggregatedRow[] = Array.from(groups.values()).map((g) => ({
+    const rows: AggregatedRow[] = [...groups.values()].map((g) => ({
       provider: g.provider,
       model: g.model,
       inputTokens: g.inputTokens,
@@ -144,7 +144,7 @@ export class UsageAggregator {
       }
     }
 
-    const byModel: ModelSummary[] = Array.from(modelMap.entries())
+    const byModel: ModelSummary[] = [...modelMap.entries()]
       .map(([model, data]) => ({
         model,
         tokens: data.tokens,
@@ -178,7 +178,7 @@ export class UsageAggregator {
       byModel,
       rows,
       totals,
-      unknownModels: Array.from(this.unknownModels).sort(),
+      unknownModels: [...this.unknownModels].sort(),
     };
   }
 }

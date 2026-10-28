@@ -9,7 +9,7 @@
 const Y_TUNNUS_TRAILING = /\((\d{7}-\d)\)\s*$/;
 
 export const extractBusinessId = (recipient: string | null): string | null => {
-  if (!recipient) {
+  if (recipient === null || recipient === "") {
     return null;
   }
   return Y_TUNNUS_TRAILING.exec(recipient)?.[1] ?? null;

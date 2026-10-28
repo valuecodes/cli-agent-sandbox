@@ -3,7 +3,7 @@ import path from "node:path";
 
 const PATH_TRAVERSAL = /(^|[\\/])\.\.([\\/]|$)/;
 
-export const TMP_ROOT = path.resolve(process.cwd(), "tmp");
+const TMP_ROOT = path.resolve(process.cwd(), "tmp");
 
 const isErrno = (
   error: unknown,
@@ -90,7 +90,7 @@ const resolveCandidatePath = (trimmed: string) => {
   return candidatePath;
 };
 
-export const resolveTmpPathForWrite = async (userPath: string) => {
+const resolveTmpPathForWrite = async (userPath: string) => {
   const trimmed = userPath.trim();
   if (!trimmed) {
     throw new Error("Path cannot be empty.");
@@ -121,7 +121,7 @@ export const resolveTmpPathForWrite = async (userPath: string) => {
   return candidatePath;
 };
 
-export const resolveTmpPathForRead = async (userPath: string) => {
+const resolveTmpPathForRead = async (userPath: string) => {
   const trimmed = userPath.trim();
   if (!trimmed) {
     throw new Error("Path cannot be empty.");
@@ -149,7 +149,7 @@ export const resolveTmpPathForRead = async (userPath: string) => {
   return candidatePath;
 };
 
-export const resolveTmpPathForAccess = async (userPath: string) => {
+const resolveTmpPathForAccess = async (userPath: string) => {
   const trimmed = userPath.trim();
   if (!trimmed) {
     throw new Error("Path cannot be empty.");
@@ -181,7 +181,7 @@ export const resolveTmpPathForAccess = async (userPath: string) => {
   return candidatePath;
 };
 
-export const resolveTmpPathForDelete = async (userPath: string) => {
+const resolveTmpPathForDelete = async (userPath: string) => {
   const trimmed = userPath.trim();
   if (!trimmed) {
     throw new Error("Path cannot be empty.");
@@ -209,7 +209,7 @@ export const resolveTmpPathForDelete = async (userPath: string) => {
   return candidatePath;
 };
 
-export const resolveTmpPathForList = async (userPath?: string) => {
+const resolveTmpPathForList = async (userPath?: string) => {
   const trimmed = (userPath ?? "").trim();
 
   if (trimmed && PATH_TRAVERSAL.test(trimmed)) {
@@ -244,4 +244,13 @@ export const resolveTmpPathForList = async (userPath?: string) => {
   }
 
   return candidatePath;
+};
+
+export {
+  TMP_ROOT,
+  resolveTmpPathForWrite,
+  resolveTmpPathForRead,
+  resolveTmpPathForAccess,
+  resolveTmpPathForDelete,
+  resolveTmpPathForList,
 };

@@ -25,7 +25,10 @@ try {
     repo: args.repo,
     dryRun: args.dryRun,
   });
-} catch (err: unknown) {
-  logger.error("Failed:", err instanceof Error ? err.message : String(err));
+} catch (error: unknown) {
+  logger.error(
+    "Failed:",
+    error instanceof Error ? error.message : String(error)
+  );
   process.exit(1);
 }

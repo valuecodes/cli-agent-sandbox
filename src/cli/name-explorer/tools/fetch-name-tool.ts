@@ -8,7 +8,7 @@ import { resolveAndValidateUrl } from "~tools/utils/url-safety";
 /**
  * Statistics for a single decade row
  */
-export type NameStatRow = {
+type NameStatRow = {
   decade: string;
   men: number | null;
   women: number | null;
@@ -21,7 +21,7 @@ export type NameStatRow = {
 /**
  * Complete result from fetching name statistics
  */
-export type NameStatResult = {
+type NameStatResult = {
   name: string;
   rows: NameStatRow[];
   totals: {
@@ -38,7 +38,7 @@ export type NameStatResult = {
 /**
  * Error result when fetch fails
  */
-export type NameStatError = {
+type NameStatError = {
   error: string;
   name: string;
 };
@@ -50,7 +50,7 @@ type ParsedValue = {
 
 const DVV_BASE_URL = "https://nimipalvelu.dvv.fi/etunimihaku";
 const USER_AGENT = "cli-agent-sandbox/1.0";
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 15_000;
 
 /**
  * Parse a table cell value from the DVV name statistics page.
@@ -80,8 +80,8 @@ const parseTableValue = (rawValue: string): ParsedValue => {
 
   // Remove &nbsp; (non-breaking space, char code 160) and regular spaces used as thousand separators
   const cleaned = trimmed
-    .replace(/\u00A0/g, "") // &nbsp;
-    .replace(/\s/g, ""); // regular whitespace
+    .replaceAll("\u00A0", "") // &nbsp;
+    .replaceAll(/\s/g, ""); // regular whitespace
 
   const parsed = parseInt(cleaned, 10);
 
@@ -143,9 +143,7 @@ const extractNameStatistics = (
 
   for (const table of tables) {
     const headers = table.querySelectorAll("th");
-    const headerTexts = Array.from(headers).map((h) =>
-      h.textContent.toLowerCase()
-    );
+    const headerTexts = [...headers].map((h) => h.textContent.toLowerCase());
 
     // Look for the table with expected Finnish headers
     if (
@@ -170,15 +168,15 @@ const extractNameStatistics = (
   // Extract body rows (decade data)
   const tbody = statsTable.querySelector("tbody");
   const bodyRows = tbody
-    ? Array.from(tbody.querySelectorAll("tr"))
-    : Array.from(statsTable.querySelectorAll("tr")).slice(1);
+    ? [...tbody.querySelectorAll("tr")]
+    : [...statsTable.querySelectorAll("tr")].slice(1);
 
   const rows: NameStatRow[] = [];
 
   for (const tr of bodyRows) {
-    const cells = Array.from(tr.querySelectorAll("td"));
+    const cells = [...tr.querySelectorAll("td")];
     const row = parseTableRow(cells);
-    if (row?.decade) {
+    if (row !== null && row.decade !== "") {
       rows.push(row);
     }
   }
@@ -192,7 +190,7 @@ const extractNameStatistics = (
   };
 
   if (tfoot) {
-    const footerCells = Array.from(tfoot.querySelectorAll("td, th"));
+    const footerCells = [...tfoot.querySelectorAll("td, th")];
     const [, menCell, womenCell, totalCell] = footerCells;
     if (menCell && womenCell && totalCell) {
       const menParsed = parseTableValue(menCell.textContent);
@@ -234,7 +232,7 @@ const fileExists = async (filePath: string): Promise<boolean> => {
   }
 };
 
-export type FetchNameToolOptions = {
+type FetchNameToolOptions = {
   cacheDir: string;
   refetch?: boolean;
   maxRequests?: number;
@@ -243,7 +241,7 @@ export type FetchNameToolOptions = {
 /**
  * Create a tool for fetching individual name statistics from DVV
  */
-export const createFetchNameTool = (options: FetchNameToolOptions) => {
+const createFetchNameTool = (options: FetchNameToolOptions) => {
   const { cacheDir, refetch = false, maxRequests = 3 } = options;
 
   let requestCount = 0;
@@ -364,3 +362,11 @@ For aggregate statistics across top 100 names per decade, use the SQL database t
     },
   });
 };
+
+export type {
+  NameStatRow,
+  NameStatResult,
+  NameStatError,
+  FetchNameToolOptions,
+};
+export { createFetchNameTool };

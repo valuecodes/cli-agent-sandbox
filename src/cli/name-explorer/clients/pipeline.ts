@@ -9,28 +9,26 @@ import { AggregatedNameDatabase, NameDatabase } from "./database";
 import type { ParsedNames } from "./parse-names";
 import { parseNamesHtml } from "./parse-names";
 
-export type NameSuggesterPipelineConfig = {
+type NameSuggesterPipelineConfig = {
   logger: Logger;
   outputDir: string;
   refetch?: boolean;
 };
 
-export type { DecadeData, ConsolidatedData } from "./database";
-
-export type FetchDecadePageResult = {
+type FetchDecadePageResult = {
   html: string;
   markdown: string;
   parsedNames: ParsedNames;
   fromCache: boolean;
 };
 
-export type ProcessAllDecadesResult = {
+type ProcessAllDecadesResult = {
   totalPages: number;
   cachedPages: number;
   fetchedPages: number;
 };
 
-export type SetupResult = {
+type SetupResult = {
   outputPath: string;
   totalPages: number;
   cachedPages: number;
@@ -42,13 +40,13 @@ export type SetupResult = {
 const BASE_URL = "https://nimipalvelu.dvv.fi/suosituimmat-etunimet";
 const REQUEST_DELAY_MS = 500;
 
-export class NameSuggesterPipeline {
-  private logger: Logger;
-  private outputDir: string;
-  private rawDataDir: string;
-  private refetch: boolean;
-  private fetchClient: FetchClient;
-  private db: NameDatabase;
+class NameSuggesterPipeline {
+  private readonly logger: Logger;
+  private readonly outputDir: string;
+  private readonly rawDataDir: string;
+  private readonly refetch: boolean;
+  private readonly fetchClient: FetchClient;
+  private readonly db: NameDatabase;
 
   constructor(config: NameSuggesterPipelineConfig) {
     this.logger = config.logger;
@@ -278,3 +276,11 @@ export class NameSuggesterPipeline {
     return aggregatedDb;
   }
 }
+
+export type {
+  NameSuggesterPipelineConfig,
+  FetchDecadePageResult,
+  ProcessAllDecadesResult,
+  SetupResult,
+};
+export { NameSuggesterPipeline };

@@ -1,10 +1,8 @@
 import { z } from "zod";
 
-export const CliArgsSchema = z.object({
+const CliArgsSchema = z.object({
   name: z.string().min(1),
 });
-
-export type CliArgs = z.infer<typeof CliArgsSchema>;
 
 // --- PRH API response schemas ---
 
@@ -76,11 +74,14 @@ const PrhCompanySchema = z
   })
   .loose();
 
-export const PrhApiResponseSchema = z.object({
+const PrhApiResponseSchema = z.object({
   totalResults: z.number(),
   companies: z.array(PrhCompanySchema).default([]),
 });
 
-export type PrhApiResponse = z.infer<typeof PrhApiResponseSchema>;
-export type PrhCompany = z.infer<typeof PrhCompanySchema>;
-export type PrhName = z.infer<typeof PrhNameSchema>;
+type PrhApiResponse = z.infer<typeof PrhApiResponseSchema>;
+type PrhCompany = z.infer<typeof PrhCompanySchema>;
+type PrhName = z.infer<typeof PrhNameSchema>;
+
+export type { PrhApiResponse, PrhCompany, PrhName };
+export { CliArgsSchema, PrhApiResponseSchema };

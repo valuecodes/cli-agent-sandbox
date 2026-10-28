@@ -1,4 +1,4 @@
-import { DECADES, FIRST_DECADE, LAST_DECADE } from "../constants";
+import { FIRST_DECADE, LAST_DECADE, DECADES } from "../constants";
 import type {
   AllStats,
   ChurnMetrics,
@@ -16,18 +16,26 @@ import type {
   UnisexName,
 } from "../types/stats";
 import type { NameDatabase } from "./database";
+import { computeDecadeStats, computeTopNames } from "./stats-distribution";
+import {
+  computeChurnMetrics,
+  computeComebacks,
+  computeNameDynamics,
+  computeNewEntries,
+  computeRankChanges,
+} from "./stats-trends";
 
 /**
  * Generates statistical analysis from Finnish names data stored in a NameDatabase.
  * Computes various metrics including decade stats, top names, name dynamics,
  * rank changes, churn metrics, and phonetic analysis.
  */
-export class StatsGenerator {
+class StatsGenerator {
   /**
    * Creates a new StatsGenerator instance.
    * @param db - The NameDatabase instance to query for statistics
    */
-  constructor(private db: NameDatabase) {}
+  constructor(private readonly db: NameDatabase) {}
 
   /**
    * Computes comprehensive statistics for each decade and gender combination.
@@ -35,139 +43,7 @@ export class StatsGenerator {
    * @returns Array of decade/gender statistics
    */
   computeDecadeStats(): DecadeGenderStats[] {
-    const results: DecadeGenderStats[] = [];
-
-    for (const decade of DECADES) {
-      for (const gender of ["boy", "girl"] as const) {
-        const totalRow = this.db.queryOne<{ total: number; cnt: number }>(
-          `SELECT SUM(count) as total, COUNT(*) as cnt FROM names WHERE decade = ? AND gender = ?`,
-          [decade, gender]
-        );
-
-        const total = totalRow?.total ?? 0;
-        const nameCount = totalRow?.cnt ?? 0;
-
-        if (total === 0) {
-          continue;
-        }
-
-        // Top-N concentration
-        const topConcentration = {
-          top1: this.getTopNShare(decade, gender, 1, total),
-          top5: this.getTopNShare(decade, gender, 5, total),
-          top10: this.getTopNShare(decade, gender, 10, total),
-        };
-
-        // Names to reach percentages
-        const namesToReach = {
-          pct25: this.getNamesToReachPct(decade, gender, 0.25, total),
-          pct50: this.getNamesToReachPct(decade, gender, 0.5, total),
-        };
-
-        // Diversity indices
-        const diversity = this.computeDiversityIndices(decade, gender, total);
-
-        results.push({
-          decade,
-          gender,
-          totalBirths: total,
-          nameCount,
-          topNConcentration: topConcentration,
-          namesToReach,
-          hhi: diversity.hhi,
-          effectiveNames: diversity.effectiveNames,
-          entropy: diversity.entropy,
-        });
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Calculates the share of births for the top N names.
-   * @param decade - The decade to query
-   * @param gender - The gender category
-   * @param n - Number of top names to include
-   * @param total - Total births for normalization
-   * @returns Share as a decimal (0-1)
-   */
-  private getTopNShare(
-    decade: string,
-    gender: string,
-    n: number,
-    total: number
-  ): number {
-    const row = this.db.queryOne<{ topSum: number }>(
-      `SELECT SUM(count) as topSum FROM names WHERE decade = ? AND gender = ? AND rank <= ?`,
-      [decade, gender, n]
-    );
-    return total > 0 ? (row?.topSum ?? 0) / total : 0;
-  }
-
-  /**
-   * Calculates how many names are needed to reach a given percentage of births.
-   * @param decade - The decade to query
-   * @param gender - The gender category
-   * @param pct - Target percentage as decimal (e.g., 0.5 for 50%)
-   * @param total - Total births for the decade/gender
-   * @returns Number of names needed to reach the percentage
-   */
-  private getNamesToReachPct(
-    decade: string,
-    gender: string,
-    pct: number,
-    total: number
-  ): number {
-    const target = total * pct;
-    const rows = this.db.query<{ rank: number; count: number }>(
-      `SELECT rank, count FROM names WHERE decade = ? AND gender = ? ORDER BY rank`,
-      [decade, gender]
-    );
-
-    let cumulative = 0;
-    for (const row of rows) {
-      cumulative += row.count;
-      if (cumulative >= target) {
-        return row.rank;
-      }
-    }
-    return rows.length;
-  }
-
-  /**
-   * Computes diversity indices for name distribution.
-   * @param decade - The decade to query
-   * @param gender - The gender category
-   * @param total - Total births for normalization
-   * @returns Object containing HHI, effective names count, and Shannon entropy
-   */
-  private computeDiversityIndices(
-    decade: string,
-    gender: string,
-    total: number
-  ): { hhi: number; effectiveNames: number; entropy: number } {
-    const rows = this.db.query<{ count: number }>(
-      `SELECT count FROM names WHERE decade = ? AND gender = ?`,
-      [decade, gender]
-    );
-
-    let hhi = 0;
-    let entropy = 0;
-
-    for (const row of rows) {
-      const share = row.count / total;
-      hhi += share * share;
-      if (share > 0) {
-        entropy -= share * Math.log(share);
-      }
-    }
-
-    return {
-      hhi,
-      effectiveNames: hhi > 0 ? 1 / hhi : 0,
-      entropy,
-    };
+    return computeDecadeStats({ db: this.db });
   }
 
   /**
@@ -176,39 +52,7 @@ export class StatsGenerator {
    * @returns Array of top names with rank, count, and share
    */
   computeTopNames(limit = 10): TopName[] {
-    const results: TopName[] = [];
-
-    for (const decade of DECADES) {
-      for (const gender of ["boy", "girl"] as const) {
-        const totalRow = this.db.queryOne<{ total: number }>(
-          `SELECT SUM(count) as total FROM names WHERE decade = ? AND gender = ?`,
-          [decade, gender]
-        );
-        const total = totalRow?.total ?? 1;
-
-        const rows = this.db.query<{
-          name: string;
-          rank: number;
-          count: number;
-        }>(
-          `SELECT name, rank, count FROM names WHERE decade = ? AND gender = ? ORDER BY rank LIMIT ?`,
-          [decade, gender, limit]
-        );
-
-        for (const row of rows) {
-          results.push({
-            decade,
-            gender,
-            rank: row.rank,
-            name: row.name,
-            count: row.count,
-            share: row.count / total,
-          });
-        }
-      }
-    }
-
-    return results;
+    return computeTopNames({ db: this.db, limit });
   }
 
   /**
@@ -217,75 +61,7 @@ export class StatsGenerator {
    * @returns Array of name dynamics with timing and consistency metrics
    */
   computeNameDynamics(): NameDynamics[] {
-    const rows = this.db.query<{
-      name: string;
-      gender: "boy" | "girl";
-      peakDecade: string;
-      peakRank: number;
-      firstAppearance: string;
-      lastAppearance: string;
-      longevity: number;
-      avgRank: number;
-      sumRankSq: number;
-    }>(`
-      WITH name_stats AS (
-        SELECT
-          name,
-          gender,
-          MIN(decade) as firstAppearance,
-          MAX(decade) as lastAppearance,
-          COUNT(DISTINCT decade) as longevity,
-          AVG(rank) as avgRank,
-          AVG(rank * rank) as sumRankSq
-        FROM names
-        GROUP BY name, gender
-      ),
-      peak_info AS (
-        SELECT
-          name,
-          gender,
-          decade as peakDecade,
-          rank as peakRank,
-          ROW_NUMBER() OVER (PARTITION BY name, gender ORDER BY rank, decade DESC) as rn
-        FROM names
-      )
-      SELECT
-        ns.name,
-        ns.gender,
-        pi.peakDecade,
-        pi.peakRank,
-        ns.firstAppearance,
-        ns.lastAppearance,
-        ns.longevity,
-        ns.avgRank,
-        ns.sumRankSq
-      FROM name_stats ns
-      JOIN peak_info pi ON ns.name = pi.name AND ns.gender = pi.gender AND pi.rn = 1
-      ORDER BY ns.longevity DESC, ns.avgRank ASC
-    `);
-
-    return rows.map((row) => {
-      const variance = row.sumRankSq - row.avgRank * row.avgRank;
-      const stddev = variance > 0 ? Math.sqrt(variance) : 0;
-
-      // Calculate time to peak (in decades)
-      const firstIdx = DECADES.indexOf(row.firstAppearance);
-      const peakIdx = DECADES.indexOf(row.peakDecade);
-      const timeToPeak = peakIdx >= firstIdx ? peakIdx - firstIdx : 0;
-
-      return {
-        name: row.name,
-        gender: row.gender,
-        peakDecade: row.peakDecade,
-        peakRank: row.peakRank,
-        firstAppearance: row.firstAppearance,
-        lastAppearance: row.lastAppearance,
-        timeToPeak,
-        longevity: row.longevity,
-        avgRank: row.avgRank,
-        rankStddev: stddev,
-      };
-    });
+    return computeNameDynamics({ db: this.db });
   }
 
   /**
@@ -293,52 +69,7 @@ export class StatsGenerator {
    * @returns Object containing top 20 climbers and top 20 fallers
    */
   computeRankChanges(): { climbers: RankChange[]; fallers: RankChange[] } {
-    const changes: RankChange[] = [];
-
-    for (let i = 1; i < DECADES.length; i++) {
-      const fromDecade = DECADES[i - 1];
-      const toDecade = DECADES[i];
-      if (!fromDecade || !toDecade) {
-        continue;
-      }
-
-      const rows = this.db.query<{
-        name: string;
-        gender: "boy" | "girl";
-        fromRank: number;
-        toRank: number;
-      }>(
-        `
-        SELECT
-          curr.name,
-          curr.gender,
-          prev.rank as fromRank,
-          curr.rank as toRank
-        FROM names curr
-        JOIN names prev ON curr.name = prev.name AND curr.gender = prev.gender
-        WHERE curr.decade = ? AND prev.decade = ?
-      `,
-        [toDecade, fromDecade]
-      );
-
-      for (const row of rows) {
-        changes.push({
-          name: row.name,
-          gender: row.gender,
-          fromDecade,
-          toDecade,
-          fromRank: row.fromRank,
-          toRank: row.toRank,
-          change: row.fromRank - row.toRank, // positive = climbed
-        });
-      }
-    }
-
-    const sorted = [...changes].sort((a, b) => b.change - a.change);
-    const climbers = sorted.slice(0, 20);
-    const fallers = sorted.slice(-20).reverse();
-
-    return { climbers, fallers };
+    return computeRankChanges({ db: this.db });
   }
 
   /**
@@ -346,43 +77,7 @@ export class StatsGenerator {
    * @returns Array of new entries with their debut decade and initial rank
    */
   computeNewEntries(): NewEntry[] {
-    const results: NewEntry[] = [];
-
-    for (let i = 1; i < DECADES.length; i++) {
-      const prevDecade = DECADES[i - 1];
-      const currDecade = DECADES[i];
-      if (!prevDecade || !currDecade) {
-        continue;
-      }
-
-      const rows = this.db.query<{
-        name: string;
-        gender: "boy" | "girl";
-        rank: number;
-        count: number;
-      }>(
-        `
-        SELECT curr.name, curr.gender, curr.rank, curr.count
-        FROM names curr
-        LEFT JOIN names prev ON curr.name = prev.name AND curr.gender = prev.gender AND prev.decade = ?
-        WHERE curr.decade = ? AND prev.id IS NULL
-        ORDER BY curr.rank
-      `,
-        [prevDecade, currDecade]
-      );
-
-      for (const row of rows) {
-        results.push({
-          name: row.name,
-          gender: row.gender,
-          decade: currDecade,
-          rank: row.rank,
-          count: row.count,
-        });
-      }
-    }
-
-    return results;
+    return computeNewEntries({ db: this.db });
   }
 
   /**
@@ -390,66 +85,7 @@ export class StatsGenerator {
    * @returns Array of comebacks sorted by gap length (longest gaps first)
    */
   computeComebacks(): Comeback[] {
-    const results: Comeback[] = [];
-
-    // Get all appearances per name/gender
-    const appearances = this.db.query<{
-      name: string;
-      gender: "boy" | "girl";
-      decade: string;
-      rank: number;
-    }>(`
-      SELECT name, gender, decade, rank
-      FROM names
-      ORDER BY name, gender, decade
-    `);
-
-    // Group by name/gender
-    const grouped = new Map<string, { decade: string; rank: number }[]>();
-    for (const row of appearances) {
-      const key = `${row.name}|${row.gender}`;
-      const existing = grouped.get(key);
-      if (existing) {
-        existing.push({ decade: row.decade, rank: row.rank });
-      } else {
-        grouped.set(key, [{ decade: row.decade, rank: row.rank }]);
-      }
-    }
-
-    // Find gaps
-    for (const [key, decadeList] of grouped) {
-      const parts = key.split("|");
-      const name = parts[0];
-      const gender = parts[1];
-      if (!name || !gender) {
-        continue;
-      }
-
-      for (let i = 1; i < decadeList.length; i++) {
-        const prevEntry = decadeList[i - 1];
-        const currEntry = decadeList[i];
-        if (!prevEntry || !currEntry) {
-          continue;
-        }
-
-        const prevIdx = DECADES.indexOf(prevEntry.decade);
-        const currIdx = DECADES.indexOf(currEntry.decade);
-        const gap = currIdx - prevIdx;
-
-        if (gap > 1) {
-          results.push({
-            name,
-            gender: gender as "boy" | "girl",
-            comebackDecade: currEntry.decade,
-            previousDecade: prevEntry.decade,
-            gapDecades: gap - 1,
-            comebackRank: currEntry.rank,
-          });
-        }
-      }
-    }
-
-    return results.sort((a, b) => b.gapDecades - a.gapDecades);
+    return computeComebacks({ db: this.db });
   }
 
   /**
@@ -458,63 +94,7 @@ export class StatsGenerator {
    * @returns Array of churn metrics including new/exited names and Jaccard similarity
    */
   computeChurnMetrics(): ChurnMetrics[] {
-    const results: ChurnMetrics[] = [];
-
-    for (let i = 1; i < DECADES.length; i++) {
-      const fromDecade = DECADES[i - 1];
-      const toDecade = DECADES[i];
-      if (!fromDecade || !toDecade) {
-        continue;
-      }
-
-      for (const gender of ["boy", "girl"] as const) {
-        // Get name sets
-        const fromNames = new Set(
-          this.db
-            .query<{
-              name: string;
-            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [
-              fromDecade,
-              gender,
-            ])
-            .map((r) => r.name)
-        );
-
-        const toNames = new Set(
-          this.db
-            .query<{
-              name: string;
-            }>(`SELECT name FROM names WHERE decade = ? AND gender = ?`, [
-              toDecade,
-              gender,
-            ])
-            .map((r) => r.name)
-        );
-
-        const intersection = new Set(
-          [...fromNames].filter((n) => toNames.has(n))
-        );
-        const union = new Set([...fromNames, ...toNames]);
-
-        const newNames = [...toNames].filter((n) => !fromNames.has(n)).length;
-        const exitedNames = [...fromNames].filter(
-          (n) => !toNames.has(n)
-        ).length;
-
-        results.push({
-          fromDecade,
-          toDecade,
-          gender,
-          churnRate: toNames.size > 0 ? newNames / toNames.size : 0,
-          newNames,
-          exitedNames,
-          jaccardSimilarity:
-            union.size > 0 ? intersection.size / union.size : 0,
-        });
-      }
-    }
-
-    return results;
+    return computeChurnMetrics({ db: this.db });
   }
 
   /**
@@ -760,3 +340,5 @@ export class StatsGenerator {
     };
   }
 }
+
+export { StatsGenerator };

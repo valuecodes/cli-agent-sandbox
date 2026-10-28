@@ -5,7 +5,7 @@ import type { Logger } from "~clients/logger";
 
 import type { NameEntry } from "./parse-names";
 
-export type NameRow = {
+type NameRow = {
   id: number;
   decade: string;
   gender: "boy" | "girl";
@@ -14,13 +14,13 @@ export type NameRow = {
   count: number;
 };
 
-export type DecadeData = {
+type DecadeData = {
   decade: string;
   boys: NameEntry[];
   girls: NameEntry[];
 };
 
-export type ConsolidatedData = {
+type ConsolidatedData = {
   decades: DecadeData[];
 };
 
@@ -30,9 +30,9 @@ export type ConsolidatedData = {
  * The database schema includes a 'names' table with columns for decade,
  * gender, rank, name, and count.
  */
-export class NameDatabase {
-  private db: DatabaseSync;
-  private logger: Logger;
+class NameDatabase {
+  private readonly db: DatabaseSync;
+  private readonly logger: Logger;
 
   /**
    * Creates a new NameDatabase instance with an in-memory SQLite database.
@@ -202,21 +202,14 @@ export class NameDatabase {
   }
 }
 
-export type AggregatedNameRow = {
-  id: number;
-  name: string;
-  count: number;
-  gender: "male" | "female";
-};
-
 /**
  * Manages an in-memory SQLite database for aggregated Finnish names data.
  * Stores total name counts across all time (not broken down by decade).
  * Used for looking up overall name popularity.
  */
-export class AggregatedNameDatabase {
-  private db: DatabaseSync;
-  private logger: Logger;
+class AggregatedNameDatabase {
+  private readonly db: DatabaseSync;
+  private readonly logger: Logger;
 
   /**
    * Creates a new AggregatedNameDatabase instance with an in-memory SQLite database.
@@ -269,12 +262,17 @@ export class AggregatedNameDatabase {
     try {
       for (const line of dataLines) {
         const [name, countStr] = line.split(",");
-        if (!name || !countStr) {
+        if (
+          name === undefined ||
+          name === "" ||
+          countStr === undefined ||
+          countStr === ""
+        ) {
           continue;
         }
 
         // Parse count with thousand separators like "43.276" or "43,276"
-        const normalizedCount = countStr.replace(/[^\d]/g, "");
+        const normalizedCount = countStr.replaceAll(/[^\d]/g, "");
         if (!normalizedCount) {
           continue;
         }
@@ -346,3 +344,6 @@ export class AggregatedNameDatabase {
     this.db.close();
   }
 }
+
+export type { NameRow, DecadeData, ConsolidatedData };
+export { NameDatabase, AggregatedNameDatabase };

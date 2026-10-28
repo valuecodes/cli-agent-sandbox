@@ -7,7 +7,7 @@ import type { Logger } from "~clients/logger";
 /**
  * Result of a Python script execution
  */
-export type PythonResult = {
+type PythonResult = {
   success: boolean;
   exitCode: number | null;
   stdout: string;
@@ -19,18 +19,13 @@ export type PythonResult = {
 /**
  * Repo venv Python path for CLIs that use the project .venv.
  */
-export const PYTHON_BINARY = path.join(
-  process.cwd(),
-  ".venv",
-  "bin",
-  "python3"
-);
+const PYTHON_BINARY = path.join(process.cwd(), ".venv", "bin", "python3");
 
 /**
  * Default configuration values
  */
 const DEFAULTS = {
-  timeoutMs: 30000,
+  timeoutMs: 30_000,
   maxOutputBytes: 50 * 1024, // 50KB
   pythonBinary: PYTHON_BINARY,
 } as const;
@@ -39,7 +34,7 @@ const DEFAULTS = {
  * Maximum allowed values
  */
 const MAX_VALUES = {
-  timeoutMs: 120000,
+  timeoutMs: 120_000,
 } as const;
 
 /**
@@ -51,7 +46,7 @@ const clamp = (value: number, min: number, max: number): number =>
 /**
  * Validate that script name is safe (no path traversal)
  */
-export const isValidScriptName = (scriptName: string): boolean => {
+const isValidScriptName = (scriptName: string): boolean => {
   // Must end with .py
   if (!scriptName.endsWith(".py")) {
     return false;
@@ -200,7 +195,7 @@ const executePython = async (params: {
   });
 };
 
-export type RunPythonToolOptions = {
+type RunPythonToolOptions = {
   /** Absolute path to the directory containing Python scripts */
   scriptsDir: string;
   /** Logger for tool execution logging */
@@ -213,7 +208,7 @@ export type RunPythonToolOptions = {
  * Creates a tool to execute Python scripts from a specified directory.
  * Scripts must be pre-defined .py files in the configured scriptsDir.
  */
-export const createRunPythonTool = ({
+const createRunPythonTool = ({
   scriptsDir,
   logger,
   pythonBinary,
@@ -272,3 +267,6 @@ export const createRunPythonTool = ({
       return JSON.stringify(result, null, 2);
     },
   });
+
+export type { PythonResult, RunPythonToolOptions };
+export { PYTHON_BINARY, isValidScriptName, createRunPythonTool };

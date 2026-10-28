@@ -1,15 +1,15 @@
 import path from "node:path";
 
-export const OUTPUT_BASE_DIR = path.join("tmp", "update-docs");
-export const CHANGES_FILENAME = "changes.md";
+const OUTPUT_BASE_DIR = path.join("tmp", "update-docs");
+const CHANGES_FILENAME = "changes.md";
 
-export const getOutputDir = (branch: string): string =>
+const getOutputDir = (branch: string): string =>
   path.join(process.cwd(), OUTPUT_BASE_DIR, branch);
 
-export const getChangesPath = (branch: string): string =>
+const getChangesPath = (branch: string): string =>
   path.join(getOutputDir(branch), CHANGES_FILENAME);
 
-export const CODEX_PROMPT_TEMPLATE = (diffPath: string): string =>
+const CODEX_PROMPT_TEMPLATE = (diffPath: string): string =>
   `Review the code changes in ${diffPath} and update the repository documentation accordingly.
 
 Use the docs-sync skill at .codex/skills/docs-sync/SKILL.md for guidelines.
@@ -25,3 +25,11 @@ Guidelines:
 - Keep documentation concise and accurate
 - Follow existing documentation style
 - Don't add unnecessary documentation`;
+
+export {
+  CHANGES_FILENAME,
+  CODEX_PROMPT_TEMPLATE,
+  getChangesPath,
+  getOutputDir,
+  OUTPUT_BASE_DIR,
+};

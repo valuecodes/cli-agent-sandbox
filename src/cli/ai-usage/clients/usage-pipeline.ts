@@ -1,7 +1,7 @@
-import { execSync } from "child_process";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Logger } from "~clients/logger";
 
 import { DURATION_MS } from "../constants";
@@ -29,8 +29,8 @@ type GetReportOptions = {
  * Orchestrates usage data collection, aggregation, and formatting.
  */
 export class UsagePipeline {
-  private logger: Logger;
-  private debug: boolean;
+  private readonly logger: Logger;
+  private readonly debug: boolean;
 
   constructor(options: UsagePipelineOptions) {
     this.logger = options.logger;
@@ -101,7 +101,7 @@ export class UsagePipeline {
    * Resolve repo path, defaulting to git root of current directory.
    */
   private resolveRepoPath(repoArg?: string): string {
-    if (repoArg) {
+    if (repoArg !== undefined && repoArg !== "") {
       return repoArg;
     }
 
@@ -122,7 +122,7 @@ export class UsagePipeline {
    */
   private parseSinceDuration(since: string): Date {
     const ms = DURATION_MS[since];
-    if (!ms) {
+    if (ms === undefined || ms === 0 || Number.isNaN(ms)) {
       throw new Error(
         `Invalid --since value: ${since}. Use one of: ${Object.keys(DURATION_MS).join(", ")}`
       );

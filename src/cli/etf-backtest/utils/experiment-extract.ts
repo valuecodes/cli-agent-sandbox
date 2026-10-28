@@ -37,7 +37,14 @@ export const extractLastExperimentResult = (runResult: {
   try {
     const items = runResult.newItems ?? [];
     for (const item of items) {
-      if (item.type === "tool_call_output_item" && item.output) {
+      // Mirrors the old truthiness check: other falsy values (0, false, NaN)
+      // fall through harmlessly because they have no `stdout`.
+      if (
+        item.type === "tool_call_output_item" &&
+        item.output !== undefined &&
+        item.output !== null &&
+        item.output !== ""
+      ) {
         const output = item.output;
         let parsed: unknown;
         if (typeof output === "string") {
@@ -47,9 +54,10 @@ export const extractLastExperimentResult = (runResult: {
         }
 
         const toolResult = parsed as { stdout?: string };
-        if (toolResult.stdout) {
+        if (toolResult.stdout !== undefined && toolResult.stdout !== "") {
           const result = extractJsonFromStdout(toolResult.stdout);
-          if (result) {
+          // Parsing a "{...}" slice yields an object or throws, so null is the only falsy outcome.
+          if (result !== null) {
             const validated = ExperimentResultSchema.safeParse(result);
             if (validated.success) {
               return validated.data;

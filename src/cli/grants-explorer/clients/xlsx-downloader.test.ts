@@ -27,7 +27,7 @@ const buildFixtureXlsx = (): Buffer => {
       "Alueet",
     ],
     [
-      46022,
+      46_022,
       "Test ry (1234567-8)",
       "Test ELY-keskus",
       "T-001",
@@ -82,7 +82,7 @@ const buildPlaywrightMock = (behavior: Behavior) => {
   closeMock = vi.fn(() => Promise.resolve());
 
   const tabClick = vi.fn(() => {
-    if (behavior.failTabClick) {
+    if (behavior.failTabClick === true) {
       return Promise.reject(new Error("simulated tab click failure"));
     }
     return Promise.resolve();
@@ -107,7 +107,7 @@ const buildPlaywrightMock = (behavior: Behavior) => {
     const src = typeof fn === "function" ? fn.toString() : String(fn);
     if (src.includes("activeElement")) {
       const texts = behavior.discoveredSectorTexts;
-      const text = texts[focusIndex] ?? texts[texts.length - 1] ?? "";
+      const text = texts[focusIndex] ?? texts.at(-1) ?? "";
       if (focusIndex < texts.length) {
         focusIndex++;
       }
@@ -160,9 +160,10 @@ const buildPlaywrightMock = (behavior: Behavior) => {
 
   const downloadMock = {
     saveAs: vi.fn((path: string) => {
-      const bytes = behavior.produceInvalidXlsx
-        ? Buffer.from("not a real xlsx", "utf8")
-        : behavior.fixture;
+      const bytes =
+        behavior.produceInvalidXlsx === true
+          ? Buffer.from("not a real xlsx", "utf8")
+          : behavior.fixture;
       return writeFile(path, bytes);
     }),
     suggestedFilename: () => "paatokset.xlsx",

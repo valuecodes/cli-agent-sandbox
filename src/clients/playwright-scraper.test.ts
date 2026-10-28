@@ -80,7 +80,7 @@ describe("PlaywrightScraper", () => {
       expect(launchMock).toHaveBeenCalledWith({ headless: true });
       expect(newPageMock).toHaveBeenCalled();
       expect(gotoMock).toHaveBeenCalledWith("https://example.com", {
-        timeout: 30000,
+        timeout: 30_000,
         waitUntil: "load",
       });
       expect(contentMock).toHaveBeenCalled();
@@ -124,12 +124,12 @@ describe("PlaywrightScraper", () => {
 
       await scraper.scrapeHtml({
         targetUrl: "https://example.com",
-        timeoutMs: 60000,
+        timeoutMs: 60_000,
         waitStrategy: "networkidle",
       });
 
       expect(gotoMock).toHaveBeenCalledWith("https://example.com", {
-        timeout: 60000,
+        timeout: 60_000,
         waitUntil: "networkidle",
       });
 
@@ -145,7 +145,7 @@ describe("PlaywrightScraper", () => {
       });
 
       expect(waitForSelectorMock).toHaveBeenCalledWith(".article-content", {
-        timeout: 30000,
+        timeout: 30_000,
       });
 
       await scraper.close();
@@ -155,7 +155,7 @@ describe("PlaywrightScraper", () => {
       const scraper = new PlaywrightScraper({
         logger,
         headless: false,
-        defaultTimeoutMs: 45000,
+        defaultTimeoutMs: 45_000,
         defaultWaitStrategy: "domcontentloaded",
       });
 
@@ -163,7 +163,7 @@ describe("PlaywrightScraper", () => {
 
       expect(launchMock).toHaveBeenCalledWith({ headless: false });
       expect(gotoMock).toHaveBeenCalledWith("https://example.com", {
-        timeout: 45000,
+        timeout: 45_000,
         waitUntil: "domcontentloaded",
       });
 

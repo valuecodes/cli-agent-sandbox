@@ -16,8 +16,8 @@ export type SuiteLoaderConfig = {
  * Suite files are stored in the suites/ directory with .json extension.
  */
 export class SuiteLoader {
-  private logger: Logger;
-  private suitesDir: string;
+  private readonly logger: Logger;
+  private readonly suitesDir: string;
 
   constructor(config: SuiteLoaderConfig) {
     this.logger = config.logger;
@@ -60,12 +60,12 @@ export class SuiteLoader {
 
       this.logger.debug("Available suites", { suites: suiteNames });
       return suiteNames;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         this.logger.warn("Suites directory not found", { dir: this.suitesDir });
         return [];
       }
-      throw err;
+      throw error;
     }
   }
 

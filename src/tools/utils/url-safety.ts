@@ -3,7 +3,7 @@ import dns from "node:dns/promises";
 /**
  * URL validation result returned by resolveAndValidateUrl
  */
-export type UrlValidationResult = {
+type UrlValidationResult = {
   valid: boolean;
   error?: string;
   resolvedIp?: string;
@@ -119,7 +119,7 @@ const isIpAddress = (hostname: string): boolean => {
 /**
  * Check if an IP address is in a private or reserved range
  */
-export const isPrivateOrReservedIp = (ip: string): boolean => {
+const isPrivateOrReservedIp = (ip: string): boolean => {
   // Check exact matches first
   if (BLOCKED_IPS.has(ip)) {
     return true;
@@ -148,7 +148,7 @@ export const isPrivateOrReservedIp = (ip: string): boolean => {
 /**
  * Check if a hostname should be blocked
  */
-export const isBlockedHostname = (hostname: string): boolean => {
+const isBlockedHostname = (hostname: string): boolean => {
   const lower = hostname.toLowerCase();
 
   // Check exact matches
@@ -172,7 +172,7 @@ export const isBlockedHostname = (hostname: string): boolean => {
 /**
  * Validate that a URL uses an allowed protocol (http or https only)
  */
-export const validateUrlProtocol = (url: string): boolean => {
+const validateUrlProtocol = (url: string): boolean => {
   try {
     const parsed = new URL(url);
     return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -185,7 +185,7 @@ export const validateUrlProtocol = (url: string): boolean => {
  * Resolve a URL's hostname via DNS and validate that all resolved IPs are safe.
  * This prevents SSRF attacks by blocking requests to internal/private networks.
  */
-export const resolveAndValidateUrl = async (
+const resolveAndValidateUrl = async (
   urlString: string
 ): Promise<UrlValidationResult> => {
   // Parse URL
@@ -248,4 +248,12 @@ export const resolveAndValidateUrl = async (
       return { valid: false, error: `DNS resolution failed for: ${hostname}` };
     }
   }
+};
+
+export type { UrlValidationResult };
+export {
+  isPrivateOrReservedIp,
+  isBlockedHostname,
+  validateUrlProtocol,
+  resolveAndValidateUrl,
 };

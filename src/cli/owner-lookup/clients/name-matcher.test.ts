@@ -80,9 +80,7 @@ describe("findBestMatch", () => {
       companies,
     });
     // Should NOT match the historical name with endDate
-    if (result) {
-      expect(result.matchedName.endDate).toBeUndefined();
-    }
+    expect(result?.matchedName.endDate).toBeUndefined();
   });
 
   it("returns null when no match found", () => {
