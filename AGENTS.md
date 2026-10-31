@@ -29,7 +29,7 @@
 
 ## 2) Setup & commands
 
-- Requires Node.js 24.22.1 (`.nvmrc`, the one place that holds the exact version) and pnpm 12 (`corepack enable` picks up `packageManager`)
+- Requires Node.js 26.12.1 (`.nvmrc`, the one place that holds the exact version) and pnpm 12 (`corepack enable` picks up `packageManager`)
 - Install deps: `pnpm install` (also enables the git hooks, see below)
 - Every dependency version lives in the `catalog:` block of `pnpm-workspace.yaml`; `package.json` references each as `catalog:`. Add one with `pnpm add -D <dep>` (routed into the catalog by `catalogMode: strict`) and update with `pnpm up --latest`; `updateConfig.ignoreDependencies` holds `@types/node` to the `.nvmrc` major, so bump it by hand.
 - Every install enforces the supply-chain settings in `pnpm-workspace.yaml`: `minimumReleaseAge` (new releases resolve only after 14 days), `trustPolicy: no-downgrade` and `engineStrict` (a dependency whose `engines` excludes the running Node.js fails the install). When one fails, investigate: never disable it, and never exclude a whole package to get past it.
