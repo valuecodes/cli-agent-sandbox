@@ -12,7 +12,8 @@ jobs:
   # Keeps one issue listing due catalog, pnpm, Node.js and audit updates. It
   # never changes code. A called workflow cannot raise the caller's token, so
   # the job grants it here. Pins the same `valuecodes/maintain-kit` commit as
-  # secret-scan and workflow-lint in `checks.yml`; bump them together.
+  # secret-scan and workflow-lint in `checks.yml` and the updates caller; bump
+  # them together.
   maintain-kit-dashboard:
     permissions:
       contents: read

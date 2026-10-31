@@ -59,6 +59,7 @@ GitHub settings to go with it:
 1. **Branches → branch protection for `main`**: require the `all-passed` status check. It fans in every CI job, so it is the only one to require.
 2. **Code security → Dependabot**: turn **alerts** on. `.github/dependabot.yml` bumps the SHA-pinned GitHub Actions monthly; npm dependencies are updated by hand.
 3. **Issues**: run the `Maintain-kit dashboard` workflow once (**Actions → Maintain-kit dashboard → Run workflow**), then pin the **Maintenance dashboard** issue it creates. It lists due catalog, pnpm and Node.js updates and `pnpm audit` findings, refreshed daily.
+4. **Actions → General**: turn on **Allow GitHub Actions to create and approve pull requests**. `maintain-kit-updates.yml` runs weekly and keeps one PR per update kind open (Node.js, pnpm, `catalog:`), for updates on the current major only. Nothing auto-merges, and each PR's checks wait until someone with write access clicks **Approve workflows to run** in it.
 
 ## Publication scraping
 
