@@ -11,8 +11,8 @@
 # Scoped keys must be double-quoted.
 catalog:
   "@openai/agents": 0.18.0
-  # Held on the Node 24 line to match `.nvmrc` (see `updateConfig` below).
-  "@types/node": 24.19.2
+  # Held on the Node 26 line to match `.nvmrc` (see `updateConfig` below).
+  "@types/node": 26.6.5
   "@types/jsdom": 30.0.0
   "@types/lodash-es": 4.17.12
   "@types/sanitize-html": 2.16.1
