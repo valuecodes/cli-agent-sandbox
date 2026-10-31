@@ -49,19 +49,16 @@ pip install numpy pandas torch
 | `pnpm format:check`            | Check code formatting                                        |
 | `pnpm test`                    | Run Vitest test suite once (`pnpm test:watch` to watch)      |
 | `pnpm knip`                    | Find unused files, exports and dependencies                  |
-| `pnpm secrets:scan`            | Scan git history for secrets with gitleaks                   |
-
-`secrets:scan` needs `gitleaks` v8.19+ on PATH or a running Docker daemon (it falls back to a pinned gitleaks image).
 
 ### Git hooks and CI
 
-`pnpm install` turns on the git hooks in `.githooks/`: format check, lint and a staged secrets scan before each commit (so committing needs `gitleaks` or Docker); typecheck, test and knip before each push. CI (`.github/workflows/checks.yml`) runs typecheck, lint, knip, format:check, test, a gitleaks scan, and actionlint + zizmor over the workflow files on every PR and push to `main`.
+`pnpm install` turns on the git hooks in `.githooks/`: format check, lint and a staged secrets scan before each commit; typecheck, test and knip before each push. Committing needs `gitleaks` v8.19+ on PATH for the staged secrets scan: `brew install gitleaks` (macOS, Linux and WSL), or unpack the `linux_x64` tarball from the [releases page](https://github.com/gitleaks/gitleaks/releases) into a directory on PATH such as `~/.local/bin`. CI (`.github/workflows/checks.yml`) runs typecheck, lint, knip, format:check, test, a gitleaks scan over the full git history and actionlint + zizmor over the workflow files on every PR and push to `main`; the last two come from the reusable workflows in `valuecodes/maintain-kit`.
 
 GitHub settings to go with it:
 
 1. **Branches → branch protection for `main`**: require the `all-passed` status check. It fans in every CI job, so it is the only one to require.
 2. **Code security → Dependabot**: turn **alerts** on. `.github/dependabot.yml` bumps the SHA-pinned GitHub Actions monthly; npm dependencies are updated by hand.
-3. **Issues**: run the `Maintenance dashboard` workflow once (**Actions → Maintenance dashboard → Run workflow**), then pin the **Maintenance dashboard** issue it creates. It lists due catalog, pnpm, gitleaks and Node.js updates and `pnpm audit` findings, refreshed daily.
+3. **Issues**: run the `Maintain-kit dashboard` workflow once (**Actions → Maintain-kit dashboard → Run workflow**), then pin the **Maintenance dashboard** issue it creates. It lists due catalog, pnpm and Node.js updates and `pnpm audit` findings, refreshed daily.
 
 ## Publication scraping
 
