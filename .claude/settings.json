@@ -10,7 +10,6 @@
       "Bash(pnpm format:*)",
       "Bash(pnpm format:check:*)",
       "Bash(pnpm test:*)",
-      "Bash(pnpm secrets:scan:*)",
       "Bash(pnpm knip:*)",
       "Bash(tsx scripts/scaffold-cli.ts:*)"
     ],

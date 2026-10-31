@@ -30,7 +30,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "knip": "knip",
-    "secrets:scan": "sh .github/scripts/secrets-scan.sh",
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config --local core.hooksPath .githooks || true"
   },
   "keywords": [
