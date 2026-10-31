@@ -32,34 +32,3 @@ jobs:
           RESULT: ${{ needs.checks.result }}
         run: |
           [ "$RESULT" = success ] || { echo "checks ended with: $RESULT"; exit 1; }
-
-  # Resolves review threads that later pushes addressed. Not a gate, so it is
-  # not in `all-passed`. Skipped on the first push and for forks, which get no
-  # secrets.
-  resolve-pr-comments:
-    name: resolve-pr-comments
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [checks]
-    if: >-
-      github.event.action != 'opened' &&
-      !github.event.pull_request.head.repo.fork
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Setup
-        uses: ./.github/actions/setup # zizmor: ignore[self-repository]
-
-      - name: Resolve PR comments
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: pnpm run:resolve-pr-comments -- --pr="$PR_NUMBER" --repo="$REPO"
